@@ -1,10 +1,10 @@
-# 👁️⃤ CODORUM
+# 👁️⃤CODORUM
 
 **Because you can't trust the machines.**
 
 ---
 
-CODORUM is a desktop file watcher for people who want to *actually see* what's happening to their text files. Markdown especially — because that's where the chaos lives.
+CODORUM is a desktop text/md file watcher for people who want to *actually see* what's happening to their text files. Markdown especially — because that's where the chaos lives.
 
 You drop files in. You drop folders in. CODORUM watches them. When something changes on disk, you see it *immediately* — diffs, line counts, the whole crime scene. No mystery commits. No silent rewrites. No "I just tidied up your prose a little" surprises.
 
