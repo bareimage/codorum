@@ -1,4 +1,6 @@
-# 👁️⃤CODORUM
+
+![LOGO](https://github.com/user-attachments/assets/d06f4e61-8ab3-4993-a2b7-75231e30b74e)
+# CODORUM
 
 **Because you can't trust the machines.**
 
