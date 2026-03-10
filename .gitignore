@@ -25,3 +25,4 @@ src-tauri/gen/
 
 # TypeScript
 *.tsbuildinfo
+scripts/
