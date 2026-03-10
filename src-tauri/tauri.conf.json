@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedoc/tauri/v2/crates/tauri-config-schema/schema.json",
   "productName": "CODORUM",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.bareimage.codorum",
   "build": {
     "frontendDist": "../dist",
