@@ -22,6 +22,10 @@ interface AppState {
   // Theme
   theme: string;
 
+  // Search
+  searchMode: "filename" | "content";
+  setSearchMode: (mode: "filename" | "content") => void;
+
   // Drawers & stream
   drawerOpen: Record<string, boolean>;
   sortBy: "name" | "modified" | "changes";
@@ -60,12 +64,16 @@ interface AppState {
   togglePin: (id: string) => void;
   setTheme: (theme: string) => void;
 
-  // Group actions
+  // Group / tab actions
   addGroup: (group: FileGroup) => void;
+  createTab: (name: string) => string;
   removeGroup: (groupId: string) => void;
   removeGroupAndFiles: (groupId: string) => void;
   renameGroup: (groupId: string, name: string) => void;
   toggleGroupCollapse: (groupId: string) => void;
+  moveFileToGroup: (fileId: string, groupId: string) => void;
+  removeFileFromGroup: (fileId: string, groupId: string) => void;
+  reorderGroups: (groupIds: string[]) => void;
 }
 
 /** Derive savedFilePaths from current files array */
@@ -93,6 +101,8 @@ export const useAppStore = create<AppState>()(
       drawerOpen: { pinned: true, loose: true },
       sortBy: "modified",
       search: "",
+      searchMode: "filename",
+      setSearchMode: (mode) => set({ searchMode: mode }),
       cardCollapsed: {},
       cardHeights: {},
       cardDirty: {},
@@ -241,6 +251,15 @@ export const useAppStore = create<AppState>()(
           drawerOpen: { ...s.drawerOpen, [group.id]: true },
         })),
 
+      createTab: (name) => {
+        const id = crypto.randomUUID();
+        set((s) => ({
+          groups: [...s.groups, { id, name, collapsed: false, fileIds: [] }],
+          drawerOpen: { ...s.drawerOpen, [id]: true },
+        }));
+        return id;
+      },
+
       removeGroup: (groupId) =>
         set((s) => ({ groups: s.groups.filter((g) => g.id !== groupId) })),
 
@@ -270,6 +289,29 @@ export const useAppStore = create<AppState>()(
             g.id === groupId ? { ...g, collapsed: !g.collapsed } : g,
           ),
         })),
+
+      moveFileToGroup: (fileId, groupId) =>
+        set((s) => ({
+          groups: s.groups.map((g) => {
+            if (g.id === groupId) {
+              return g.fileIds.includes(fileId) ? g : { ...g, fileIds: [...g.fileIds, fileId] };
+            }
+            return { ...g, fileIds: g.fileIds.filter((fid) => fid !== fileId) };
+          }),
+        })),
+
+      removeFileFromGroup: (fileId, groupId) =>
+        set((s) => ({
+          groups: s.groups.map((g) =>
+            g.id === groupId ? { ...g, fileIds: g.fileIds.filter((fid) => fid !== fileId) } : g,
+          ),
+        })),
+
+      reorderGroups: (groupIds) =>
+        set((s) => {
+          const map = new Map(s.groups.map((g) => [g.id, g]));
+          return { groups: groupIds.map((id) => map.get(id)!).filter(Boolean) };
+        }),
     }),
     {
       name: "codorum-state",
@@ -279,6 +321,7 @@ export const useAppStore = create<AppState>()(
         groups: state.groups,
         drawerOpen: state.drawerOpen,
         sortBy: state.sortBy,
+        searchMode: state.searchMode,
         cardCollapsed: state.cardCollapsed,
         cardHeights: state.cardHeights,
       }),

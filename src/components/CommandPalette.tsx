@@ -1,23 +1,22 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { useCommandStore } from "../stores/command-store";
 import { Icons } from "./Icons";
 import { Kbd } from "./Kbd";
-import { ExtDot } from "./ExtDot";
 import type { WatchedFile, DirectoryResult } from "../types/files";
 
 const THEMES = ["n01z", "paper", "phosphor", "ember"] as const;
 
 type PaletteItem =
-  | { type: "file"; id: string; label: string; ext: string; kbd?: string }
   | { type: "cmd"; id: string; label: string; icon: "search" | "file" | "folder" | "plus" | "sparkle" | "palette"; kbd?: string; sub?: string }
   | { type: "sep"; label: string };
 
 export function CommandPalette() {
   const { open, close } = useCommandStore();
-  const { files, groups, openFile, setTheme, theme, addFiles, addGroup } = useAppStore();
+  const { groups, openFile, setTheme, theme, addFiles, addGroup, createTab } = useAppStore();
   const addToast = useToastStore((s) => s.add);
   const [query, setQuery] = useState("");
   const [idx, setIdx] = useState(0);
@@ -50,78 +49,46 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Build items
+  // Build items — commands only (no file listings; use sidebar search for files)
   const items = useMemo<PaletteItem[]>(() => {
     const q = query.toLowerCase();
-    const result: PaletteItem[] = [];
+    const all: PaletteItem[] = [];
 
-    // Files
-    files
-      .filter((f) => !q || f.name.toLowerCase().includes(q) || f.extension.toLowerCase().includes(q))
-      .forEach((f, i) => {
-        result.push({
-          type: "file",
-          id: f.id,
-          label: `${f.name}.${f.extension}`,
-          ext: f.extension,
-          kbd: i < 9 ? `\u2318${i + 1}` : undefined,
-        });
-      });
+    all.push({ type: "sep", label: "Actions" });
+    all.push({ type: "cmd", id: "add-folder", label: "Add Folder", icon: "folder" });
+    all.push({ type: "cmd", id: "add-file", label: "Add Files", icon: "file" });
+    all.push({ type: "cmd", id: "create-tab", label: "Create Tab", icon: "plus" });
 
-    if (!q) {
-      result.push({ type: "sep", label: "Actions" });
-      result.push({ type: "cmd", id: "add-folder", label: "Add Folder", icon: "folder" });
-      result.push({ type: "cmd", id: "add-file", label: "Add Files", icon: "file" });
-
-      for (const g of groups.filter((g) => g.sourcePath)) {
-        result.push({
-          type: "cmd",
-          id: `new-${g.id}`,
-          label: `New File in ${g.name}`,
-          icon: "plus",
-        });
-      }
-
-      result.push({ type: "sep", label: "Appearance" });
-      result.push({
+    for (const g of groups) {
+      all.push({
         type: "cmd",
-        id: "theme",
-        label: "Cycle Theme",
-        icon: "palette",
-        kbd: "\u2318T",
-        sub: theme,
+        id: `new-${g.id}`,
+        label: `New File in ${g.name}`,
+        icon: "plus",
       });
     }
 
-    return result;
-  }, [query, files, groups, theme]);
+    all.push({ type: "sep", label: "Appearance" });
+    all.push({
+      type: "cmd",
+      id: "theme",
+      label: "Cycle Theme",
+      icon: "palette",
+      kbd: "\u2318T",
+      sub: theme,
+    });
+
+    if (!q) return all;
+
+    // Filter commands by query
+    return all.filter(
+      (item) => item.type === "sep" || item.label.toLowerCase().includes(q),
+    );
+  }, [query, groups, theme]);
 
   const selectable = useMemo(() => items.filter((i) => i.type !== "sep"), [items]);
 
   // ─── Handlers ───
-
-  const handleSelect = useCallback(
-    (id: string) => {
-      const store = useAppStore.getState();
-      const file = store.files.find((f) => f.id === id);
-      if (file?.pinned) {
-        if (!store.drawerOpen["pinned"]) store.toggleDrawer("pinned");
-      } else {
-        const group = store.groups.find((g) => g.fileIds.includes(id));
-        if (group) {
-          if (!store.drawerOpen[group.id]) store.toggleDrawer(group.id);
-        } else {
-          if (!store.drawerOpen["loose"]) store.toggleDrawer("loose");
-        }
-      }
-      openFile(id);
-      close();
-      setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }, 100);
-    },
-    [openFile, close],
-  );
 
   const handleAddDir = useCallback(async () => {
     close();
@@ -160,10 +127,37 @@ export function CommandPalette() {
 
   const handleCreateFile = useCallback(async () => {
     if (!newFileTarget || !query.trim()) return;
-    const fileName = query.trim();
+    // Default to .md if no extension provided
+    let fileName = query.trim();
+    if (!fileName.includes(".")) fileName += ".md";
+
+    let dir = newFileTarget.dir;
+
+    // If tab has no sourcePath, prompt user to pick a save location
+    if (!dir) {
+      try {
+        // Build filter matching the file's actual extension so the dialog
+        // doesn't append a different one (e.g. io.sh → io.sh.md)
+        const ext = fileName.includes(".")
+          ? fileName.split(".").pop()!
+          : "md";
+        const savePath = await save({
+          defaultPath: fileName,
+          filters: [{ name: `${ext.toUpperCase()} file`, extensions: [ext] }],
+        });
+        if (!savePath) return; // user cancelled
+        // Extract directory from chosen path, use the chosen filename
+        const lastSep = savePath.lastIndexOf("/");
+        dir = savePath.substring(0, lastSep);
+        fileName = savePath.substring(lastSep + 1);
+      } catch {
+        return; // dialog cancelled
+      }
+    }
+
     try {
       const created = await invoke<WatchedFile>("create_file", {
-        dir: newFileTarget.dir,
+        dir,
         name: fileName,
       });
       addFiles([created]);
@@ -192,14 +186,16 @@ export function CommandPalette() {
   const handleActivateItem = useCallback(
     (item: PaletteItem) => {
       if (item.type === "sep") return;
-      if (item.type === "file") {
-        handleSelect(item.id);
-        return;
-      }
       if (item.id === "add-folder") {
         handleAddDir();
       } else if (item.id === "add-file") {
         handleAddFile();
+      } else if (item.id === "create-tab") {
+        const id = createTab("Untitled");
+        addToast("Untitled", "tab created", "cyan");
+        close();
+        // Trigger rename mode via a custom event the Sidebar will listen for
+        setTimeout(() => window.dispatchEvent(new CustomEvent("codorum:rename-tab", { detail: id })), 100);
       } else if (item.id === "theme") {
         cycleTheme();
         close();
@@ -207,14 +203,14 @@ export function CommandPalette() {
         const groupId = item.id.replace("new-", "");
         const group = groups.find((g) => g.id === groupId);
         if (group) {
-          setNewFileTarget({ groupId: group.id, dir: group.sourcePath, name: group.name });
+          setNewFileTarget({ groupId: group.id, dir: group.sourcePath ?? "", name: group.name });
           setQuery("");
           setIdx(0);
           setTimeout(() => inputRef.current?.focus(), 30);
         }
       }
     },
-    [handleSelect, handleAddDir, handleAddFile, cycleTheme, close, groups],
+    [handleAddDir, handleAddFile, createTab, cycleTheme, close, groups, addToast],
   );
 
   const handleKeyDown = useCallback(
@@ -311,7 +307,7 @@ export function CommandPalette() {
               setIdx(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder={newFileTarget ? `filename (in ${newFileTarget.name})...` : "Search files, commands..."}
+            placeholder={newFileTarget ? `filename (in ${newFileTarget.name})...` : "Type a command..."}
             style={{
               flex: 1,
               fontSize: 15,
@@ -367,8 +363,7 @@ export function CommandPalette() {
 
                 selectableIdx++;
                 const isSel = selectableIdx === idx;
-                const IconComp =
-                  item.type === "cmd" ? Icons[item.icon] : null;
+                const IconComp = item.type === "cmd" ? Icons[item.icon] : null;
 
                 return (
                   <div
@@ -386,30 +381,16 @@ export function CommandPalette() {
                       transition: "background 50ms",
                     }}
                   >
-                    {item.type === "file" ? (
-                      <span style={{ color: "var(--tx3)", display: "flex", flexShrink: 0 }}>
-                        <Icons.file />
-                      </span>
-                    ) : IconComp ? (
+                    {IconComp && (
                       <span style={{ color: "var(--ac)", display: "flex", flexShrink: 0 }}>
                         <IconComp />
                       </span>
-                    ) : null}
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: 14,
-                        color: "var(--tx)",
-                        fontWeight: item.type === "cmd" ? 500 : 400,
-                      }}
-                    >
+                    )}
+                    <span style={{ flex: 1, fontSize: 14, color: "var(--tx)", fontWeight: 500 }}>
                       {item.label}
                     </span>
                     {item.type === "cmd" && item.sub && (
                       <span style={{ fontSize: 12, color: "var(--tx3)" }}>{item.sub}</span>
-                    )}
-                    {item.type === "file" && (
-                      <ExtDot extension={item.ext} size={6} />
                     )}
                     {item.kbd && <Kbd>{item.kbd}</Kbd>}
                   </div>

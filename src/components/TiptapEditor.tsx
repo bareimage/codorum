@@ -17,8 +17,14 @@ import Image from "@tiptap/extension-image";
 import { Markdown } from "tiptap-markdown";
 import { all, createLowlight } from "lowlight";
 import { MermaidExtension } from "./MermaidExtension";
+import { createSlashExtension } from "./SlashMenu";
 
 const lowlight = createLowlight(all);
+const SlashCommand = createSlashExtension();
+
+// Devil's Dictionary entries used as placeholder content for new files.
+// Matches blockquote format: "> ***Word***, *n.* ..."
+const DD_PATTERN = /^>\s+\*{3}[A-Z][a-z]+\*{3},\s+\*(?:n|adj|v\.\s?[ti]|adv|interj|pp|pron)\.\*/;
 
 interface TiptapEditorProps {
   content: string;
@@ -35,6 +41,7 @@ export function TiptapEditor({ content, onChange, fileId, editable = true }: Tip
   // Track which file we've loaded to avoid re-setting on user edits
   const loadedFile = useRef<string>("");
   const suppressUpdate = useRef(false);
+  const isPlaceholderContent = useRef(false);
 
   const editor = useEditor({
     extensions: [
@@ -63,6 +70,7 @@ export function TiptapEditor({ content, onChange, fileId, editable = true }: Tip
       Highlight,
       Image,
       MermaidExtension,
+      SlashCommand,
       Markdown.configure({
         html: false,
         tightLists: true,
@@ -71,7 +79,12 @@ export function TiptapEditor({ content, onChange, fileId, editable = true }: Tip
         transformCopiedText: true,
       }),
     ],
-    content: "", // Start empty — markdown set via setContent() below
+    // tiptap-markdown's onBeforeCreate parses the content option through
+    // markdown-it.  Passing null/"" can produce a spurious codeBlock node.
+    // A zero-width space is valid inline content that markdown-it renders as
+    // <p>\u200B</p> — guaranteeing a paragraph, never a code block.
+    // The useEffect below immediately replaces this with actual file content.
+    content: "\u200B",
     editorProps: {
       attributes: {
         class: "tiptap-editor-content",
@@ -83,24 +96,68 @@ export function TiptapEditor({ content, onChange, fileId, editable = true }: Tip
       const md = (editor.storage as any).markdown.getMarkdown();
       onChangeRef.current(md);
     },
+    onFocus: ({ editor }) => {
+      if (!isPlaceholderContent.current) return;
+      isPlaceholderContent.current = false;
+      // Clear the placeholder quote without triggering a save to disk.
+      // Raw ProseMirror dispatch bypasses tiptap-markdown's setContent hook.
+      suppressUpdate.current = true;
+      const emptyDoc = editor.schema.nodeFromJSON({
+        type: "doc",
+        content: [{ type: "paragraph" }],
+      });
+      const tr = editor.state.tr.replaceWith(
+        0,
+        editor.state.doc.content.size,
+        emptyDoc.content,
+      );
+      tr.setMeta("addToHistory", false);
+      editor.view.dispatch(tr);
+      suppressUpdate.current = false;
+    },
   });
 
-  // Load markdown content via setContent (goes through tiptap-markdown parser).
-  // Runs when fileId changes OR when content arrives for a new file.
+  // Load markdown content when the file changes.
+  // For empty files, dispatch a raw ProseMirror transaction (bypasses
+  // tiptap-markdown's setContent override which would parse "" → code block).
   useEffect(() => {
-    if (!editor || !content) return;
+    if (!editor) return;
     // Skip if we already loaded content for this file (user edits)
     if (loadedFile.current === fileId) return;
 
+    // Always stamp the fileId so we don't re-enter on every render
     loadedFile.current = fileId;
+
     suppressUpdate.current = true;
-    editor.commands.setContent(content);
-    suppressUpdate.current = false;
-    try {
-      (editor.commands as any).clearHistory?.();
-    } catch {
-      // noop
+
+    // Detect Devil's Dictionary placeholder content
+    isPlaceholderContent.current = DD_PATTERN.test(content.trim());
+
+    if (!content || !content.trim()) {
+      // tiptap-markdown hooks into editor.commands.setContent() and
+      // editor.commands.clearContent() — both run parser.parse("") which
+      // turns an empty string into a spurious <pre><code> node.
+      // Raw ProseMirror transactions bypass that hook entirely.
+      const emptyDoc = editor.schema.nodeFromJSON({
+        type: "doc",
+        content: [{ type: "paragraph" }],
+      });
+      const tr = editor.state.tr.replaceWith(
+        0,
+        editor.state.doc.content.size,
+        emptyDoc.content,
+      );
+      tr.setMeta("addToHistory", false);
+      editor.view.dispatch(tr);
+    } else {
+      editor.commands.setContent(content);
+      try {
+        (editor.commands as any).clearHistory?.();
+      } catch {
+        // noop
+      }
     }
+    suppressUpdate.current = false;
   }, [fileId, content, editor]);
 
   // Reset tracking when fileId changes so we accept the next content load
@@ -204,66 +261,9 @@ export function TiptapEditor({ content, onChange, fileId, editable = true }: Tip
         editor={editor}
         className="tiptap-floating-menu"
       >
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={editor.isActive("heading", { level: 1 }) ? "is-active" : ""}
-        >
-          H1
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
-        >
-          H2
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={editor.isActive("heading", { level: 3 }) ? "is-active" : ""}
-        >
-          H3
-        </button>
-        <span className="tiptap-menu-sep" />
-        <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={editor.isActive("bulletList") ? "is-active" : ""}
-        >
-          &#x2022;
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive("orderedList") ? "is-active" : ""}
-        >
-          1.
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-          className={editor.isActive("taskList") ? "is-active" : ""}
-        >
-          &#x2611;
-        </button>
-        <span className="tiptap-menu-sep" />
-        <button
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          className={editor.isActive("codeBlock") ? "is-active" : ""}
-        >
-          {"```"}
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={editor.isActive("blockquote") ? "is-active" : ""}
-        >
-          &gt;
-        </button>
-        <button
-          onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 3 }).run()}
-        >
-          &#x229e;
-        </button>
-        <button
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-        >
-          &#x2015;
-        </button>
+        <span style={{ fontSize: 12, color: "var(--tx3)", opacity: 0.6 }}>
+          Type <kbd style={{ fontFamily: "monospace", padding: "0 4px", background: "var(--hover)", borderRadius: 3, fontSize: 11 }}>/</kbd> for commands
+        </span>
       </FloatingMenu>}
 
       <EditorContent editor={editor} />

@@ -11,6 +11,7 @@ export function ContentPane() {
     drawerOpen,
     sortBy,
     search,
+    searchMode,
     activeFileId,
     openFile,
     cardCollapsed,
@@ -21,8 +22,13 @@ export function ContentPane() {
 
   const sections = useMemo(() => {
     const result: { key: string; title: string; files: WatchedFile[] }[] = [];
-    const filterByQuery = (list: WatchedFile[]) =>
-      q ? list.filter((f) => f.name.toLowerCase().includes(q)) : list;
+    const filterByQuery = (list: WatchedFile[]) => {
+      if (!q) return list;
+      if (searchMode === "content") {
+        return list.filter((f) => f.content.toLowerCase().includes(q));
+      }
+      return list.filter((f) => f.name.toLowerCase().includes(q));
+    };
 
     if (q || drawerOpen["pinned"]) {
       const pinned = filterByQuery(files.filter((f) => f.pinned));
@@ -56,7 +62,7 @@ export function ContentPane() {
     }
 
     return result;
-  }, [files, groups, drawerOpen, sortBy, q]);
+  }, [files, groups, drawerOpen, sortBy, q, searchMode]);
 
   const totalVisible = sections.reduce((sum, s) => sum + s.files.length, 0);
   const scrollRef = useRef<HTMLDivElement>(null);

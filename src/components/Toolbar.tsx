@@ -60,14 +60,15 @@ export function Toolbar() {
 
       <div style={{ flex: 1 }} />
 
-      {/* ⌘K button */}
+      {/* ⌘K commands button */}
       <button
         onClick={openCmd}
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          padding: "5px 12px",
+          gap: 6,
+          height: 30,
+          padding: "0 12px",
           background: "var(--hover)",
           border: "1px solid var(--brd)",
           borderRadius: 8,
@@ -78,7 +79,7 @@ export function Toolbar() {
           fontFamily: "inherit",
         }}
       >
-        <Icons.search />
+        <Icons.sparkle />
         <Kbd>{"\u2318"}K</Kbd>
       </button>
 
@@ -86,7 +87,8 @@ export function Toolbar() {
       <button
         onClick={cycleTheme}
         style={{
-          padding: "5px 12px",
+          height: 30,
+          padding: "0 12px",
           background: "transparent",
           border: "1px solid var(--brd)",
           borderRadius: 8,

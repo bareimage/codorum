@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { TiptapEditor } from "./TiptapEditor";
-import { CodeView } from "./CodeView";
+import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Icons } from "./Icons";
 import { ExtDot } from "./ExtDot";
@@ -57,6 +57,7 @@ export function FileCard({
   const [trackedContent, setTrackedContent] = useState(file.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mode = detectMode(file.extension);
 
   // Sync content synchronously during render when file changes externally.
@@ -120,6 +121,14 @@ export function FileCard({
     <div
       id={file.id}
       className={`file-card${isActive ? " active" : ""}`}
+      onMouseEnter={() => {
+        if (!isActive) {
+          hoverTimer.current = setTimeout(onActivate, 500);
+        }
+      }}
+      onMouseLeave={() => {
+        if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+      }}
       onClick={onActivate}
     >
       {/* Card header */}
@@ -229,10 +238,13 @@ export function FileCard({
             />
           )}
           {mode === "code" && typeof content === "string" && (
-            <CodeView
+            <CodeEditor
               key={`code-${file.id}-${file._rev ?? 0}`}
               content={content}
               language={file.extension}
+              onChange={handleTextChange}
+              fileId={file.id}
+              editable={isActive && !file.deleted}
             />
           )}
           {mode === "text" && typeof content === "string" && (
