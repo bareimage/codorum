@@ -1,0 +1,770 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   THEMES
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  /* v8 canonical — n01z default */
+  --bg: #18181b;
+  --bg2: #111113;
+  --card: #1f1f23;
+  --hover: #27272c;
+  --tx: #e4e4e7;
+  --tx2: #a1a1aa;
+  --tx3: #52525b;
+  --ac: #5bc4c4;
+  --ac2: #a78bfa;
+  --ac3: #6bcb8b;
+  --warn: #e0a644;
+  --danger: #ef6b7a;
+  --brd: #27272a;
+  --ring: rgba(91,196,196,0.15);
+  --input-bg: #1c1c20;
+  --cmd-bg: #1c1c20;
+  --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
+  --shadow-heavy: rgba(0,0,0,0.4);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  --radius: 8px;
+  --radius-sm: 4px;
+  /* backward compat aliases */
+  --bg-base: var(--bg);
+  --bg-deep: var(--bg2);
+  --bg-card: var(--card);
+  --bg-hover: var(--hover);
+  --text: var(--tx);
+  --text-2: var(--tx2);
+  --text-3: var(--tx3);
+  --text-primary: var(--tx);
+  --text-secondary: var(--tx2);
+  --text-muted: var(--tx3);
+  --accent: var(--ac);
+  --accent-2: var(--ac2);
+  --accent-3: var(--ac3);
+  --accent-cyan: var(--ac);
+  --accent-violet: var(--ac2);
+  --accent-mint: var(--ac3);
+  --accent-warn: var(--warn);
+  --accent-danger: var(--danger);
+  --accent-amber: var(--warn);
+  --accent-rose: var(--danger);
+  --deleted: #6b6b73;
+  --border: var(--brd);
+  --border-light: var(--brd);
+}
+
+[data-theme="paper"] {
+  --bg: #fafaf9;
+  --bg2: #f0efed;
+  --card: #ffffff;
+  --hover: #f4f4f2;
+  --tx: #18181b;
+  --tx2: #71717a;
+  --tx3: #a1a1aa;
+  --ac: #2a7272;
+  --ac2: #7c3aed;
+  --ac3: #16a34a;
+  --warn: #ca8a04;
+  --danger: #dc2626;
+  --brd: #e4e4e7;
+  --ring: rgba(42,114,114,0.1);
+  --input-bg: #ffffff;
+  --cmd-bg: #ffffff;
+  --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.12);
+  --shadow-heavy: rgba(0,0,0,0.1);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --deleted: #b0b0b8;
+}
+
+[data-theme="phosphor"] {
+  --bg: #0c110c;
+  --bg2: #070a07;
+  --card: #111711;
+  --hover: #1a221a;
+  --tx: #c0e8c0;
+  --tx2: #6aaa6a;
+  --tx3: #3a6a3a;
+  --ac: #00c898;
+  --ac2: #70cc90;
+  --ac3: #00ee78;
+  --warn: #90cc40;
+  --danger: #ee5530;
+  --brd: #1a261a;
+  --ring: rgba(0,200,152,0.12);
+  --input-bg: #0e140e;
+  --cmd-bg: #0e140e;
+  --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.6);
+  --shadow-heavy: rgba(0,0,0,0.5);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.12);
+  --deleted: #3a5a3a;
+}
+
+[data-theme="ember"] {
+  --bg: #1c1614;
+  --bg2: #12100e;
+  --card: #221c18;
+  --hover: #2c2420;
+  --tx: #e8dace;
+  --tx2: #a09080;
+  --tx3: #6a5a4a;
+  --ac: #ee7733;
+  --ac2: #eeaa55;
+  --ac3: #77bb55;
+  --warn: #eebb44;
+  --danger: #ee4433;
+  --brd: #302420;
+  --ring: rgba(238,119,51,0.12);
+  --input-bg: #1a1412;
+  --cmd-bg: #1a1412;
+  --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
+  --shadow-heavy: rgba(0,0,0,0.4);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1);
+  --deleted: #6a5548;
+}
+
+/* ═══ BASE ═══ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background 200ms ease, color 200ms ease;
+}
+::selection {
+  background: color-mix(in srgb, var(--accent-cyan) 25%, transparent);
+}
+
+/* ═══ Scrollbar ═══ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 30%, transparent);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text-muted) 50%, transparent);
+}
+
+/* ═══ Keyframes ═══ */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes barIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px) scale(0.96); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+@keyframes cmdIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes eyeBlink {
+  0%, 42%, 50%, 100% { transform: scaleY(0); }
+  44%, 48% { transform: scaleY(1); }
+}
+@keyframes eyeLook {
+  0%, 40%, 50%, 100% { transform: translateX(0); }
+  42%, 48% { transform: translateX(2px); }
+}
+
+.codorum-eye-lid {
+  transform-origin: center center;
+  animation: eyeBlink 6s ease-in-out infinite;
+}
+.codorum-eye-iris {
+  animation: eyeLook 6s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMPONENT STYLES — Figma-clean aesthetic
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Buttons ─── */
+.tbtn {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 100ms ease;
+  letter-spacing: 0.3px;
+}
+.tbtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+.tbtn.active {
+  color: var(--accent-cyan);
+  background: color-mix(in srgb, var(--accent-cyan) 8%, transparent);
+}
+
+.sbtn {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 100ms ease;
+}
+.sbtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+}
+
+
+/* ═══ Drawer eject button ═══ */
+.drawer-section:hover .drawer-eject-btn {
+  opacity: 1 !important;
+}
+.drawer-eject-btn:hover {
+  color: var(--danger) !important;
+  background: color-mix(in srgb, var(--danger) 12%, transparent) !important;
+}
+
+/* ═══ Drop Zone ═══ */
+.drop-zone-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  animation: fadeIn 150ms ease;
+}
+.drop-zone-indicator {
+  padding: 40px 60px;
+  border-radius: 16px;
+  border: 2px dashed var(--border-light);
+  background: var(--bg-hover);
+  box-shadow: 0 12px 48px var(--shadow-heavy);
+  color: var(--accent-cyan);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: cmdIn 200ms cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ═══ File Card ═══ */
+.file-card {
+  background: var(--card);
+  border-radius: 12px;
+  border: 1px solid var(--brd);
+  margin-bottom: 12px;
+  box-shadow: none;
+  transition: all 150ms ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+.file-card:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.file-card.active {
+  border-color: color-mix(in srgb, var(--ac) 25%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac) 19%, transparent), 0 2px 8px var(--ring);
+}
+.file-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--brd);
+}
+.file-card-chevron {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tx3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 100ms;
+  padding: 0;
+}
+.file-card-chevron:hover {
+  color: var(--tx2);
+}
+.file-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tx);
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-card-time {
+  font-size: 12px;
+  color: var(--tx3);
+  flex-shrink: 0;
+}
+.file-card-body {
+  padding: 20px 24px 24px 48px;
+  overflow: hidden;
+  animation: slideUp 150ms ease;
+}
+.file-card-body .tiptap-editor-content {
+  padding: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.8;
+  max-width: none;
+}
+/* Card headings use system font, not Georgia */
+.file-card-body .tiptap-editor-content h1,
+.file-card-body .tiptap-editor-content h2,
+.file-card-body .tiptap-editor-content h3 {
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+}
+.file-card-body .source-editor {
+  height: auto;
+  font-size: 12px;
+  padding: 12px 16px;
+  resize: none;
+  overflow: hidden;
+}
+
+/* ─── Source editor (textarea for plain text files) ─── */
+.source-editor {
+  width: 100%;
+  min-height: 120px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  border: none;
+  border-radius: var(--radius);
+  outline: none;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  padding: 20px 24px;
+  caret-color: var(--accent-cyan);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TIPTAP / PROSEMIRROR
+   ═══════════════════════════════════════════════════════════ */
+/* ═══ Highlight.js (code blocks — used by CodeView + Tiptap lowlight) ═══ */
+.hljs { color: var(--text-primary); }
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-name { color: var(--accent-cyan); }
+.hljs-string, .hljs-addition { color: var(--accent-mint); }
+.hljs-comment, .hljs-quote { color: var(--text-muted); font-style: italic; }
+.hljs-number, .hljs-literal { color: var(--accent-amber); }
+.hljs-type, .hljs-class .hljs-title, .hljs-title.class_ { color: var(--accent-amber); }
+.hljs-function .hljs-title, .hljs-title.function_ { color: var(--accent-cyan); }
+.hljs-attr, .hljs-attribute { color: var(--accent-violet); }
+.hljs-variable, .hljs-template-variable { color: var(--accent-rose); }
+.hljs-property { color: var(--text-primary); }
+.hljs-regexp { color: var(--accent-rose); }
+.hljs-symbol, .hljs-bullet { color: var(--accent-amber); }
+.hljs-meta { color: var(--text-muted); }
+.hljs-deletion { color: var(--accent-rose); }
+.hljs-section { color: var(--accent-cyan); font-weight: 600; }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 700; }
+.hljs-punctuation { color: var(--text-muted); }
+.hljs-params { color: var(--text-secondary); }
+
+/* ── Container ─────────────────────────────────────────── */
+.tiptap-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tiptap-editor-content {
+  flex: 1;
+  padding: 2rem 3rem;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-primary);
+  caret-color: var(--accent-cyan);
+  max-width: 72ch;
+  margin: 0 auto;
+}
+
+/* ── Typography ────────────────────────────────────────── */
+.tiptap-editor-content h1 {
+  font-size: 1.55em;
+  font-weight: 700;
+  margin: 1.5em 0 0.6em;
+  line-height: 1.25;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.tiptap-editor-content h2 {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin: 1.3em 0 0.5em;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+.tiptap-editor-content h3 {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 1.2em 0 0.4em;
+  color: var(--tx2);
+}
+.tiptap-editor-content h4 {
+  font-weight: 600;
+  margin: 1em 0 0.3em;
+  color: var(--tx2);
+  letter-spacing: 0.05em;
+  font-size: 0.85em;
+}
+.tiptap-editor-content p {
+  margin: 0 0 0.75em;
+}
+.tiptap-editor-content > *:first-child {
+  margin-top: 0;
+}
+
+/* ── Links ─────────────────────────────────────────────── */
+.tiptap-editor-content a {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.tiptap-editor-content a:hover {
+  color: var(--accent-mint);
+}
+
+/* ── Strong / Em / Mark ────────────────────────────────── */
+.tiptap-editor-content strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.tiptap-editor-content mark {
+  background: color-mix(in srgb, var(--accent-amber) 30%, transparent);
+  color: inherit;
+  padding: 1px 3px;
+  border-radius: 2px;
+}
+
+/* ── Inline Code ───────────────────────────────────────── */
+.tiptap-editor-content code {
+  font-family: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+  background: var(--hover);
+  border: 1px solid var(--brd);
+  padding: 1px 6px;
+  border-radius: 5px;
+  color: var(--ac2);
+}
+
+/* ── Code Blocks (lowlight syntax highlighting) ────────── */
+.tiptap-editor-content pre {
+  font-family: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--bg2);
+  border: 1px solid var(--brd);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 1em 0;
+  overflow-x: auto;
+  tab-size: 2;
+  color: var(--tx2);
+}
+.tiptap-editor-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--text-primary);
+}
+
+/* ── Blockquotes ───────────────────────────────────────── */
+.tiptap-editor-content blockquote {
+  border-left: 3px solid var(--accent-cyan);
+  margin: 1em 0;
+  padding: 0.4em 0 0.4em 1.2em;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+.tiptap-editor-content blockquote p {
+  margin: 0 0 0.4em;
+}
+
+/* ── Lists ─────────────────────────────────────────────── */
+.tiptap-editor-content ul,
+.tiptap-editor-content ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+.tiptap-editor-content li {
+  margin: 0.2em 0;
+}
+.tiptap-editor-content li p {
+  margin: 0;
+}
+
+/* ── Task Lists ────────────────────────────────────────── */
+.tiptap-editor-content ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.tiptap-editor-content ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.tiptap-editor-content ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-top: 0.25em;
+  cursor: pointer;
+}
+.tiptap-editor-content ul[data-type="taskList"] li > label input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--text-muted);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  transition: all 150ms ease;
+}
+.tiptap-editor-content ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+.tiptap-editor-content ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
+  content: "\2713";
+  position: absolute;
+  top: -1px;
+  left: 2px;
+  color: var(--bg-deep);
+  font-size: 11px;
+  font-weight: 700;
+}
+.tiptap-editor-content ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* ── Tables ────────────────────────────────────────────── */
+.tiptap-editor-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 14px;
+}
+.tiptap-editor-content th,
+.tiptap-editor-content td {
+  border: 1px solid var(--border-light);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  min-width: 80px;
+  position: relative;
+}
+.tiptap-editor-content th {
+  background: var(--bg-hover);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.tiptap-editor-content td {
+  background: var(--bg-card);
+}
+.tiptap-editor-content .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--accent-cyan) 12%, transparent);
+  pointer-events: none;
+}
+
+/* ── Images ────────────────────────────────────────────── */
+.tiptap-editor-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  margin: 1em 0;
+}
+
+/* ── Horizontal Rule ───────────────────────────────────── */
+.tiptap-editor-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+/* ── Placeholder ───────────────────────────────────────── */
+.tiptap-editor-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  opacity: 0.5;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* ── Selection ─────────────────────────────────────────── */
+.tiptap-editor-content ::selection {
+  background: color-mix(in srgb, var(--accent-cyan) 25%, transparent);
+}
+
+/* ── Gapcursor ─────────────────────────────────────────── */
+.ProseMirror-gapcursor::after {
+  border-top-color: var(--accent-cyan);
+}
+
+/* ── Bubble Menu (select text → inline formatting) ─────── */
+.tiptap-bubble-menu {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px var(--shadow-heavy);
+}
+
+/* ── Floating Menu (empty line → block type picker) ────── */
+.tiptap-floating-menu {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px var(--shadow-heavy);
+  opacity: 0.7;
+  transition: opacity 150ms ease;
+}
+.tiptap-floating-menu:hover {
+  opacity: 1;
+}
+
+/* Shared button styles for both menus */
+.tiptap-bubble-menu button,
+.tiptap-floating-menu button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: "JetBrains Mono", "SF Mono", monospace;
+  transition: all 100ms ease;
+  white-space: nowrap;
+}
+.tiptap-bubble-menu button:hover,
+.tiptap-floating-menu button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.tiptap-bubble-menu button.is-active,
+.tiptap-floating-menu button.is-active {
+  background: color-mix(in srgb, var(--accent-cyan) 15%, transparent);
+  color: var(--accent-cyan);
+}
+
+/* Menu separator (thin vertical line) */
+.tiptap-menu-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: var(--border);
+}
+
+/* ── Mermaid Blocks ────────────────────────────────────── */
+.mermaid-block {
+  margin: 1.5em 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.mermaid-render {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
+  background: var(--bg-deep);
+}
+.mermaid-render svg {
+  max-width: 100%;
+  height: auto;
+}
+.mermaid-error {
+  padding: 1rem;
+  background: color-mix(in srgb, var(--accent-rose) 10%, var(--bg-deep));
+  color: var(--accent-rose);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+.mermaid-error-label {
+  display: block;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5em;
+  font-size: 10px;
+}
+.mermaid-source {
+  border-top: 1px solid var(--border);
+}
+.mermaid-source summary {
+  padding: 6px 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: var(--bg-card);
+}
+.mermaid-source pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  font-size: 12px;
+}
