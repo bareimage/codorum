@@ -248,6 +248,20 @@ body {
 }
 
 
+/* ═══ File row hover ═══ */
+.file-row {
+  transition: background 80ms ease, box-shadow 80ms ease;
+}
+.file-row:hover {
+  background: color-mix(in srgb, var(--ac) 15%, var(--bg2)) !important;
+  box-shadow: inset 3px 0 0 var(--ac);
+  border-radius: 0 6px 6px 0;
+}
+.file-row:hover span {
+  color: var(--tx) !important;
+}
+
+/* ═══ File context menu ═══ */
 /* ═══ Drawer eject button ═══ */
 .drawer-section:hover .drawer-eject-btn {
   opacity: 1 !important;
@@ -255,6 +269,69 @@ body {
 .drawer-eject-btn:hover {
   color: var(--danger) !important;
   background: color-mix(in srgb, var(--danger) 12%, transparent) !important;
+}
+
+/* ═══ Sidebar + button ═══ */
+.sidebar-add-btn:hover {
+  background: var(--hover) !important;
+  color: var(--ac) !important;
+}
+
+/* ═══ Slash Menu ═══ */
+.slash-menu {
+  background: var(--card);
+  border: 1px solid var(--brd);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: 4px;
+  min-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.slash-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--tx);
+  transition: background 60ms;
+}
+.slash-menu-item.is-selected,
+.slash-menu-item:hover {
+  background: var(--hover);
+}
+.slash-menu-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--hover);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ac);
+  flex-shrink: 0;
+}
+.slash-menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.slash-menu-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+.slash-menu-desc {
+  font-size: 11px;
+  color: var(--tx3);
 }
 
 /* ═══ Drop Zone ═══ */
@@ -767,4 +844,14 @@ body {
   border: none;
   border-radius: 0;
   font-size: 12px;
+}
+
+/* ═══ CodeMirror in file cards ═══ */
+.code-editor-wrap .cm-editor {
+  height: auto;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.code-editor-wrap .cm-editor.cm-focused {
+  outline: none;
 }

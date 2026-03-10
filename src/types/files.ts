@@ -35,7 +35,7 @@ export interface DropBatchResult {
 export interface FileGroup {
   id: string;
   name: string;
-  sourcePath: string;
+  sourcePath?: string;
   collapsed: boolean;
   fileIds: string[];
 }

@@ -184,7 +184,7 @@ export default function App() {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
       const tag = (e.target as HTMLElement)?.tagName;
-      const isEditing = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      const isEditing = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable || !!(e.target as HTMLElement)?.closest?.(".cm-editor");
 
       // ⌘S — dispatch save event to active FileCard
       if (mod && e.key === "s") {

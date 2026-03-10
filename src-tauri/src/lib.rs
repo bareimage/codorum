@@ -3,8 +3,48 @@ mod watcher;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
+use std::time::SystemTime;
 use tauri::{Emitter, Manager, State};
 use watcher::{FileEvent, FileWatcherManager};
+
+const PLACEHOLDERS_JSON: &str = include_str!("../../src/data/devils-dictionary.json");
+
+fn random_placeholder() -> String {
+    let placeholders: Vec<String> =
+        serde_json::from_str(PLACEHOLDERS_JSON).unwrap_or_default();
+    if placeholders.is_empty() {
+        return String::new();
+    }
+    let idx = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|d| d.as_millis() as usize)
+        .unwrap_or(0)
+        % placeholders.len();
+    let raw = &placeholders[idx];
+
+    // Parse "Word, n.  definition text" into formatted markdown blockquote
+    // Format: > ***Word***, *n.* definition text
+    //         >
+    //         > — Ambrose Bierce, *The Devil's Dictionary*
+    if let Some(comma_pos) = raw.find(',') {
+        let word = &raw[..comma_pos];
+        let rest = raw[comma_pos + 1..].trim_start();
+        // Split part-of-speech from definition: "n.  definition" → ("n.", "definition")
+        if let Some(dot_pos) = rest.find('.') {
+            let pos = &rest[..=dot_pos];
+            let defn = rest[dot_pos + 1..].trim_start();
+            return format!(
+                "> ***{}***, *{}* {}\n>\n> \u{2014} Ambrose Bierce, *The Devil\u{2019}s Dictionary*",
+                word, pos, defn
+            );
+        }
+    }
+    // Fallback: wrap raw text in blockquote
+    format!(
+        "> {}\n>\n> \u{2014} Ambrose Bierce, *The Devil\u{2019}s Dictionary*",
+        raw
+    )
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WatchedFile {
@@ -100,7 +140,16 @@ fn create_file(dir: String, name: String, state: State<AppState>) -> Result<Watc
     if file_path.exists() {
         return Err("File already exists".to_string());
     }
-    std::fs::write(&file_path, "").map_err(|e| e.to_string())?;
+    let ext = file_path
+        .extension()
+        .map(|e| e.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
+    let initial = if ext == "md" || ext == "markdown" || ext == "mdx" {
+        random_placeholder()
+    } else {
+        "\n".to_string()
+    };
+    std::fs::write(&file_path, &initial).map_err(|e| e.to_string())?;
     let info = read_file_info(&file_path).ok_or("Failed to read created file")?;
     {
         let mut files = state.files.lock().expect("mutex poisoned");
