@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codorum — Interactive GUI Mockup</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+::selection { background: color-mix(in srgb, var(--ac) 25%, transparent); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--tx3) 30%, transparent); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--tx3) 50%, transparent); }
+button { font-family: inherit; cursor: pointer; }
+input { font-family: inherit; }
+
+/* ═══════════════════════════════════════════════════════════
+   THEMES
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg: #18181b; --bg2: #111113; --card: #1f1f23; --hover: #27272c;
+  --tx: #e4e4e7; --tx2: #a1a1aa; --tx3: #52525b;
+  --ac: #5bc4c4; --ac2: #a78bfa; --ac3: #6bcb8b;
+  --warn: #e0a644; --danger: #ef6b7a; --brd: #27272a;
+  --ring: rgba(91,196,196,0.15); --input-bg: #1c1c20;
+  --cmd-bg: #1c1c20; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
+  --deleted: #6b6b73;
+}
+[data-theme="paper"] {
+  --bg: #fafaf9; --bg2: #f0efed; --card: #ffffff; --hover: #f4f4f2;
+  --tx: #18181b; --tx2: #71717a; --tx3: #a1a1aa;
+  --ac: #2a7272; --ac2: #7c3aed; --ac3: #16a34a;
+  --warn: #ca8a04; --danger: #dc2626; --brd: #e4e4e7;
+  --ring: rgba(42,114,114,0.1); --input-bg: #ffffff;
+  --cmd-bg: #ffffff; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.12);
+  --deleted: #b0b0b8;
+}
+[data-theme="phosphor"] {
+  --bg: #0c110c; --bg2: #070a07; --card: #111711; --hover: #1a221a;
+  --tx: #c0e8c0; --tx2: #6aaa6a; --tx3: #3a6a3a;
+  --ac: #00c898; --ac2: #70cc90; --ac3: #00ee78;
+  --warn: #90cc40; --danger: #ee5530; --brd: #1a261a;
+  --ring: rgba(0,200,152,0.12); --input-bg: #0e140e;
+  --cmd-bg: #0e140e; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.6);
+  --deleted: #3a5a3a;
+}
+[data-theme="ember"] {
+  --bg: #1c1614; --bg2: #12100e; --card: #221c18; --hover: #2c2420;
+  --tx: #e8dace; --tx2: #a09080; --tx3: #6a5a4a;
+  --ac: #ee7733; --ac2: #eeaa55; --ac3: #77bb55;
+  --warn: #eebb44; --danger: #ee4433; --brd: #302420;
+  --ring: rgba(238,119,51,0.12); --input-bg: #1a1412;
+  --cmd-bg: #1a1412; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
+  --deleted: #6a5548;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════════════════ */
+#app {
+  display: flex; flex-direction: column; height: 100vh;
+  background: var(--bg); color: var(--tx);
+  transition: background 200ms, color 200ms;
+}
+
+/* ─── Toolbar ─── */
+.toolbar {
+  height: 44px; display: flex; align-items: center;
+  padding: 0 16px; background: var(--bg2);
+  border-bottom: 1px solid var(--brd); flex-shrink: 0;
+  transition: background 200ms;
+  user-select: none;
+}
+.toolbar-spacer { width: 72px; }
+.toolbar-logo {
+  display: flex; align-items: center; gap: 6px;
+}
+.toolbar-logo svg { flex-shrink: 0; }
+.toolbar-brand {
+  font-size: 14px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--tx3); font-family: monospace;
+}
+.toolbar-count { font-size: 12px; color: var(--tx3); margin-left: 12px; opacity: 0.5; }
+.toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.cmd-btn {
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 12px; background: var(--hover);
+  border: 1px solid var(--brd); border-radius: 8px;
+  color: var(--tx3); font-size: 13px;
+}
+.cmd-btn:hover { border-color: var(--ac); }
+.theme-btn {
+  height: 30px; padding: 0 12px; background: transparent;
+  border: 1px solid var(--brd); border-radius: 8px;
+  font-size: 12px; font-weight: 500; color: var(--tx2);
+}
+.theme-btn:hover { border-color: var(--ac); color: var(--ac); }
+.kbd {
+  font-size: 11px; font-family: monospace; padding: 1px 5px;
+  border-radius: 4px; background: color-mix(in srgb, var(--tx3) 15%, transparent);
+  color: var(--tx3);
+}
+
+/* ─── Main area ─── */
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* ─── Sidebar ─── */
+.sidebar {
+  width: 240px; flex-shrink: 0; background: var(--bg2);
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--brd); overflow: hidden;
+  transition: background 200ms;
+}
+.sidebar-search {
+  padding: 12px 12px 6px;
+}
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; background: var(--input-bg);
+  border: 1px solid var(--brd); border-radius: 8px;
+  transition: border-color 150ms;
+}
+.search-box:focus-within { border-color: var(--ac); }
+.search-box svg { color: var(--tx3); flex-shrink: 0; }
+.search-box input {
+  flex: 1; font-size: 13px; background: transparent;
+  color: var(--tx); border: none; outline: none;
+}
+.search-box input::placeholder { color: var(--tx3); opacity: 0.6; }
+
+/* Sort bar */
+.sort-bar {
+  display: flex; gap: 1px; padding: 2px 12px 4px; align-items: center;
+}
+.sort-btn {
+  font-size: 12px; padding: 4px 10px; border-radius: 6px;
+  border: none; font-weight: 400; background: transparent;
+  color: var(--tx3); transition: all 80ms;
+}
+.sort-btn.active { font-weight: 600; background: var(--hover); color: var(--ac); }
+.sort-btn:hover { background: var(--hover); }
+.add-tab-btn {
+  margin-left: auto; width: 22px; height: 22px; border-radius: 6px;
+  border: none; background: transparent; color: var(--tx3);
+  font-size: 16px; font-weight: 300; display: flex; align-items: center;
+  justify-content: center; transition: all 80ms;
+}
+.add-tab-btn:hover { background: var(--hover); color: var(--ac); }
+
+/* Search mode toggle */
+.search-mode {
+  display: flex; gap: 1px; padding: 0 12px 6px;
+}
+.mode-btn {
+  font-size: 11px; padding: 3px 8px; border-radius: 5px;
+  border: none; font-weight: 400; background: transparent;
+  color: var(--tx3); transition: all 80ms;
+}
+.mode-btn.active { font-weight: 600; background: var(--hover); color: var(--ac); }
+
+.sidebar-divider { height: 1px; background: var(--brd); margin: 0 12px; }
+
+/* Drawers */
+.drawers { flex: 1; overflow-y: auto; padding-top: 4px; }
+.drawer-header {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 8px 12px; background: none;
+  border: none; text-align: left;
+}
+.drawer-header:hover { background: var(--hover); }
+.chevron {
+  color: var(--tx3); font-size: 8px; transition: transform 200ms;
+  width: 14px; text-align: center;
+}
+.chevron.open { transform: rotate(90deg); }
+.drawer-title {
+  font-size: 13px; font-weight: 600; color: var(--tx3); transition: color 120ms;
+}
+.drawer-header:hover .drawer-title,
+.drawer.open > .drawer-header .drawer-title { color: var(--tx2); }
+.drawer-meta { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.drawer-count { font-size: 11px; color: var(--tx3); min-width: 18px; text-align: right; }
+.drawer-eject {
+  width: 18px; height: 18px; border-radius: 4px; border: none;
+  background: none; color: var(--tx3); display: flex; align-items: center;
+  justify-content: center; opacity: 0; transition: opacity 120ms, color 100ms;
+  font-size: 10px;
+}
+.drawer:hover .drawer-eject { opacity: 1; }
+.drawer-eject:hover { color: var(--danger) !important; background: color-mix(in srgb, var(--danger) 12%, transparent); }
+
+.drawer-items {
+  overflow: hidden; transition: max-height 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.drawer.open .drawer-items { max-height: 900px; }
+.drawer:not(.open) .drawer-items { max-height: 0; }
+
+/* File rows */
+.file-row {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 5px 12px 5px 32px;
+  background: none; border: none; text-align: left;
+  transition: all 60ms;
+}
+.file-row:hover {
+  background: color-mix(in srgb, var(--ac) 15%, var(--bg2)) !important;
+  box-shadow: inset 3px 0 0 var(--ac);
+  border-radius: 0 6px 6px 0;
+}
+.file-row:hover .file-name { color: var(--tx) !important; }
+.file-row.active {
+  background: var(--ring); border-radius: 6px;
+  width: calc(100% - 12px); margin: 1px 6px;
+}
+.file-row.selected {
+  background: color-mix(in srgb, var(--warn) 15%, transparent);
+  border-radius: 6px; width: calc(100% - 12px); margin: 1px 6px;
+}
+.ext-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.file-name {
+  font-size: 13px; color: var(--tx2); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; flex: 1;
+}
+.file-row.active .file-name { color: var(--tx); font-weight: 500; }
+.file-ext { color: var(--tx3); font-weight: 400; }
+.file-name.deleted { color: var(--deleted); text-decoration: line-through; }
+.file-name.deleted .file-ext { color: var(--deleted); }
+
+.diff-badge {
+  display: inline-flex; gap: 3px; font-family: monospace;
+  font-size: 10px; font-weight: 600; flex-shrink: 0;
+}
+.diff-added { color: var(--ac3); }
+.diff-removed { color: var(--danger); }
+
+/* Status bar */
+.status-bar {
+  padding: 8px 12px; border-top: 1px solid var(--brd);
+  font-size: 10px; color: var(--tx3); opacity: 0.4;
+}
+
+/* ─── Content Pane ─── */
+.content {
+  flex: 1; overflow-y: auto; background: var(--bg);
+  padding: 28px 36px; transition: background 200ms;
+}
+.content-header {
+  display: flex; align-items: baseline; gap: 8px; margin-bottom: 24px;
+}
+.content-title { font-size: 20px; font-weight: 700; letter-spacing: -0.015em; }
+.content-count { font-size: 12px; color: var(--tx3); }
+
+.section-label {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.section-label span:first-child {
+  font-size: 12px; font-weight: 600; color: var(--tx3); flex-shrink: 0;
+}
+.section-line { flex: 1; height: 1px; background: var(--brd); opacity: 0.5; }
+
+/* File Cards */
+.file-card {
+  background: var(--card); border-radius: 12px; border: 1px solid var(--brd);
+  margin-bottom: 12px; overflow: hidden; transition: all 150ms; cursor: pointer;
+}
+.file-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.file-card.active {
+  border-color: color-mix(in srgb, var(--ac) 25%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac) 19%, transparent), 0 2px 8px var(--ring);
+}
+.card-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; user-select: none; border-bottom: 1px solid var(--brd);
+}
+.card-header.collapsed { border-bottom: none; }
+.card-chevron {
+  flex-shrink: 0; color: var(--tx3); background: none; border: none;
+  font-size: 8px; padding: 0; transition: transform 200ms;
+}
+.card-chevron.open { transform: rotate(90deg); }
+.card-ext-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.card-name {
+  font-size: 14px; font-weight: 600; color: var(--tx); letter-spacing: -0.01em;
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card-name .ext { color: var(--tx3); font-weight: 400; }
+.card-meta { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.card-time { font-size: 12px; color: var(--tx3); flex-shrink: 0; }
+.card-badge {
+  font-size: 11px; flex-shrink: 0; padding: 2px 8px;
+  border-radius: 4px; background: var(--hover);
+}
+.badge-deleted { color: var(--danger); }
+.badge-modified { color: var(--ac); }
+.pin-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex-shrink: 0; }
+
+.card-subtitle {
+  padding: 0 20px 12px 48px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic; font-size: 13px; color: var(--tx3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card-body {
+  padding: 20px 24px 24px 48px; overflow: hidden;
+  animation: slideUp 150ms ease;
+}
+.card-body.markdown {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px; line-height: 1.8; color: var(--tx2);
+}
+.card-body.markdown h1, .card-body.markdown h2, .card-body.markdown h3 {
+  font-family: -apple-system, system-ui, sans-serif;
+  color: var(--tx); margin: 0.8em 0 0.4em;
+}
+.card-body.markdown h1 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.02em; }
+.card-body.markdown h2 { font-size: 1.1em; font-weight: 700; }
+.card-body.markdown p { margin: 0 0 0.75em; }
+.card-body.markdown code {
+  font-family: monospace; font-size: 0.85em; font-weight: 500;
+  background: var(--hover); border: 1px solid var(--brd);
+  padding: 1px 6px; border-radius: 5px; color: var(--ac2);
+}
+.card-body.markdown blockquote {
+  border-left: 3px solid var(--ac); margin: 1em 0;
+  padding: 0.4em 0 0.4em 1.2em; color: var(--tx2); font-style: italic;
+}
+.card-body.markdown pre {
+  font-family: monospace; font-size: 13px; line-height: 1.6;
+  background: var(--bg2); border: 1px solid var(--brd);
+  border-radius: 10px; padding: 16px 20px; margin: 1em 0;
+  overflow-x: auto; color: var(--tx2);
+}
+.card-body.markdown pre code {
+  background: none; border: none; padding: 0; color: var(--tx);
+}
+.card-body.markdown ul { padding-left: 1.5em; margin: 0.5em 0; }
+.card-body.markdown li { margin: 0.2em 0; }
+.card-body.code {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px; line-height: 1.6; color: var(--tx);
+}
+.card-body.code .kw { color: var(--ac); }
+.card-body.code .str { color: var(--ac3); }
+.card-body.code .cmt { color: var(--tx3); font-style: italic; }
+.card-body.code .num { color: var(--warn); }
+.card-body.code .fn { color: var(--ac); }
+.card-body.code .type { color: var(--warn); }
+.card-body.code .attr { color: var(--ac2); }
+
+.resize-handle {
+  height: 8px; display: flex; align-items: center; justify-content: center;
+  cursor: ns-resize; opacity: 0; transition: opacity 150ms;
+}
+.file-card:hover .resize-handle { opacity: 1; }
+.resize-handle::after {
+  content: ''; width: 40px; height: 2px; border-radius: 1px;
+  background: var(--brd);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 120px 20px; color: var(--tx3);
+  font-size: 13px; opacity: 0.5;
+}
+
+/* ─── Command Palette ─── */
+.cmd-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 80px; background: rgba(0,0,0,0.18);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  animation: fadeIn 120ms ease;
+}
+.cmd-overlay.hidden { display: none; }
+.cmd-panel {
+  width: 560px; border-radius: 12px; overflow: hidden;
+  background: var(--cmd-bg); box-shadow: var(--cmd-shadow);
+  border: 1px solid var(--brd);
+  animation: cmdIn 120ms cubic-bezier(.34,1.56,.64,1);
+}
+.cmd-search {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--brd);
+}
+.cmd-search svg { color: var(--tx3); flex-shrink: 0; }
+.cmd-search input {
+  flex: 1; font-size: 15px; background: transparent;
+  color: var(--tx); border: none; outline: none;
+}
+.cmd-search input::placeholder { color: var(--tx3); opacity: 0.6; }
+.cmd-items { max-height: 380px; overflow-y: auto; padding: 4px 6px; }
+.cmd-sep {
+  padding: 12px 10px 4px; font-size: 12px; font-weight: 600; color: var(--tx3);
+}
+.cmd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  transition: background 50ms; border: none; width: 100%;
+  background: transparent; text-align: left; font-family: inherit;
+}
+.cmd-item:hover, .cmd-item.selected { background: var(--hover); }
+.cmd-icon { color: var(--ac); flex-shrink: 0; font-size: 14px; }
+.cmd-label { flex: 1; font-size: 14px; color: var(--tx); font-weight: 500; }
+.cmd-sub { font-size: 12px; color: var(--tx3); }
+.cmd-footer {
+  display: flex; gap: 16px; padding: 8px 16px;
+  border-top: 1px solid var(--brd);
+}
+.cmd-hint {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--tx3);
+}
+
+/* ─── Eject Bar ─── */
+.eject-bar {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%); z-index: 400;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px; background: var(--card);
+  border: 1px solid var(--brd); border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  backdrop-filter: blur(12px);
+  animation: barIn 150ms cubic-bezier(.34,1.56,.64,1);
+}
+.eject-bar.hidden { display: none; }
+.eject-bar .sparkle { color: var(--warn); }
+.eject-bar .label { font-size: 13px; color: var(--tx); font-weight: 500; }
+.eject-bar .sub { font-size: 12px; color: var(--tx3); }
+.eject-bar .divider { width: 1px; height: 20px; background: var(--brd); margin: 0 4px; }
+.eject-btn {
+  font-size: 12px; font-weight: 600; padding: 5px 14px;
+  border-radius: 8px; border: none;
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  color: var(--danger); transition: all 100ms;
+}
+.eject-btn:hover { background: color-mix(in srgb, var(--danger) 25%, transparent); }
+.cancel-btn {
+  font-size: 12px; padding: 5px 14px; border-radius: 8px;
+  border: 1px solid var(--brd); background: transparent;
+  color: var(--tx3); transition: all 100ms;
+}
+.cancel-btn:hover { border-color: var(--tx3); color: var(--tx2); }
+
+/* ─── Toasts ─── */
+.toasts {
+  position: fixed; bottom: 32px; right: 16px;
+  display: flex; flex-direction: column-reverse; gap: 6px;
+  z-index: 400; pointer-events: none;
+}
+.toast {
+  font-family: monospace; font-size: 11px; padding: 8px 14px;
+  border-radius: 8px; display: flex; align-items: center; gap: 8px;
+  background: var(--hover); border: 1px solid var(--brd);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  color: var(--tx2); pointer-events: auto;
+  animation: toastIn 200ms cubic-bezier(.34,1.56,.64,1);
+}
+.toast.exiting { animation: toastOut 140ms ease-in forwards; }
+.toast-text { font-weight: 600; }
+.toast-text.cyan { color: var(--ac); }
+.toast-text.amber { color: var(--warn); }
+.toast-text.rose { color: var(--danger); }
+
+/* ─── Drop zone ─── */
+.drop-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.3); animation: fadeIn 150ms ease;
+}
+.drop-overlay.hidden { display: none; }
+.drop-indicator {
+  padding: 40px 60px; border-radius: 16px;
+  border: 2px dashed var(--brd); background: var(--hover);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.4);
+  color: var(--ac); font-family: monospace; font-size: 14px;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes barIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px) scale(0.96); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+@keyframes cmdIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes eyeBlink {
+  0%, 42%, 50%, 100% { transform: scaleY(0); }
+  44%, 48% { transform: scaleY(1); }
+}
+@keyframes eyeLook {
+  0%, 40%, 50%, 100% { transform: translateX(0); }
+  42%, 48% { transform: translateX(2px); }
+}
+.eye-lid { transform-origin: center center; animation: eyeBlink 6s ease-in-out infinite; }
+.eye-iris { animation: eyeLook 6s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ═══ TOOLBAR ═══ -->
+  <div class="toolbar">
+    <div class="toolbar-spacer"></div>
+    <div class="toolbar-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L2 22h20L12 2z" stroke="var(--tx3)" stroke-width="1.5" fill="none"/>
+        <path d="M7.5 15C7.5 15 9 12 12 12C15 12 16.5 15 16.5 15C16.5 15 15 18 12 18C9 18 7.5 15 7.5 15Z" stroke="var(--tx3)" stroke-width="1.2" fill="none"/>
+        <circle class="eye-iris" cx="12" cy="15" r="1.5" fill="var(--ac)"/>
+        <rect class="eye-lid" x="7" y="11.5" width="10" height="7" rx="5" fill="var(--bg2)"/>
+      </svg>
+      <span class="toolbar-brand">CODORUM</span>
+    </div>
+    <span class="toolbar-count" id="fileCount">7 files</span>
+    <div class="toolbar-right">
+      <button class="cmd-btn" onclick="toggleCmd()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a1 1 0 011 1v2.268A2 2 0 0110.268 3H13a1 1 0 110 2h-2.732A2 2 0 019 6.268V8a1 1 0 11-2 0V6.268A2 2 0 015.732 5H3a1 1 0 010-2h2.268A2 2 0 017 4.268V2a1 1 0 011-1z"/></svg>
+        <span class="kbd">⌘K</span>
+      </button>
+      <button class="theme-btn" id="themeBtn" onclick="cycleTheme()">n01z</button>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <!-- ═══ SIDEBAR ═══ -->
+    <div class="sidebar">
+      <div class="sidebar-search">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
+          <input type="text" id="searchInput" placeholder="Find files..." oninput="filterFiles()">
+        </div>
+      </div>
+      <div class="sort-bar">
+        <button class="sort-btn active" data-sort="name" onclick="setSort(this)">Name</button>
+        <button class="sort-btn" data-sort="modified" onclick="setSort(this)">Modified</button>
+        <button class="sort-btn" data-sort="changes" onclick="setSort(this)">Changes</button>
+        <button class="add-tab-btn" onclick="addToast('Untitled', 'tab created', 'cyan')" title="Create tab">+</button>
+      </div>
+      <div class="search-mode">
+        <button class="mode-btn active" data-mode="filename" onclick="setSearchMode(this)">Name</button>
+        <button class="mode-btn" data-mode="content" onclick="setSearchMode(this)">Content</button>
+      </div>
+      <div class="sidebar-divider"></div>
+
+      <div class="drawers" id="drawers"></div>
+
+      <div class="status-bar" id="statusBar">7 files watched</div>
+    </div>
+
+    <!-- ═══ CONTENT ═══ -->
+    <div class="content" id="contentPane"></div>
+  </div>
+</div>
+
+<!-- ═══ COMMAND PALETTE ═══ -->
+<div class="cmd-overlay hidden" id="cmdOverlay" onclick="if(event.target===this)toggleCmd()">
+  <div class="cmd-panel">
+    <div class="cmd-search">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
+      <input type="text" id="cmdInput" placeholder="Type a command..." onkeydown="cmdKeydown(event)" oninput="filterCmds()">
+    </div>
+    <div class="cmd-items" id="cmdItems"></div>
+    <div class="cmd-footer">
+      <span class="cmd-hint"><span class="kbd">↑↓</span> Navigate</span>
+      <span class="cmd-hint"><span class="kbd">⏎</span> Open</span>
+      <span class="cmd-hint"><span class="kbd">esc</span> Close</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EJECT BAR ═══ -->
+<div class="eject-bar hidden" id="ejectBar">
+  <span class="sparkle">✦</span>
+  <span class="label" id="ejectLabel">0 files</span>
+  <span class="sub">selected</span>
+  <div class="divider"></div>
+  <button class="eject-btn" onclick="ejectSelected()">Eject</button>
+  <button class="cancel-btn" onclick="clearSelection()">Cancel</button>
+</div>
+
+<!-- ═══ TOASTS ═══ -->
+<div class="toasts" id="toasts"></div>
+
+<!-- ═══ DROP ZONE ═══ -->
+<div class="drop-overlay hidden" id="dropOverlay">
+  <div class="drop-indicator">drop files here</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const THEMES = ['n01z', 'paper', 'phosphor', 'ember'];
+let currentTheme = 0;
+
+const EXT_COLORS = {
+  md: 'var(--ac)', markdown: 'var(--ac)', mdx: 'var(--ac)',
+  ts: 'var(--ac2)', tsx: 'var(--ac2)', rs: 'var(--danger)',
+  css: 'var(--ac3)', scss: 'var(--ac3)', js: 'var(--warn)',
+  jsx: 'var(--warn)', py: 'var(--ac3)', go: 'var(--ac)',
+  html: 'var(--danger)', json: 'var(--warn)', yaml: 'var(--ac3)',
+  yml: 'var(--ac3)', toml: 'var(--ac3)',
+};
+
+const MOCK_FILES = [
+  { id: 'f1', name: 'README', ext: 'md', pinned: true, modified: Date.now()/1000 - 120,
+    added: 12, removed: 3, deleted: false,
+    content: `<h1>Codorum</h1>
+<p>A desktop file watcher that monitors text and markdown files in real-time with diff visualization.</p>
+<blockquote><p>Transparency for your codebase</p></blockquote>
+<h2>Quick Start</h2>
+<p>Install dependencies and run the dev server:</p>
+<pre><code>npm install
+npm run tauri dev</code></pre>
+<ul><li>Live file monitoring with drag-and-drop</li>
+<li>Real-time diff visualization</li>
+<li>WYSIWYG Markdown editor</li>
+<li>4 built-in themes</li></ul>` },
+  { id: 'f2', name: 'App', ext: 'tsx', group: 'src', modified: Date.now()/1000 - 300,
+    added: 28, removed: 5, deleted: false,
+    content: `<span class="cmt">// Root application component</span>
+<span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">"react"</span>;
+<span class="kw">import</span> { invoke } <span class="kw">from</span> <span class="str">"@tauri-apps/api/core"</span>;
+<span class="kw">import</span> { Toolbar } <span class="kw">from</span> <span class="str">"./components/Toolbar"</span>;
+<span class="kw">import</span> { Sidebar } <span class="kw">from</span> <span class="str">"./components/Sidebar"</span>;
+
+<span class="kw">export default function</span> <span class="fn">App</span>() {
+  <span class="kw">const</span> { addFiles } = <span class="fn">useAppStore</span>();
+  <span class="kw">const</span> theme = <span class="fn">useAppStore</span>(s => s.theme);
+
+  <span class="kw">return</span> (
+    &lt;<span class="type">div</span> <span class="attr">className</span>=<span class="str">"flex flex-col h-screen"</span>&gt;
+      &lt;<span class="type">Toolbar</span> /&gt;
+      &lt;<span class="type">Sidebar</span> /&gt;
+      &lt;<span class="type">ContentPane</span> /&gt;
+    &lt;/<span class="type">div</span>&gt;
+  );
+}` },
+  { id: 'f3', name: 'main', ext: 'tsx', group: 'src', modified: Date.now()/1000 - 3600,
+    added: 0, removed: 0, deleted: false,
+    content: `<span class="kw">import</span> React <span class="kw">from</span> <span class="str">"react"</span>;
+<span class="kw">import</span> ReactDOM <span class="kw">from</span> <span class="str">"react-dom/client"</span>;
+<span class="kw">import</span> App <span class="kw">from</span> <span class="str">"./App"</span>;
+<span class="kw">import</span> <span class="str">"./styles/app.css"</span>;
+
+ReactDOM.<span class="fn">createRoot</span>(
+  document.<span class="fn">getElementById</span>(<span class="str">"root"</span>)!
+).<span class="fn">render</span>(
+  &lt;<span class="type">React.StrictMode</span>&gt;
+    &lt;<span class="type">App</span> /&gt;
+  &lt;/<span class="type">React.StrictMode</span>&gt;
+);` },
+  { id: 'f4', name: 'app', ext: 'css', group: 'src', modified: Date.now()/1000 - 7200,
+    added: 0, removed: 0, deleted: false,
+    content: `<span class="cmt">/* ═══ THEMES ═══ */</span>
+<span class="fn">:root</span> {
+  <span class="attr">--bg</span>: <span class="str">#18181b</span>;
+  <span class="attr">--bg2</span>: <span class="str">#111113</span>;
+  <span class="attr">--card</span>: <span class="str">#1f1f23</span>;
+  <span class="attr">--ac</span>: <span class="str">#5bc4c4</span>;
+  <span class="attr">--ac2</span>: <span class="str">#a78bfa</span>;
+}
+
+<span class="fn">.file-card</span> {
+  <span class="attr">background</span>: <span class="fn">var</span>(<span class="attr">--card</span>);
+  <span class="attr">border-radius</span>: <span class="num">12px</span>;
+  <span class="attr">border</span>: <span class="num">1px</span> solid <span class="fn">var</span>(<span class="attr">--brd</span>);
+  <span class="attr">transition</span>: all <span class="num">150ms</span> ease;
+}` },
+  { id: 'f5', name: 'Sidebar', ext: 'tsx', group: 'src', modified: Date.now()/1000 - 600,
+    added: 8, removed: 0, deleted: false,
+    content: `<span class="kw">import</span> { useMemo, useState } <span class="kw">from</span> <span class="str">"react"</span>;
+<span class="kw">import</span> { useAppStore } <span class="kw">from</span> <span class="str">"../stores/app-store"</span>;
+
+<span class="kw">export function</span> <span class="fn">Sidebar</span>() {
+  <span class="kw">const</span> { files, groups } = <span class="fn">useAppStore</span>();
+  <span class="kw">const</span> [search, setSearch] = <span class="fn">useState</span>(<span class="str">""</span>);
+
+  <span class="kw">return</span> (
+    &lt;<span class="type">div</span> <span class="attr">style</span>={{ width: <span class="num">240</span> }}&gt;
+      &lt;<span class="type">SearchBox</span> /&gt;
+      &lt;<span class="type">DrawerSection</span> /&gt;
+    &lt;/<span class="type">div</span>&gt;
+  );
+}` },
+  { id: 'f6', name: 'notes', ext: 'md', modified: Date.now()/1000 - 86400,
+    added: 0, removed: 0, deleted: false,
+    content: `<h2>Development Notes</h2>
+<p>Some quick notes about the architecture and design decisions made during development.</p>
+<h3>File Watching</h3>
+<p>Using the <code>notify</code> crate with FSEvents backend on macOS for native performance.</p>
+<p>Events are debounced at 200ms to prevent rapid-fire updates during batch saves.</p>` },
+  { id: 'f7', name: 'config', ext: 'json', modified: Date.now()/1000 - 172800,
+    added: 0, removed: 0, deleted: true,
+    content: `{
+  <span class="attr">"appName"</span>: <span class="str">"Codorum"</span>,
+  <span class="attr">"version"</span>: <span class="str">"0.1.0"</span>,
+  <span class="attr">"window"</span>: {
+    <span class="attr">"width"</span>: <span class="num">1200</span>,
+    <span class="attr">"height"</span>: <span class="num">800</span>
+  }
+}` },
+];
+
+let activeFileId = 'f1';
+let selectedIds = new Set();
+let collapsedCards = new Set(['f3', 'f4', 'f7']);
+let searchQuery = '';
+let cmdSelectedIdx = 0;
+
+const GROUPS = [
+  { id: 'pinned', name: 'Pinned', fileIds: ['f1'] },
+  { id: 'src', name: 'src', fileIds: ['f2', 'f3', 'f4', 'f5'], ejectable: true },
+  { id: 'loose', name: 'Loose', fileIds: ['f6', 'f7'] },
+];
+let openDrawers = new Set(['pinned', 'src', 'loose']);
+
+const COMMANDS = [
+  { type: 'sep', label: 'Actions' },
+  { type: 'cmd', id: 'add-folder', label: 'Add Folder', icon: '📁' },
+  { type: 'cmd', id: 'add-file', label: 'Add Files', icon: '📄' },
+  { type: 'cmd', id: 'create-tab', label: 'Create Tab', icon: '＋' },
+  { type: 'cmd', id: 'new-src', label: 'New File in src', icon: '＋' },
+  { type: 'sep', label: 'Appearance' },
+  { type: 'cmd', id: 'theme', label: 'Cycle Theme', icon: '🎨', kbd: '⌘T', sub: '' },
+];
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+
+function timeAgo(ts) {
+  const diff = Date.now() / 1000 - ts;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+function extColor(ext) {
+  return EXT_COLORS[ext] || 'var(--tx3)';
+}
+
+function detectMode(ext) {
+  if (['md','markdown','mdx'].includes(ext)) return 'markdown';
+  if (['ts','tsx','js','jsx','rs','py','go','css','scss','json','toml','yaml','yml'].includes(ext)) return 'code';
+  return 'text';
+}
+
+function renderDiffBadge(added, removed) {
+  if (!added && !removed) return '';
+  let html = '<span class="diff-badge">';
+  if (added > 0) html += `<span class="diff-added">+${added}</span>`;
+  if (removed > 0) html += `<span class="diff-removed">−${removed}</span>`;
+  html += '</span>';
+  return html;
+}
+
+function renderSidebar() {
+  const q = searchQuery.toLowerCase();
+  let html = '';
+
+  for (const group of GROUPS) {
+    const files = group.fileIds
+      .map(id => MOCK_FILES.find(f => f.id === id))
+      .filter(f => f && (!q || f.name.toLowerCase().includes(q)));
+
+    if (q && files.length === 0) continue;
+    const isOpen = openDrawers.has(group.id);
+    const totalAdded = files.reduce((s, f) => s + (f.added || 0), 0);
+    const totalRemoved = files.reduce((s, f) => s + (f.removed || 0), 0);
+
+    html += `<div class="drawer ${isOpen ? 'open' : ''}">`;
+    html += `<button class="drawer-header" onclick="toggleDrawer('${group.id}')">`;
+    html += `<span class="chevron ${isOpen ? 'open' : ''}">▶</span>`;
+    html += `<span class="drawer-title">${group.name}</span>`;
+    html += `<span class="drawer-meta">`;
+    html += renderDiffBadge(totalAdded, totalRemoved);
+    html += `<span class="drawer-count">${files.length}</span>`;
+    if (group.ejectable) {
+      html += `<button class="drawer-eject" onclick="event.stopPropagation();ejectGroup('${group.id}')" title="Eject ${group.name}">✕</button>`;
+    }
+    html += `</span></button>`;
+    html += `<div class="drawer-items">`;
+
+    for (const file of files) {
+      const isActive = activeFileId === file.id;
+      const isSelected = selectedIds.has(file.id);
+      let cls = 'file-row';
+      if (isActive) cls += ' active';
+      if (isSelected) cls += ' selected';
+
+      html += `<button class="${cls}" onclick="handleFileClick('${file.id}', event)" data-file-id="${file.id}">`;
+      html += `<span class="ext-dot" style="background:${extColor(file.ext)}"></span>`;
+      html += `<span class="file-name ${file.deleted ? 'deleted' : ''}">`;
+      html += `${file.name}<span class="file-ext">.${file.ext}</span>`;
+      html += `</span>`;
+      html += renderDiffBadge(file.added, file.removed);
+      html += `</button>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  if (MOCK_FILES.length === 0) {
+    html = '<div style="padding:32px 16px;text-align:center"><div style="color:var(--tx3);opacity:0.25;font-size:10px">drop files or folders</div></div>';
+  }
+
+  document.getElementById('drawers').innerHTML = html;
+}
+
+function renderContent() {
+  const q = searchQuery.toLowerCase();
+  let html = '';
+
+  html += `<div class="content-header">`;
+  html += `<span class="content-title">Files</span>`;
+  const visibleCount = MOCK_FILES.filter(f => !q || f.name.toLowerCase().includes(q)).length;
+  html += `<span class="content-count">${visibleCount} visible</span>`;
+  html += `</div>`;
+
+  for (const group of GROUPS) {
+    const files = group.fileIds
+      .map(id => MOCK_FILES.find(f => f.id === id))
+      .filter(f => f && (!q || f.name.toLowerCase().includes(q)));
+
+    if (files.length === 0) continue;
+    if (!openDrawers.has(group.id) && !q) continue;
+
+    html += `<div style="margin-bottom:32px">`;
+    html += `<div class="section-label"><span>${group.name}</span><span class="section-line"></span></div>`;
+
+    for (const file of files) {
+      const isActive = activeFileId === file.id;
+      const isCollapsed = collapsedCards.has(file.id);
+      const mode = detectMode(file.ext);
+
+      html += `<div class="file-card ${isActive ? 'active' : ''}" id="card-${file.id}" onclick="activateFile('${file.id}')">`;
+
+      // Header
+      html += `<div class="card-header ${isCollapsed ? 'collapsed' : ''}">`;
+      html += `<button class="card-chevron ${isCollapsed ? '' : 'open'}" onclick="event.stopPropagation();toggleCollapse('${file.id}')">▶</button>`;
+      html += `<span class="card-ext-dot" style="background:${extColor(file.ext)}"></span>`;
+      html += `<span class="card-name" ${file.deleted ? 'style="color:var(--deleted);text-decoration:line-through"' : ''}>`;
+      html += `${file.name}<span class="ext">.${file.ext}</span></span>`;
+      html += `<div class="card-meta">`;
+      html += `<span class="card-time">${timeAgo(file.modified)}</span>`;
+      html += renderDiffBadge(file.added, file.removed);
+      if (file.pinned) html += `<span class="pin-dot"></span>`;
+      if (file.deleted) html += `<span class="card-badge badge-deleted">deleted</span>`;
+      html += `</div></div>`;
+
+      // Collapsed subtitle
+      if (isCollapsed) {
+        const subtitleMatch = file.content.match(/<h[12][^>]*>([^<]+)<\/h/);
+        if (subtitleMatch) {
+          html += `<div class="card-subtitle">${subtitleMatch[1]}</div>`;
+        }
+      }
+
+      // Body
+      if (!isCollapsed) {
+        html += `<div class="card-body ${mode}" onclick="event.stopPropagation()">`;
+        html += file.content;
+        html += `</div>`;
+        html += `<div class="resize-handle"></div>`;
+      }
+
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+  }
+
+  if (visibleCount === 0) {
+    html += `<div class="empty-state">${searchQuery ? 'no matches' : 'drop files or folders'}</div>`;
+  }
+
+  html += '<div style="height:80px"></div>';
+  document.getElementById('contentPane').innerHTML = html;
+}
+
+function renderCmds() {
+  const q = document.getElementById('cmdInput')?.value?.toLowerCase() || '';
+  COMMANDS.find(c => c.id === 'theme' && c.type === 'cmd').sub = THEMES[currentTheme];
+
+  const filtered = COMMANDS.filter(c =>
+    c.type === 'sep' || c.label.toLowerCase().includes(q)
+  );
+
+  let html = '';
+  let selIdx = -1;
+
+  for (const item of filtered) {
+    if (item.type === 'sep') {
+      html += `<div class="cmd-sep">${item.label}</div>`;
+      continue;
+    }
+    selIdx++;
+    const sel = selIdx === cmdSelectedIdx ? ' selected' : '';
+    html += `<button class="cmd-item${sel}" data-cmd="${item.id}" onclick="execCmd('${item.id}')">`;
+    html += `<span class="cmd-icon">${item.icon}</span>`;
+    html += `<span class="cmd-label">${item.label}</span>`;
+    if (item.sub) html += `<span class="cmd-sub">${item.sub}</span>`;
+    if (item.kbd) html += `<span class="kbd">${item.kbd}</span>`;
+    html += `</button>`;
+  }
+
+  if (selIdx < 0) {
+    html += '<div style="padding:32px;text-align:center;color:var(--tx3);font-size:14px">No results found</div>';
+  }
+
+  document.getElementById('cmdItems').innerHTML = html;
+}
+
+function renderAll() {
+  renderSidebar();
+  renderContent();
+  updateEjectBar();
+  document.getElementById('fileCount').textContent = MOCK_FILES.length + ' files';
+  document.getElementById('statusBar').textContent = MOCK_FILES.length + ' files watched';
+}
+
+// ═══════════════════════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════════════════════
+
+function handleFileClick(id, e) {
+  e.stopPropagation();
+  if (e.shiftKey) {
+    // Range select (simplified: just toggle)
+    toggleSelect(id);
+  } else if (e.metaKey || e.ctrlKey) {
+    toggleSelect(id);
+  } else {
+    clearSelection();
+    activateFile(id);
+  }
+}
+
+function activateFile(id) {
+  activeFileId = id;
+  renderAll();
+  const card = document.getElementById('card-' + id);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  renderAll();
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  renderAll();
+}
+
+function selectAll() {
+  MOCK_FILES.forEach(f => selectedIds.add(f.id));
+  renderAll();
+}
+
+function ejectSelected() {
+  addToast(selectedIds.size + ' file(s)', 'ejected', 'amber');
+  selectedIds.clear();
+  renderAll();
+}
+
+function updateEjectBar() {
+  const bar = document.getElementById('ejectBar');
+  if (selectedIds.size === 0) {
+    bar.classList.add('hidden');
+  } else {
+    bar.classList.remove('hidden');
+    const label = selectedIds.size === 1
+      ? MOCK_FILES.find(f => f.id === [...selectedIds][0])?.name || '1 file'
+      : selectedIds.size + ' files';
+    document.getElementById('ejectLabel').textContent = label;
+  }
+}
+
+function toggleDrawer(id) {
+  if (openDrawers.has(id)) openDrawers.delete(id);
+  else openDrawers.add(id);
+  renderAll();
+}
+
+function toggleCollapse(id) {
+  if (collapsedCards.has(id)) collapsedCards.delete(id);
+  else collapsedCards.add(id);
+  renderAll();
+}
+
+function ejectGroup(id) {
+  addToast(GROUPS.find(g => g.id === id)?.name || id, 'ejected', 'amber');
+}
+
+// Theme
+function cycleTheme() {
+  currentTheme = (currentTheme + 1) % THEMES.length;
+  document.documentElement.setAttribute('data-theme', THEMES[currentTheme]);
+  document.getElementById('themeBtn').textContent = THEMES[currentTheme];
+  addToast('Theme', THEMES[currentTheme], 'cyan');
+}
+
+// Sort
+function setSort(btn) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Search mode
+function setSearchMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const mode = btn.dataset.mode;
+  document.getElementById('searchInput').placeholder = mode === 'content' ? 'Search in files...' : 'Find files...';
+}
+
+// Search
+function filterFiles() {
+  searchQuery = document.getElementById('searchInput').value;
+  renderAll();
+}
+
+// Command Palette
+function toggleCmd() {
+  const overlay = document.getElementById('cmdOverlay');
+  overlay.classList.toggle('hidden');
+  if (!overlay.classList.contains('hidden')) {
+    cmdSelectedIdx = 0;
+    const input = document.getElementById('cmdInput');
+    input.value = '';
+    renderCmds();
+    setTimeout(() => input.focus(), 50);
+  }
+}
+
+function filterCmds() {
+  cmdSelectedIdx = 0;
+  renderCmds();
+}
+
+function cmdKeydown(e) {
+  const items = document.querySelectorAll('.cmd-item');
+  if (e.key === 'Escape') { toggleCmd(); return; }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    cmdSelectedIdx = Math.min(cmdSelectedIdx + 1, items.length - 1);
+    renderCmds();
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    cmdSelectedIdx = Math.max(cmdSelectedIdx - 1, 0);
+    renderCmds();
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const sel = items[cmdSelectedIdx];
+    if (sel) execCmd(sel.dataset.cmd);
+  }
+}
+
+function execCmd(id) {
+  if (id === 'theme') cycleTheme();
+  else if (id === 'add-folder') addToast('Add Folder', 'dialog would open', 'cyan');
+  else if (id === 'add-file') addToast('Add Files', 'dialog would open', 'cyan');
+  else if (id === 'create-tab') addToast('Untitled', 'tab created', 'cyan');
+  else if (id.startsWith('new-')) addToast('New file', 'in ' + id.replace('new-', ''), 'cyan');
+  toggleCmd();
+}
+
+// Toasts
+function addToast(text, detail, color = 'cyan') {
+  const container = document.getElementById('toasts');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span class="toast-text ${color}">${text}</span>` +
+    (detail ? `<span style="color:var(--tx3)">${detail}</span>` : '');
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('exiting');
+    setTimeout(() => toast.remove(), 150);
+  }, 2500);
+}
+
+// ═══════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  const mod = e.metaKey || e.ctrlKey;
+  const tag = e.target.tagName;
+  const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
+
+  // ⌘K — Command Palette
+  if (mod && e.key === 'k') { e.preventDefault(); toggleCmd(); }
+
+  // ⌘S — Save
+  if (mod && e.key === 's') {
+    e.preventDefault();
+    const file = MOCK_FILES.find(f => f.id === activeFileId);
+    if (file) addToast('Saved', file.name + '.' + file.ext, 'cyan');
+  }
+
+  // ⌘A — Select all (when not editing)
+  if (mod && e.key === 'a' && !isEditing) { e.preventDefault(); selectAll(); }
+
+  // Delete/Backspace — Eject
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !isEditing) {
+    e.preventDefault();
+    if (selectedIds.size > 0) ejectSelected();
+    else if (activeFileId) {
+      const file = MOCK_FILES.find(f => f.id === activeFileId);
+      if (file) addToast(file.name, 'ejected', 'amber');
+    }
+  }
+
+  // Escape — Clear selection
+  if (e.key === 'Escape' && !isEditing && document.getElementById('cmdOverlay').classList.contains('hidden')) {
+    clearSelection();
+  }
+});
+
+// Right-click → Command Palette
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  toggleCmd();
+});
+
+// Simulate drag-drop zone on global drag
+document.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  document.getElementById('dropOverlay').classList.remove('hidden');
+});
+document.addEventListener('dragleave', (e) => {
+  if (e.relatedTarget === null) {
+    document.getElementById('dropOverlay').classList.add('hidden');
+  }
+});
+document.addEventListener('drop', (e) => {
+  e.preventDefault();
+  document.getElementById('dropOverlay').classList.add('hidden');
+  addToast('Drop detected', 'files would be added', 'cyan');
+});
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+renderAll();
+addToast('7 file(s)', 'restored', 'cyan');
+</script>
+</body>
+</html>

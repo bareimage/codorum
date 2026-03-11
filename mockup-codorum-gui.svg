@@ -1,0 +1,737 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2800 2600" width="2800" height="2600" font-family="-apple-system, 'SF Pro Text', 'Inter', system-ui, sans-serif">
+  <defs>
+    <!-- n01z theme colors -->
+    <linearGradient id="activeGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5bc4c4" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#5bc4c4" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 1: MAIN VIEW (Default State) — n01z theme
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="screen-1-main">
+    <!-- Label -->
+    <text x="20" y="30" fill="#a1a1aa" font-size="14" font-weight="600" letter-spacing="0.1em">SCREEN 1 — MAIN VIEW (n01z theme, 1200×800)</text>
+
+    <!-- Window frame -->
+    <rect x="20" y="50" width="1200" height="800" rx="12" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+
+    <!-- ─── TOOLBAR (44px) ─── -->
+    <rect x="20" y="50" width="1200" height="44" rx="12" fill="#111113"/>
+    <rect x="20" y="82" width="1200" height="12" fill="#111113"/>
+    <line x1="20" y1="94" x2="1220" y2="94" stroke="#27272a" stroke-width="1"/>
+
+    <!-- Traffic lights -->
+    <circle cx="52" cy="72" r="6" fill="#ff5f57"/>
+    <circle cx="72" cy="72" r="6" fill="#febc2e"/>
+    <circle cx="92" cy="72" r="6" fill="#28c840"/>
+
+    <!-- Logo icon (triangle with eye) -->
+    <g transform="translate(128, 62)">
+      <path d="M9 2L1 18h16L9 2z" stroke="#52525b" stroke-width="1.5" fill="none"/>
+      <circle cx="9" cy="12" r="1.5" fill="#5bc4c4"/>
+    </g>
+
+    <!-- Brand text -->
+    <text x="148" y="77" fill="#52525b" font-size="14" font-weight="700" letter-spacing="0.08em" font-family="monospace">CODORUM</text>
+    <text x="240" y="77" fill="#52525b" font-size="12" opacity="0.5">7 files</text>
+
+    <!-- ⌘K button -->
+    <rect x="1040" y="59" width="80" height="30" rx="8" fill="#27272c" stroke="#27272a" stroke-width="1"/>
+    <text x="1058" y="78" fill="#52525b" font-size="13">✦ ⌘K</text>
+
+    <!-- Theme button -->
+    <rect x="1130" y="59" width="60" height="30" rx="8" fill="none" stroke="#27272a" stroke-width="1"/>
+    <text x="1145" y="78" fill="#a1a1aa" font-size="12" font-weight="500">n01z</text>
+
+    <!-- ─── SIDEBAR (240px) ─── -->
+    <rect x="20" y="94" width="240" height="756" fill="#111113"/>
+    <line x1="260" y1="94" x2="260" y2="850" stroke="#27272a" stroke-width="1"/>
+
+    <!-- Search bar -->
+    <rect x="32" y="106" width="216" height="32" rx="8" fill="#1c1c20" stroke="#27272a" stroke-width="1"/>
+    <text x="60" y="126" fill="#52525b" font-size="13">🔍</text>
+    <text x="80" y="126" fill="#52525b" font-size="13" opacity="0.6">Find files...</text>
+
+    <!-- Sort buttons row -->
+    <g transform="translate(32, 146)">
+      <rect x="0" y="0" width="52" height="24" rx="6" fill="#27272c"/>
+      <text x="10" y="16" fill="#5bc4c4" font-size="12" font-weight="600">Name</text>
+      <text x="62" y="16" fill="#52525b" font-size="12">Modified</text>
+      <text x="128" y="16" fill="#52525b" font-size="12">Changes</text>
+      <!-- + button -->
+      <rect x="196" y="1" width="22" height="22" rx="6" fill="none"/>
+      <text x="202" y="17" fill="#52525b" font-size="16" font-weight="300">+</text>
+    </g>
+
+    <!-- Search mode toggle -->
+    <g transform="translate(32, 176)">
+      <rect x="0" y="0" width="42" height="22" rx="5" fill="#27272c"/>
+      <text x="8" y="15" fill="#5bc4c4" font-size="11" font-weight="600">Name</text>
+      <text x="52" y="15" fill="#52525b" font-size="11">Content</text>
+    </g>
+
+    <!-- Divider -->
+    <line x1="32" y1="204" x2="248" y2="204" stroke="#27272a" stroke-width="1"/>
+
+    <!-- ─── Drawer: Pinned ─── -->
+    <g transform="translate(20, 212)">
+      <g>
+        <text x="22" y="16" fill="#52525b" font-size="10">▼</text>
+        <text x="38" y="16" fill="#a1a1aa" font-size="13" font-weight="600">Pinned</text>
+        <text x="210" y="16" fill="#52525b" font-size="11" text-anchor="end">1</text>
+      </g>
+      <!-- Pinned file (active) -->
+      <rect x="6" y="24" width="228" height="28" rx="6" fill="rgba(91,196,196,0.15)"/>
+      <circle cx="26" cy="38" r="3" fill="#5bc4c4"/>
+      <text x="36" y="42" fill="#e4e4e7" font-size="13" font-weight="500">README</text>
+      <text x="86" y="42" fill="#52525b" font-size="13">.md</text>
+      <text x="190" y="42" fill="#6bcb8b" font-size="10" font-weight="600" font-family="monospace">+12</text>
+      <text x="210" y="42" fill="#ef6b7a" font-size="10" font-weight="600" font-family="monospace">−3</text>
+    </g>
+
+    <!-- ─── Drawer: src (folder group) ─── -->
+    <g transform="translate(20, 272)">
+      <g>
+        <text x="22" y="16" fill="#52525b" font-size="10">▼</text>
+        <text x="38" y="16" fill="#a1a1aa" font-size="13" font-weight="600">src</text>
+        <text x="160" y="16" fill="#6bcb8b" font-size="10" font-weight="600" font-family="monospace">+28</text>
+        <text x="180" y="16" fill="#ef6b7a" font-size="10" font-weight="600" font-family="monospace">−5</text>
+        <text x="210" y="16" fill="#52525b" font-size="11" text-anchor="end">4</text>
+        <!-- Eject X (visible on hover) -->
+        <rect x="218" y="3" width="18" height="18" rx="4" fill="none"/>
+        <text x="223" y="16" fill="#52525b" font-size="10">✕</text>
+      </g>
+      <!-- File rows -->
+      <g transform="translate(0, 24)">
+        <circle cx="26" cy="14" r="3" fill="#e0a644"/>
+        <text x="36" y="18" fill="#a1a1aa" font-size="13">App</text>
+        <text x="60" y="18" fill="#52525b" font-size="13">.tsx</text>
+      </g>
+      <g transform="translate(0, 52)">
+        <circle cx="26" cy="14" r="3" fill="#e0a644"/>
+        <text x="36" y="18" fill="#a1a1aa" font-size="13">main</text>
+        <text x="68" y="18" fill="#52525b" font-size="13">.tsx</text>
+      </g>
+      <g transform="translate(0, 80)">
+        <circle cx="26" cy="14" r="3" fill="#a78bfa"/>
+        <text x="36" y="18" fill="#a1a1aa" font-size="13">app</text>
+        <text x="56" y="18" fill="#52525b" font-size="13">.css</text>
+      </g>
+      <g transform="translate(0, 108)">
+        <circle cx="26" cy="14" r="3" fill="#e0a644"/>
+        <text x="36" y="18" fill="#a1a1aa" font-size="13">Sidebar</text>
+        <text x="84" y="18" fill="#52525b" font-size="13">.tsx</text>
+        <text x="190" y="18" fill="#6bcb8b" font-size="10" font-weight="600" font-family="monospace">+8</text>
+      </g>
+    </g>
+
+    <!-- ─── Drawer: Loose ─── -->
+    <g transform="translate(20, 420)">
+      <g>
+        <text x="22" y="16" fill="#52525b" font-size="10">▼</text>
+        <text x="38" y="16" fill="#a1a1aa" font-size="13" font-weight="600">Loose</text>
+        <text x="210" y="16" fill="#52525b" font-size="11" text-anchor="end">2</text>
+      </g>
+      <g transform="translate(0, 24)">
+        <circle cx="26" cy="14" r="3" fill="#5bc4c4"/>
+        <text x="36" y="18" fill="#a1a1aa" font-size="13">notes</text>
+        <text x="72" y="18" fill="#52525b" font-size="13">.md</text>
+      </g>
+      <g transform="translate(0, 52)">
+        <circle cx="26" cy="14" r="3" fill="#6bcb8b"/>
+        <text x="36" y="18" fill="#6b6b73" font-size="13" text-decoration="line-through">config</text>
+        <text x="78" y="18" fill="#6b6b73" font-size="13" text-decoration="line-through">.json</text>
+      </g>
+    </g>
+
+    <!-- Status bar -->
+    <g transform="translate(20, 820)">
+      <line x1="12" y1="0" x2="248" y2="0" stroke="#27272a" stroke-width="1"/>
+      <text x="32" y="20" fill="#52525b" font-size="10" opacity="0.4">7 files watched</text>
+    </g>
+
+    <!-- ─── CONTENT PANE ─── -->
+    <rect x="260" y="94" width="960" height="756" fill="#18181b"/>
+
+    <!-- Files heading -->
+    <text x="296" y="136" fill="#e4e4e7" font-size="20" font-weight="700" letter-spacing="-0.015em">Files</text>
+    <text x="346" y="136" fill="#52525b" font-size="12">7 visible</text>
+
+    <!-- Section label: Pinned -->
+    <text x="296" y="168" fill="#52525b" font-size="12" font-weight="600">Pinned</text>
+    <line x1="340" y1="165" x2="1190" y2="165" stroke="#27272a" stroke-width="1" opacity="0.5"/>
+
+    <!-- ─── FILE CARD 1 (Active, Markdown, Expanded) ─── -->
+    <rect x="296" y="180" width="894" height="300" rx="12" fill="#1f1f23" stroke="rgba(91,196,196,0.25)" stroke-width="1"/>
+    <!-- Active glow -->
+    <rect x="296" y="180" width="894" height="300" rx="12" fill="none" stroke="rgba(91,196,196,0.19)" stroke-width="2" opacity="0.5"/>
+
+    <!-- Card header -->
+    <g transform="translate(296, 180)">
+      <line x1="0" y1="44" x2="894" y2="44" stroke="#27272a" stroke-width="1"/>
+      <!-- Chevron -->
+      <text x="20" y="28" fill="#52525b" font-size="10">▼</text>
+      <!-- ExtDot -->
+      <circle cx="46" cy="22" r="4" fill="#5bc4c4"/>
+      <!-- File name -->
+      <text x="58" y="28" fill="#e4e4e7" font-size="14" font-weight="600">README</text>
+      <text x="112" y="28" fill="#52525b" font-size="14">.md</text>
+      <!-- Time -->
+      <text x="720" y="28" fill="#52525b" font-size="12">2m ago</text>
+      <!-- Diff badge -->
+      <text x="780" y="28" fill="#6bcb8b" font-size="10" font-weight="600" font-family="monospace">+12</text>
+      <text x="800" y="28" fill="#ef6b7a" font-size="10" font-weight="600" font-family="monospace">−3</text>
+      <!-- Pinned indicator -->
+      <circle cx="840" cy="22" r="4" fill="#e0a644"/>
+    </g>
+
+    <!-- Card body (Tiptap markdown content) -->
+    <g transform="translate(344, 240)">
+      <text x="0" y="0" fill="#e4e4e7" font-size="22" font-weight="700" font-family="-apple-system, system-ui, sans-serif" letter-spacing="-0.02em">Codorum</text>
+      <text x="0" y="32" fill="#a1a1aa" font-size="15" font-family="Georgia, serif" line-height="1.8">A desktop file watcher that monitors text and markdown</text>
+      <text x="0" y="56" fill="#a1a1aa" font-size="15" font-family="Georgia, serif">files in real-time with diff visualization.</text>
+      <!-- Inline code -->
+      <rect x="0" y="72" width="80" height="22" rx="5" fill="#27272c" stroke="#27272a" stroke-width="1"/>
+      <text x="8" y="88" fill="#a78bfa" font-size="12" font-family="'JetBrains Mono', monospace" font-weight="500">npm run dev</text>
+      <!-- Blockquote -->
+      <line x1="0" y1="108" x2="0" y2="140" stroke="#5bc4c4" stroke-width="3"/>
+      <text x="16" y="124" fill="#a1a1aa" font-size="15" font-family="Georgia, serif" font-style="italic">Transparency for your codebase</text>
+      <!-- Code block -->
+      <rect x="0" y="156" width="500" height="60" rx="10" fill="#111113" stroke="#27272a" stroke-width="1"/>
+      <text x="16" y="178" fill="#5bc4c4" font-size="13" font-family="'JetBrains Mono', monospace">const</text>
+      <text x="56" y="178" fill="#e4e4e7" font-size="13" font-family="'JetBrains Mono', monospace"> watcher = </text>
+      <text x="160" y="178" fill="#5bc4c4" font-size="13" font-family="'JetBrains Mono', monospace">new</text>
+      <text x="186" y="178" fill="#e0a644" font-size="13" font-family="'JetBrains Mono', monospace"> FileWatcher</text>
+      <text x="286" y="178" fill="#52525b" font-size="13" font-family="'JetBrains Mono', monospace">();</text>
+      <text x="16" y="198" fill="#e4e4e7" font-size="13" font-family="'JetBrains Mono', monospace">watcher.</text>
+      <text x="82" y="198" fill="#5bc4c4" font-size="13" font-family="'JetBrains Mono', monospace">watch</text>
+      <text x="120" y="198" fill="#52525b" font-size="13" font-family="'JetBrains Mono', monospace">(</text>
+      <text x="128" y="198" fill="#6bcb8b" font-size="13" font-family="'JetBrains Mono', monospace">"./src"</text>
+      <text x="188" y="198" fill="#52525b" font-size="13" font-family="'JetBrains Mono', monospace">);</text>
+    </g>
+
+    <!-- Resize handle -->
+    <line x1="580" y1="476" x2="620" y2="476" stroke="#27272a" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Section label: src -->
+    <text x="296" y="510" fill="#52525b" font-size="12" font-weight="600">src</text>
+    <line x1="318" y1="507" x2="1190" y2="507" stroke="#27272a" stroke-width="1" opacity="0.5"/>
+
+    <!-- ─── FILE CARD 2 (Code, Collapsed) ─── -->
+    <rect x="296" y="520" width="894" height="68" rx="12" fill="#1f1f23" stroke="#27272a" stroke-width="1"/>
+    <g transform="translate(296, 520)">
+      <!-- Chevron (collapsed) -->
+      <text x="20" y="28" fill="#52525b" font-size="10">▶</text>
+      <circle cx="46" cy="22" r="4" fill="#e0a644"/>
+      <text x="58" y="28" fill="#e4e4e7" font-size="14" font-weight="600">App</text>
+      <text x="82" y="28" fill="#52525b" font-size="14">.tsx</text>
+      <text x="720" y="28" fill="#52525b" font-size="12">5m ago</text>
+      <text x="780" y="28" fill="#6bcb8b" font-size="10" font-weight="600" font-family="monospace">+28</text>
+      <text x="800" y="28" fill="#ef6b7a" font-size="10" font-weight="600" font-family="monospace">−5</text>
+      <!-- Collapsed subtitle -->
+      <text x="48" y="52" fill="#52525b" font-size="13" font-family="Georgia, 'Times New Roman', serif" font-style="italic">Root component with file sync logic</text>
+    </g>
+
+    <!-- ─── FILE CARD 3 (Code, Collapsed) ─── -->
+    <rect x="296" y="600" width="894" height="44" rx="12" fill="#1f1f23" stroke="#27272a" stroke-width="1"/>
+    <g transform="translate(296, 600)">
+      <text x="20" y="28" fill="#52525b" font-size="10">▶</text>
+      <circle cx="46" cy="22" r="4" fill="#e0a644"/>
+      <text x="58" y="28" fill="#e4e4e7" font-size="14" font-weight="600">main</text>
+      <text x="90" y="28" fill="#52525b" font-size="14">.tsx</text>
+      <text x="720" y="28" fill="#52525b" font-size="12">1h ago</text>
+    </g>
+
+    <!-- ─── FILE CARD 4 (Deleted file) ─── -->
+    <rect x="296" y="656" width="894" height="44" rx="12" fill="#1f1f23" stroke="#27272a" stroke-width="1"/>
+    <g transform="translate(296, 656)">
+      <text x="20" y="28" fill="#52525b" font-size="10">▶</text>
+      <circle cx="46" cy="22" r="4" fill="#6bcb8b"/>
+      <text x="58" y="28" fill="#6b6b73" font-size="14" font-weight="600" text-decoration="line-through">config</text>
+      <text x="106" y="28" fill="#6b6b73" font-size="14" text-decoration="line-through">.json</text>
+      <!-- Deleted badge -->
+      <rect x="780" y="14" width="56" height="22" rx="4" fill="#27272c"/>
+      <text x="790" y="29" fill="#ef6b7a" font-size="11">deleted</text>
+    </g>
+
+    <!-- Toast notification (bottom right) -->
+    <g transform="translate(1080, 790)">
+      <rect x="0" y="0" width="130" height="30" rx="8" fill="#27272c" stroke="#27272a" stroke-width="1"/>
+      <text x="12" y="20" fill="#5bc4c4" font-size="11" font-weight="600" font-family="monospace">Updated</text>
+      <text x="72" y="20" fill="#52525b" font-size="11" font-family="monospace">App.tsx</text>
+    </g>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 2: COMMAND PALETTE (⌘K)
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="screen-2-command-palette" transform="translate(1280, 0)">
+    <text x="20" y="30" fill="#a1a1aa" font-size="14" font-weight="600" letter-spacing="0.1em">SCREEN 2 — COMMAND PALETTE (⌘K overlay)</text>
+
+    <!-- Dimmed background window -->
+    <rect x="20" y="50" width="1200" height="800" rx="12" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+    <!-- Backdrop blur overlay -->
+    <rect x="20" y="50" width="1200" height="800" rx="12" fill="rgba(0,0,0,0.18)"/>
+
+    <!-- Command Palette modal -->
+    <rect x="340" y="130" width="560" height="380" rx="12" fill="#1c1c20" stroke="#27272a" stroke-width="1"/>
+
+    <!-- Search input row -->
+    <g transform="translate(340, 130)">
+      <line x1="0" y1="48" x2="560" y2="48" stroke="#27272a" stroke-width="1"/>
+      <text x="26" y="30" fill="#52525b" font-size="14">🔍</text>
+      <text x="50" y="30" fill="#52525b" font-size="15" opacity="0.6">Type a command...</text>
+    </g>
+
+    <!-- Section: Actions -->
+    <g transform="translate(346, 190)">
+      <text x="10" y="14" fill="#52525b" font-size="12" font-weight="600">Actions</text>
+
+      <!-- Item: Add Folder (selected/hover) -->
+      <rect x="0" y="24" width="548" height="38" rx="8" fill="#27272c"/>
+      <text x="16" y="48" fill="#5bc4c4" font-size="14">📁</text>
+      <text x="42" y="48" fill="#e4e4e7" font-size="14" font-weight="500">Add Folder</text>
+
+      <!-- Item: Add Files -->
+      <g transform="translate(0, 66)">
+        <text x="16" y="14" fill="#5bc4c4" font-size="14">📄</text>
+        <text x="42" y="14" fill="#e4e4e7" font-size="14" font-weight="500">Add Files</text>
+      </g>
+
+      <!-- Item: Create Tab -->
+      <g transform="translate(0, 98)">
+        <text x="16" y="14" fill="#5bc4c4" font-size="14">＋</text>
+        <text x="42" y="14" fill="#e4e4e7" font-size="14" font-weight="500">Create Tab</text>
+      </g>
+
+      <!-- Item: New File in src -->
+      <g transform="translate(0, 130)">
+        <text x="16" y="14" fill="#5bc4c4" font-size="14">＋</text>
+        <text x="42" y="14" fill="#e4e4e7" font-size="14" font-weight="500">New File in src</text>
+      </g>
+    </g>
+
+    <!-- Section: Appearance -->
+    <g transform="translate(346, 354)">
+      <text x="10" y="14" fill="#52525b" font-size="12" font-weight="600">Appearance</text>
+
+      <g transform="translate(0, 24)">
+        <text x="16" y="14" fill="#5bc4c4" font-size="14">🎨</text>
+        <text x="42" y="14" fill="#e4e4e7" font-size="14" font-weight="500">Cycle Theme</text>
+        <text x="440" y="14" fill="#52525b" font-size="12">n01z</text>
+        <!-- Kbd -->
+        <rect x="490" y="0" width="40" height="22" rx="4" fill="#27272c" stroke="#27272a" stroke-width="1"/>
+        <text x="498" y="15" fill="#52525b" font-size="11" font-family="monospace">⌘T</text>
+      </g>
+    </g>
+
+    <!-- Footer -->
+    <g transform="translate(340, 462)">
+      <line x1="0" y1="0" x2="560" y2="0" stroke="#27272a" stroke-width="1"/>
+      <g transform="translate(16, 18)">
+        <rect x="0" y="0" width="24" height="18" rx="4" fill="#27272c" stroke="#27272a" stroke-width="1"/>
+        <text x="5" y="13" fill="#52525b" font-size="11" font-family="monospace">↑↓</text>
+        <text x="30" y="13" fill="#52525b" font-size="12">Navigate</text>
+
+        <rect x="100" y="0" width="20" height="18" rx="4" fill="#27272c" stroke="#27272a" stroke-width="1"/>
+        <text x="105" y="13" fill="#52525b" font-size="11" font-family="monospace">⏎</text>
+        <text x="126" y="13" fill="#52525b" font-size="12">Open</text>
+
+        <rect x="180" y="0" width="28" height="18" rx="4" fill="#27272c" stroke="#27272a" stroke-width="1"/>
+        <text x="185" y="13" fill="#52525b" font-size="11" font-family="monospace">esc</text>
+        <text x="214" y="13" fill="#52525b" font-size="12">Close</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 3: MULTI-SELECT + EJECT BAR
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="screen-3-eject" transform="translate(0, 900)">
+    <text x="20" y="30" fill="#a1a1aa" font-size="14" font-weight="600" letter-spacing="0.1em">SCREEN 3 — MULTI-SELECT + EJECT BAR</text>
+
+    <rect x="20" y="50" width="1200" height="800" rx="12" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+
+    <!-- Toolbar (same) -->
+    <rect x="20" y="50" width="1200" height="44" rx="12" fill="#111113"/>
+    <rect x="20" y="82" width="1200" height="12" fill="#111113"/>
+    <line x1="20" y1="94" x2="1220" y2="94" stroke="#27272a" stroke-width="1"/>
+    <circle cx="52" cy="72" r="6" fill="#ff5f57"/>
+    <circle cx="72" cy="72" r="6" fill="#febc2e"/>
+    <circle cx="92" cy="72" r="6" fill="#28c840"/>
+    <g transform="translate(128, 62)">
+      <path d="M9 2L1 18h16L9 2z" stroke="#52525b" stroke-width="1.5" fill="none"/>
+      <circle cx="9" cy="12" r="1.5" fill="#5bc4c4"/>
+    </g>
+    <text x="148" y="77" fill="#52525b" font-size="14" font-weight="700" letter-spacing="0.08em" font-family="monospace">CODORUM</text>
+
+    <!-- Sidebar with selected files highlighted -->
+    <rect x="20" y="94" width="240" height="756" fill="#111113"/>
+    <line x1="260" y1="94" x2="260" y2="850" stroke="#27272a" stroke-width="1"/>
+
+    <!-- Search bar -->
+    <rect x="32" y="106" width="216" height="32" rx="8" fill="#1c1c20" stroke="#27272a" stroke-width="1"/>
+    <text x="60" y="126" fill="#52525b" font-size="13">🔍</text>
+
+    <!-- Sort & mode (abbreviated) -->
+    <line x1="32" y1="204" x2="248" y2="204" stroke="#27272a" stroke-width="1"/>
+
+    <!-- Files section with selected items (amber highlight) -->
+    <g transform="translate(20, 212)">
+      <text x="22" y="16" fill="#52525b" font-size="10">▼</text>
+      <text x="38" y="16" fill="#a1a1aa" font-size="13" font-weight="600">src</text>
+      <text x="210" y="16" fill="#52525b" font-size="11" text-anchor="end">4</text>
+
+      <!-- Selected file 1 (amber bg) -->
+      <rect x="6" y="24" width="228" height="28" rx="6" fill="rgba(224,166,68,0.15)"/>
+      <circle cx="26" cy="38" r="3" fill="#e0a644"/>
+      <text x="36" y="42" fill="#e4e4e7" font-size="13">App</text>
+      <text x="60" y="42" fill="#52525b" font-size="13">.tsx</text>
+
+      <!-- Selected file 2 (amber bg) -->
+      <rect x="6" y="56" width="228" height="28" rx="6" fill="rgba(224,166,68,0.15)"/>
+      <circle cx="26" cy="70" r="3" fill="#e0a644"/>
+      <text x="36" y="74" fill="#e4e4e7" font-size="13">main</text>
+      <text x="68" y="74" fill="#52525b" font-size="13">.tsx</text>
+
+      <!-- Unselected file -->
+      <g transform="translate(0, 88)">
+        <circle cx="26" cy="14" r="3" fill="#a78bfa"/>
+        <text x="36" y="18" fill="#a1a1aa" font-size="13">app</text>
+        <text x="56" y="18" fill="#52525b" font-size="13">.css</text>
+      </g>
+
+      <!-- Selected file 3 (amber bg) -->
+      <rect x="6" y="108" width="228" height="28" rx="6" fill="rgba(224,166,68,0.15)"/>
+      <circle cx="26" cy="122" r="3" fill="#e0a644"/>
+      <text x="36" y="126" fill="#e4e4e7" font-size="13">Sidebar</text>
+      <text x="84" y="126" fill="#52525b" font-size="13">.tsx</text>
+    </g>
+
+    <!-- Content pane -->
+    <rect x="260" y="94" width="960" height="756" fill="#18181b"/>
+
+    <!-- ─── EJECT BAR (floating bottom center) ─── -->
+    <g transform="translate(460, 780)">
+      <rect x="0" y="0" width="320" height="44" rx="12" fill="#1f1f23" stroke="#27272a" stroke-width="1"/>
+      <!-- Glow shadow hint -->
+      <rect x="-2" y="-2" width="324" height="48" rx="14" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="2" opacity="0.5"/>
+      <text x="16" y="28" fill="#e0a644" font-size="14">✦</text>
+      <text x="38" y="28" fill="#e4e4e7" font-size="13" font-weight="500">3 files</text>
+      <text x="88" y="28" fill="#52525b" font-size="12">selected</text>
+
+      <!-- Divider -->
+      <line x1="150" y1="10" x2="150" y2="34" stroke="#27272a" stroke-width="1"/>
+
+      <!-- Eject button -->
+      <rect x="162" y="8" width="60" height="28" rx="8" fill="rgba(239,107,122,0.15)"/>
+      <text x="175" y="27" fill="#ef6b7a" font-size="12" font-weight="600">Eject</text>
+
+      <!-- Cancel button -->
+      <rect x="232" y="8" width="68" height="28" rx="8" fill="none" stroke="#27272a" stroke-width="1"/>
+      <text x="245" y="27" fill="#52525b" font-size="12">Cancel</text>
+    </g>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 4: DROP ZONE OVERLAY
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="screen-4-dropzone" transform="translate(1280, 900)">
+    <text x="20" y="30" fill="#a1a1aa" font-size="14" font-weight="600" letter-spacing="0.1em">SCREEN 4 — DRAG &amp; DROP OVERLAY</text>
+
+    <rect x="20" y="50" width="1200" height="800" rx="12" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+    <!-- Dark overlay -->
+    <rect x="20" y="50" width="1200" height="800" rx="12" fill="rgba(0,0,0,0.3)"/>
+
+    <!-- Drop zone indicator (centered) -->
+    <rect x="400" y="330" width="440" height="140" rx="16" fill="#27272c" stroke="#52525b" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="520" y="410" fill="#5bc4c4" font-size="14" font-family="monospace" letter-spacing="2px" text-anchor="middle" text-transform="uppercase">DROP FILES HERE</text>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 5: PAPER THEME (Light mode)
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="screen-5-paper" transform="translate(0, 1800)">
+    <text x="20" y="30" fill="#a1a1aa" font-size="14" font-weight="600" letter-spacing="0.1em">SCREEN 5 — PAPER THEME (Light Mode)</text>
+
+    <rect x="20" y="50" width="1200" height="800" rx="12" fill="#fafaf9" stroke="#e4e4e7" stroke-width="1"/>
+
+    <!-- Toolbar -->
+    <rect x="20" y="50" width="1200" height="44" rx="12" fill="#f0efed"/>
+    <rect x="20" y="82" width="1200" height="12" fill="#f0efed"/>
+    <line x1="20" y1="94" x2="1220" y2="94" stroke="#e4e4e7" stroke-width="1"/>
+    <circle cx="52" cy="72" r="6" fill="#ff5f57"/>
+    <circle cx="72" cy="72" r="6" fill="#febc2e"/>
+    <circle cx="92" cy="72" r="6" fill="#28c840"/>
+    <g transform="translate(128, 62)">
+      <path d="M9 2L1 18h16L9 2z" stroke="#a1a1aa" stroke-width="1.5" fill="none"/>
+      <circle cx="9" cy="12" r="1.5" fill="#2a7272"/>
+    </g>
+    <text x="148" y="77" fill="#a1a1aa" font-size="14" font-weight="700" letter-spacing="0.08em" font-family="monospace">CODORUM</text>
+    <text x="240" y="77" fill="#a1a1aa" font-size="12" opacity="0.5">7 files</text>
+
+    <!-- Theme button -->
+    <rect x="1130" y="59" width="60" height="30" rx="8" fill="none" stroke="#e4e4e7" stroke-width="1"/>
+    <text x="1140" y="78" fill="#71717a" font-size="12" font-weight="500">paper</text>
+
+    <!-- ⌘K button -->
+    <rect x="1040" y="59" width="80" height="30" rx="8" fill="#f4f4f2" stroke="#e4e4e7" stroke-width="1"/>
+    <text x="1058" y="78" fill="#a1a1aa" font-size="13">✦ ⌘K</text>
+
+    <!-- Sidebar -->
+    <rect x="20" y="94" width="240" height="756" fill="#f0efed"/>
+    <line x1="260" y1="94" x2="260" y2="850" stroke="#e4e4e7" stroke-width="1"/>
+
+    <!-- Search -->
+    <rect x="32" y="106" width="216" height="32" rx="8" fill="#ffffff" stroke="#e4e4e7" stroke-width="1"/>
+    <text x="80" y="126" fill="#a1a1aa" font-size="13" opacity="0.6">Find files...</text>
+
+    <!-- Drawer section -->
+    <g transform="translate(20, 212)">
+      <text x="22" y="16" fill="#a1a1aa" font-size="10">▼</text>
+      <text x="38" y="16" fill="#71717a" font-size="13" font-weight="600">Pinned</text>
+      <!-- Active file -->
+      <rect x="6" y="24" width="228" height="28" rx="6" fill="rgba(42,114,114,0.1)"/>
+      <circle cx="26" cy="38" r="3" fill="#2a7272"/>
+      <text x="36" y="42" fill="#18181b" font-size="13" font-weight="500">README</text>
+      <text x="86" y="42" fill="#a1a1aa" font-size="13">.md</text>
+    </g>
+
+    <!-- Content pane -->
+    <rect x="260" y="94" width="960" height="756" fill="#fafaf9"/>
+    <text x="296" y="136" fill="#18181b" font-size="20" font-weight="700">Files</text>
+    <text x="346" y="136" fill="#a1a1aa" font-size="12">7 visible</text>
+
+    <!-- File card (paper theme) -->
+    <rect x="296" y="160" width="894" height="200" rx="12" fill="#ffffff" stroke="rgba(42,114,114,0.15)" stroke-width="1"/>
+    <g transform="translate(296, 160)">
+      <line x1="0" y1="44" x2="894" y2="44" stroke="#e4e4e7" stroke-width="1"/>
+      <text x="20" y="28" fill="#a1a1aa" font-size="10">▼</text>
+      <circle cx="46" cy="22" r="4" fill="#2a7272"/>
+      <text x="58" y="28" fill="#18181b" font-size="14" font-weight="600">README</text>
+      <text x="112" y="28" fill="#a1a1aa" font-size="14">.md</text>
+      <text x="720" y="28" fill="#a1a1aa" font-size="12">2m ago</text>
+      <text x="780" y="28" fill="#16a34a" font-size="10" font-weight="600" font-family="monospace">+12</text>
+    </g>
+    <!-- Content -->
+    <g transform="translate(344, 220)">
+      <text x="0" y="0" fill="#18181b" font-size="22" font-weight="700" letter-spacing="-0.02em">Codorum</text>
+      <text x="0" y="32" fill="#71717a" font-size="15" font-family="Georgia, serif">A desktop file watcher that monitors text and markdown</text>
+      <text x="0" y="56" fill="#71717a" font-size="15" font-family="Georgia, serif">files in real-time with diff visualization.</text>
+      <!-- Code block -->
+      <rect x="0" y="80" width="500" height="44" rx="10" fill="#f0efed" stroke="#e4e4e7" stroke-width="1"/>
+      <text x="16" y="106" fill="#2a7272" font-size="13" font-family="monospace">const</text>
+      <text x="56" y="106" fill="#18181b" font-size="13" font-family="monospace"> watcher = </text>
+      <text x="160" y="106" fill="#2a7272" font-size="13" font-family="monospace">new</text>
+      <text x="186" y="106" fill="#ca8a04" font-size="13" font-family="monospace"> FileWatcher</text>
+      <text x="286" y="106" fill="#a1a1aa" font-size="13" font-family="monospace">();</text>
+    </g>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 6: PHOSPHOR + EMBER THEMES (side by side)
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="screen-6-themes" transform="translate(1280, 1800)">
+    <text x="20" y="30" fill="#a1a1aa" font-size="14" font-weight="600" letter-spacing="0.1em">SCREEN 6 — PHOSPHOR &amp; EMBER THEMES</text>
+
+    <!-- PHOSPHOR (left half) -->
+    <g transform="translate(20, 50)">
+      <rect x="0" y="0" width="580" height="400" rx="12" fill="#0c110c" stroke="#1a261a" stroke-width="1"/>
+      <!-- Toolbar -->
+      <rect x="0" y="0" width="580" height="36" rx="12" fill="#070a07"/>
+      <rect x="0" y="24" width="580" height="12" fill="#070a07"/>
+      <line x1="0" y1="36" x2="580" y2="36" stroke="#1a261a" stroke-width="1"/>
+      <text x="16" y="24" fill="#3a6a3a" font-size="12" font-weight="700" letter-spacing="0.08em" font-family="monospace">CODORUM</text>
+      <rect x="480" y="8" width="72" height="22" rx="6" fill="none" stroke="#1a261a" stroke-width="1"/>
+      <text x="490" y="24" fill="#6aaa6a" font-size="11" font-weight="500">phosphor</text>
+
+      <!-- Sidebar hint -->
+      <rect x="0" y="36" width="140" height="364" fill="#070a07"/>
+      <line x1="140" y1="36" x2="140" y2="400" stroke="#1a261a" stroke-width="1"/>
+      <g transform="translate(10, 60)">
+        <text x="8" y="0" fill="#3a6a3a" font-size="10">▼</text>
+        <text x="22" y="0" fill="#6aaa6a" font-size="11" font-weight="600">src</text>
+        <rect x="2" y="10" width="126" height="22" rx="4" fill="rgba(0,200,152,0.12)"/>
+        <circle cx="14" cy="21" r="2.5" fill="#00c898"/>
+        <text x="22" y="25" fill="#c0e8c0" font-size="11" font-weight="500">main.rs</text>
+      </g>
+
+      <!-- Card -->
+      <rect x="152" y="50" width="416" height="120" rx="10" fill="#111711" stroke="rgba(0,200,152,0.25)" stroke-width="1"/>
+      <g transform="translate(152, 50)">
+        <line x1="0" y1="36" x2="416" y2="36" stroke="#1a261a" stroke-width="1"/>
+        <circle cx="22" cy="18" r="3.5" fill="#00c898"/>
+        <text x="34" y="22" fill="#c0e8c0" font-size="12" font-weight="600">main</text>
+        <text x="66" y="22" fill="#3a6a3a" font-size="12">.rs</text>
+        <text x="340" y="22" fill="#00ee78" font-size="9" font-weight="600" font-family="monospace">+4</text>
+      </g>
+      <text x="172" y="108" fill="#00c898" font-size="11" font-family="monospace">fn</text>
+      <text x="190" y="108" fill="#c0e8c0" font-size="11" font-family="monospace"> main() {</text>
+      <text x="172" y="126" fill="#c0e8c0" font-size="11" font-family="monospace">  tauri::Builder</text>
+      <text x="172" y="144" fill="#c0e8c0" font-size="11" font-family="monospace">    .</text>
+      <text x="182" y="144" fill="#00c898" font-size="11" font-family="monospace">run</text>
+      <text x="200" y="144" fill="#3a6a3a" font-size="11" font-family="monospace">()</text>
+
+      <!-- Label -->
+      <text x="220" y="390" fill="#3a6a3a" font-size="11" text-anchor="middle" font-style="italic">phosphor — green terminal aesthetic</text>
+    </g>
+
+    <!-- EMBER (right half) -->
+    <g transform="translate(620, 50)">
+      <rect x="0" y="0" width="580" height="400" rx="12" fill="#1c1614" stroke="#302420" stroke-width="1"/>
+      <!-- Toolbar -->
+      <rect x="0" y="0" width="580" height="36" rx="12" fill="#12100e"/>
+      <rect x="0" y="24" width="580" height="12" fill="#12100e"/>
+      <line x1="0" y1="36" x2="580" y2="36" stroke="#302420" stroke-width="1"/>
+      <text x="16" y="24" fill="#6a5a4a" font-size="12" font-weight="700" letter-spacing="0.08em" font-family="monospace">CODORUM</text>
+      <rect x="500" y="8" width="56" height="22" rx="6" fill="none" stroke="#302420" stroke-width="1"/>
+      <text x="512" y="24" fill="#a09080" font-size="11" font-weight="500">ember</text>
+
+      <!-- Sidebar hint -->
+      <rect x="0" y="36" width="140" height="364" fill="#12100e"/>
+      <line x1="140" y1="36" x2="140" y2="400" stroke="#302420" stroke-width="1"/>
+      <g transform="translate(10, 60)">
+        <text x="8" y="0" fill="#6a5a4a" font-size="10">▼</text>
+        <text x="22" y="0" fill="#a09080" font-size="11" font-weight="600">src</text>
+        <rect x="2" y="10" width="126" height="22" rx="4" fill="rgba(238,119,51,0.12)"/>
+        <circle cx="14" cy="21" r="2.5" fill="#ee7733"/>
+        <text x="22" y="25" fill="#e8dace" font-size="11" font-weight="500">App.tsx</text>
+      </g>
+
+      <!-- Card -->
+      <rect x="152" y="50" width="416" height="120" rx="10" fill="#221c18" stroke="rgba(238,119,51,0.25)" stroke-width="1"/>
+      <g transform="translate(152, 50)">
+        <line x1="0" y1="36" x2="416" y2="36" stroke="#302420" stroke-width="1"/>
+        <circle cx="22" cy="18" r="3.5" fill="#ee7733"/>
+        <text x="34" y="22" fill="#e8dace" font-size="12" font-weight="600">App</text>
+        <text x="60" y="22" fill="#6a5a4a" font-size="12">.tsx</text>
+        <text x="340" y="22" fill="#77bb55" font-size="9" font-weight="600" font-family="monospace">+28</text>
+        <text x="360" y="22" fill="#ee4433" font-size="9" font-weight="600" font-family="monospace">−5</text>
+      </g>
+      <text x="172" y="108" fill="#ee7733" font-size="11" font-family="monospace">export default function</text>
+      <text x="172" y="126" fill="#e8dace" font-size="11" font-family="monospace">  App() {</text>
+      <text x="172" y="144" fill="#eeaa55" font-size="11" font-family="monospace">  const</text>
+      <text x="218" y="144" fill="#e8dace" font-size="11" font-family="monospace"> theme = ...</text>
+
+      <!-- Label -->
+      <text x="220" y="390" fill="#6a5a4a" font-size="11" text-anchor="middle" font-style="italic">ember — warm dark aesthetic</text>
+    </g>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       COMPONENT SPEC: ANNOTATIONS & MEASUREMENTS
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="annotations" transform="translate(0, 0)">
+    <!-- Screen 1 annotations -->
+    <!-- Toolbar height annotation -->
+    <line x1="1230" y1="50" x2="1250" y2="50" stroke="#5bc4c4" stroke-width="0.5"/>
+    <line x1="1230" y1="94" x2="1250" y2="94" stroke="#5bc4c4" stroke-width="0.5"/>
+    <line x1="1240" y1="50" x2="1240" y2="94" stroke="#5bc4c4" stroke-width="0.5"/>
+    <text x="1252" y="76" fill="#5bc4c4" font-size="9" font-family="monospace">44px</text>
+
+    <!-- Sidebar width annotation -->
+    <line x1="20" y1="856" x2="20" y2="870" stroke="#5bc4c4" stroke-width="0.5"/>
+    <line x1="260" y1="856" x2="260" y2="870" stroke="#5bc4c4" stroke-width="0.5"/>
+    <line x1="20" y1="864" x2="260" y2="864" stroke="#5bc4c4" stroke-width="0.5"/>
+    <text x="120" y="880" fill="#5bc4c4" font-size="9" font-family="monospace" text-anchor="middle">240px</text>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       INTERACTION FLOW DIAGRAM
+       ═══════════════════════════════════════════════════════════ -->
+  <g id="interaction-flows" transform="translate(2560, 50)">
+    <text x="0" y="0" fill="#a1a1aa" font-size="14" font-weight="600" letter-spacing="0.1em">INTERACTION MAP</text>
+
+    <!-- Key shortcuts -->
+    <g transform="translate(0, 30)">
+      <text x="0" y="0" fill="#5bc4c4" font-size="12" font-weight="600">Keyboard Shortcuts</text>
+      <text x="0" y="24" fill="#e4e4e7" font-size="11" font-family="monospace">⌘K</text>
+      <text x="50" y="24" fill="#a1a1aa" font-size="11">→ Open Command Palette</text>
+      <text x="0" y="44" fill="#e4e4e7" font-size="11" font-family="monospace">⌘S</text>
+      <text x="50" y="44" fill="#a1a1aa" font-size="11">→ Save active file</text>
+      <text x="0" y="64" fill="#e4e4e7" font-size="11" font-family="monospace">⌘A</text>
+      <text x="50" y="64" fill="#a1a1aa" font-size="11">→ Select all files</text>
+      <text x="0" y="84" fill="#e4e4e7" font-size="11" font-family="monospace">⌫</text>
+      <text x="50" y="84" fill="#a1a1aa" font-size="11">→ Eject selected / active</text>
+      <text x="0" y="104" fill="#e4e4e7" font-size="11" font-family="monospace">Esc</text>
+      <text x="50" y="104" fill="#a1a1aa" font-size="11">→ Clear selection</text>
+    </g>
+
+    <!-- Mouse interactions -->
+    <g transform="translate(0, 170)">
+      <text x="0" y="0" fill="#5bc4c4" font-size="12" font-weight="600">Mouse Interactions</text>
+      <text x="0" y="24" fill="#e4e4e7" font-size="11">Click file</text>
+      <text x="100" y="24" fill="#a1a1aa" font-size="11">→ Open &amp; scroll to card</text>
+      <text x="0" y="44" fill="#e4e4e7" font-size="11">⌘+Click</text>
+      <text x="100" y="44" fill="#a1a1aa" font-size="11">→ Toggle select</text>
+      <text x="0" y="64" fill="#e4e4e7" font-size="11">Shift+Click</text>
+      <text x="100" y="64" fill="#a1a1aa" font-size="11">→ Range select</text>
+      <text x="0" y="84" fill="#e4e4e7" font-size="11">Drag file</text>
+      <text x="100" y="84" fill="#a1a1aa" font-size="11">→ Move between groups</text>
+      <text x="0" y="104" fill="#e4e4e7" font-size="11">Double-click header</text>
+      <text x="100" y="104" fill="#a1a1aa" font-size="11">→ Collapse/expand card</text>
+      <text x="0" y="124" fill="#e4e4e7" font-size="11">Right-click</text>
+      <text x="100" y="124" fill="#a1a1aa" font-size="11">→ Open Command Palette</text>
+      <text x="0" y="144" fill="#e4e4e7" font-size="11">Hover card (500ms)</text>
+      <text x="100" y="144" fill="#a1a1aa" font-size="11">→ Auto-activate file</text>
+      <text x="0" y="164" fill="#e4e4e7" font-size="11">Drag+drop files</text>
+      <text x="100" y="164" fill="#a1a1aa" font-size="11">→ Add to watcher</text>
+    </g>
+
+    <!-- File card states -->
+    <g transform="translate(0, 370)">
+      <text x="0" y="0" fill="#5bc4c4" font-size="12" font-weight="600">File Card States</text>
+      <rect x="0" y="16" width="16" height="16" rx="4" fill="#1f1f23" stroke="#27272a" stroke-width="1"/>
+      <text x="24" y="28" fill="#a1a1aa" font-size="11">Default</text>
+      <rect x="0" y="40" width="16" height="16" rx="4" fill="#1f1f23" stroke="rgba(91,196,196,0.25)" stroke-width="1.5"/>
+      <text x="24" y="52" fill="#a1a1aa" font-size="11">Active (cyan glow)</text>
+      <rect x="0" y="64" width="16" height="16" rx="4" fill="#1f1f23" stroke="#27272a" stroke-width="1"/>
+      <text x="24" y="76" fill="#a1a1aa" font-size="11">Collapsed (chevron ▶)</text>
+      <text x="24" y="100" fill="#6b6b73" font-size="11" text-decoration="line-through">Deleted (strikethrough)</text>
+      <rect x="0" y="108" width="60" height="16" rx="4" fill="#27272c"/>
+      <text x="8" y="120" fill="#5bc4c4" font-size="10">modified</text>
+      <text x="68" y="120" fill="#a1a1aa" font-size="11">Dirty (unsaved edits)</text>
+    </g>
+
+    <!-- Editor modes -->
+    <g transform="translate(0, 510)">
+      <text x="0" y="0" fill="#5bc4c4" font-size="12" font-weight="600">Editor Modes by Extension</text>
+      <text x="0" y="24" fill="#e4e4e7" font-size="11">.md .markdown .mdx</text>
+      <text x="150" y="24" fill="#a1a1aa" font-size="11">→ Tiptap WYSIWYG</text>
+      <text x="0" y="44" fill="#e4e4e7" font-size="11">.ts .tsx .rs .py .go ...</text>
+      <text x="150" y="44" fill="#a1a1aa" font-size="11">→ CodeMirror 6</text>
+      <text x="0" y="64" fill="#e4e4e7" font-size="11">.txt (other)</text>
+      <text x="150" y="64" fill="#a1a1aa" font-size="11">→ Plain textarea</text>
+    </g>
+
+    <!-- Color coding -->
+    <g transform="translate(0, 610)">
+      <text x="0" y="0" fill="#5bc4c4" font-size="12" font-weight="600">Extension Color Dots</text>
+      <circle cx="8" cy="20" r="4" fill="#5bc4c4"/>
+      <text x="20" y="24" fill="#a1a1aa" font-size="11">.md (Markdown)</text>
+      <circle cx="8" cy="42" r="4" fill="#e0a644"/>
+      <text x="20" y="46" fill="#a1a1aa" font-size="11">.tsx .ts .js (Script)</text>
+      <circle cx="8" cy="64" r="4" fill="#a78bfa"/>
+      <text x="20" y="68" fill="#a1a1aa" font-size="11">.css .scss (Styles)</text>
+      <circle cx="8" cy="86" r="4" fill="#6bcb8b"/>
+      <text x="20" y="90" fill="#a1a1aa" font-size="11">.json .toml (Config)</text>
+      <circle cx="8" cy="108" r="4" fill="#ef6b7a"/>
+      <text x="20" y="112" fill="#a1a1aa" font-size="11">.rs (Rust)</text>
+    </g>
+
+    <!-- Themes -->
+    <g transform="translate(0, 750)">
+      <text x="0" y="0" fill="#5bc4c4" font-size="12" font-weight="600">Themes (4 available)</text>
+      <rect x="0" y="16" width="18" height="18" rx="4" fill="#18181b" stroke="#27272a" stroke-width="1"/>
+      <text x="24" y="30" fill="#a1a1aa" font-size="11">n01z — dark default</text>
+      <rect x="0" y="40" width="18" height="18" rx="4" fill="#fafaf9" stroke="#e4e4e7" stroke-width="1"/>
+      <text x="24" y="54" fill="#a1a1aa" font-size="11">paper — light mode</text>
+      <rect x="0" y="64" width="18" height="18" rx="4" fill="#0c110c" stroke="#1a261a" stroke-width="1"/>
+      <text x="24" y="78" fill="#a1a1aa" font-size="11">phosphor — green terminal</text>
+      <rect x="0" y="88" width="18" height="18" rx="4" fill="#1c1614" stroke="#302420" stroke-width="1"/>
+      <text x="24" y="102" fill="#a1a1aa" font-size="11">ember — warm dark</text>
+    </g>
+  </g>
+</svg>
