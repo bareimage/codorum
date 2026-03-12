@@ -8,6 +8,7 @@ import { ContentPane } from "./components/ContentPane";
 import { CommandPalette } from "./components/CommandPalette";
 import { Toasts } from "./components/Toasts";
 import { EjectBar } from "./components/EjectBar";
+import { DropZone } from "./components/DropZone";
 import { useAppStore } from "./stores/app-store";
 import { useToastStore } from "./stores/toast-store";
 import { useCommandStore } from "./stores/command-store";
@@ -16,6 +17,7 @@ import type { DropBatchResult, FileRenamedPayload, WatchedFile } from "./types/f
 export default function App() {
   const { addFiles, addGroup } = useAppStore();
   const theme = useAppStore((s) => s.theme);
+  const isFullscreen = useAppStore((s) => s.isFullscreen);
   const addToast = useToastStore((s) => s.add);
   const [dropHovering, setDropHovering] = useState(false);
 
@@ -236,24 +238,20 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen select-none">
-      <Toolbar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <ContentPane />
+    <div className="flex flex-col h-screen select-none" style={{ padding: 16, gap: 16, position: 'relative', overflow: 'hidden' }}>
+      <div className="bg-solid" />
+      <div className="bg-grad" />
+      <div className="ui">
+        {!isFullscreen && <Toolbar />}
+        <div className="main">
+          {!isFullscreen && <Sidebar />}
+          <ContentPane />
+        </div>
       </div>
       <CommandPalette />
       <EjectBar />
       <Toasts />
-
-      {/* Drop zone overlay */}
-      {dropHovering && (
-        <div className="drop-zone-overlay">
-          <div className="drop-zone-indicator">
-            drop files here
-          </div>
-        </div>
-      )}
+      {dropHovering && <DropZone />}
     </div>
   );
 }

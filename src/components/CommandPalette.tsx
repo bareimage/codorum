@@ -1,14 +1,22 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
+import { Search, File, FolderOpen, Plus, Sparkles, Palette } from "lucide-react";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { useCommandStore } from "../stores/command-store";
-import { Icons } from "./Icons";
-import { Kbd } from "./Kbd";
 import type { WatchedFile, DirectoryResult } from "../types/files";
 
 const THEMES = ["n01z", "paper", "phosphor", "ember"] as const;
+
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
+  search: Search,
+  file: File,
+  folder: FolderOpen,
+  plus: Plus,
+  sparkle: Sparkles,
+  palette: Palette,
+};
 
 type PaletteItem =
   | { type: "cmd"; id: string; label: string; icon: "search" | "file" | "folder" | "plus" | "sparkle" | "palette"; kbd?: string; sub?: string }
@@ -49,7 +57,7 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Build items — commands only (no file listings; use sidebar search for files)
+  // Build items
   const items = useMemo<PaletteItem[]>(() => {
     const q = query.toLowerCase();
     const all: PaletteItem[] = [];
@@ -80,7 +88,6 @@ export function CommandPalette() {
 
     if (!q) return all;
 
-    // Filter commands by query
     return all.filter(
       (item) => item.type === "sep" || item.label.toLowerCase().includes(q),
     );
@@ -127,17 +134,13 @@ export function CommandPalette() {
 
   const handleCreateFile = useCallback(async () => {
     if (!newFileTarget || !query.trim()) return;
-    // Default to .md if no extension provided
     let fileName = query.trim();
     if (!fileName.includes(".")) fileName += ".md";
 
     let dir = newFileTarget.dir;
 
-    // If tab has no sourcePath, prompt user to pick a save location
     if (!dir) {
       try {
-        // Build filter matching the file's actual extension so the dialog
-        // doesn't append a different one (e.g. io.sh → io.sh.md)
         const ext = fileName.includes(".")
           ? fileName.split(".").pop()!
           : "md";
@@ -145,13 +148,12 @@ export function CommandPalette() {
           defaultPath: fileName,
           filters: [{ name: `${ext.toUpperCase()} file`, extensions: [ext] }],
         });
-        if (!savePath) return; // user cancelled
-        // Extract directory from chosen path, use the chosen filename
+        if (!savePath) return;
         const lastSep = savePath.lastIndexOf("/");
         dir = savePath.substring(0, lastSep);
         fileName = savePath.substring(lastSep + 1);
       } catch {
-        return; // dialog cancelled
+        return;
       }
     }
 
@@ -194,7 +196,6 @@ export function CommandPalette() {
         const id = createTab("Untitled");
         addToast("Untitled", "tab created", "cyan");
         close();
-        // Trigger rename mode via a custom event the Sidebar will listen for
         setTimeout(() => window.dispatchEvent(new CustomEvent("codorum:rename-tab", { detail: id })), 100);
       } else if (item.id === "theme") {
         cycleTheme();
@@ -258,47 +259,11 @@ export function CommandPalette() {
   let selectableIdx = -1;
 
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) close();
-      }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 500,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        paddingTop: 80,
-        background: "rgba(0,0,0,0.18)",
-        backdropFilter: "blur(24px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-      }}
-    >
-      <div
-        style={{
-          width: 560,
-          borderRadius: 12,
-          overflow: "hidden",
-          background: "var(--cmd-bg)",
-          boxShadow: "var(--cmd-shadow)",
-          border: "1px solid var(--brd)",
-          animation: "cmdIn 120ms cubic-bezier(.34,1.56,.64,1)",
-        }}
-      >
+    <div className="cmd-overlay" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
+      <div className="cmd">
         {/* Search row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "12px 16px",
-            borderBottom: "1px solid var(--brd)",
-          }}
-        >
-          <span style={{ color: "var(--tx3)", display: "flex", flexShrink: 0 }}>
-            <Icons.search />
-          </span>
+        <div className="cmd-input">
+          <Search size={16} />
           <input
             ref={inputRef}
             value={query}
@@ -308,36 +273,18 @@ export function CommandPalette() {
             }}
             onKeyDown={handleKeyDown}
             placeholder={newFileTarget ? `filename (in ${newFileTarget.name})...` : "Type a command..."}
-            style={{
-              flex: 1,
-              fontSize: 15,
-              background: "transparent",
-              color: "var(--tx)",
-              border: "none",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
           />
         </div>
 
         {/* Items */}
-        <div ref={listRef} style={{ maxHeight: 380, overflowY: "auto", padding: "4px 6px" }}>
+        <div ref={listRef} className="cmd-list">
           {newFileTarget ? (
             <div style={{ padding: "12px 10px", fontSize: 13, color: "var(--tx3)" }}>
               Type a filename and press{" "}
               <span style={{ color: "var(--ac)" }}>Enter</span> to create in{" "}
               <span style={{ color: "var(--tx)" }}>{newFileTarget.name}/</span>
               {query.trim() && (
-                <div
-                  style={{
-                    marginTop: 8,
-                    padding: "6px 10px",
-                    borderRadius: 8,
-                    background: "var(--hover)",
-                    color: "var(--tx)",
-                    fontSize: 14,
-                  }}
-                >
+                <div className="cmd-item" style={{ marginTop: 8 }}>
                   {newFileTarget.name}/{query.trim()}
                 </div>
               )}
@@ -347,15 +294,7 @@ export function CommandPalette() {
               {items.map((item) => {
                 if (item.type === "sep") {
                   return (
-                    <div
-                      key={`sep-${item.label}`}
-                      style={{
-                        padding: "12px 10px 4px",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "var(--tx3)",
-                      }}
-                    >
+                    <div key={`sep-${item.label}`} className="cmd-sep">
                       {item.label}
                     </div>
                   );
@@ -363,36 +302,23 @@ export function CommandPalette() {
 
                 selectableIdx++;
                 const isSel = selectableIdx === idx;
-                const IconComp = item.type === "cmd" ? Icons[item.icon] : null;
+                const IconComp = ICON_MAP[item.icon];
 
                 return (
                   <div
                     key={item.id}
                     data-idx={selectableIdx}
+                    className={`cmd-item ${isSel ? "hi" : ""}`}
                     onClick={() => handleActivateItem(item)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: "8px 10px",
-                      borderRadius: 8,
-                      cursor: "pointer",
-                      background: isSel ? "var(--hover)" : "transparent",
-                      transition: "background 50ms",
-                    }}
                   >
                     {IconComp && (
-                      <span style={{ color: "var(--ac)", display: "flex", flexShrink: 0 }}>
-                        <IconComp />
+                      <span className="cmd-icon">
+                        <IconComp size={14} />
                       </span>
                     )}
-                    <span style={{ flex: 1, fontSize: 14, color: "var(--tx)", fontWeight: 500 }}>
-                      {item.label}
-                    </span>
-                    {item.type === "cmd" && item.sub && (
-                      <span style={{ fontSize: 12, color: "var(--tx3)" }}>{item.sub}</span>
-                    )}
-                    {item.kbd && <Kbd>{item.kbd}</Kbd>}
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {item.sub && <span className="cmd-sub">{item.sub}</span>}
+                    {item.kbd && <kbd className="kbd">{item.kbd}</kbd>}
                   </div>
                 );
               })}
@@ -406,30 +332,14 @@ export function CommandPalette() {
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            padding: "8px 16px",
-            borderTop: "1px solid var(--brd)",
-          }}
-        >
+        <div className="cmd-foot">
           {[
             { k: "\u2191\u2193", l: "Navigate" },
             { k: "\u23CE", l: "Open" },
             { k: "esc", l: "Close" },
           ].map((h) => (
-            <span
-              key={h.l}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 12,
-                color: "var(--tx3)",
-              }}
-            >
-              <Kbd>{h.k}</Kbd>
+            <span key={h.l}>
+              <kbd className="kbd">{h.k}</kbd>
               <span>{h.l}</span>
             </span>
           ))}

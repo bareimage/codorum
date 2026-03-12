@@ -1,11 +1,10 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { sortFiles } from "../utils/sortFiles";
-import { Icons } from "./Icons";
 import { ExtDot } from "./ExtDot";
-import { DiffBadge } from "./DiffBadge";
 import { StatusBar } from "./StatusBar";
 import type { WatchedFile } from "../types/files";
 
@@ -99,17 +98,16 @@ function DrawerSection({
 
   return (
     <div
-      className="drawer-section"
+      className="drawer"
       data-section-id={id}
-      style={{
-        position: "relative",
-        borderLeft: isDragOver ? "3px solid var(--ac)" : "3px solid transparent",
-        background: isDragOver ? "color-mix(in srgb, var(--ac) 8%, transparent)" : undefined,
-        borderRadius: isDragOver ? 8 : 0,
-        transition: "border-color 100ms, background 100ms",
-      }}
+      style={isDragOver ? {
+        borderLeft: "3px solid var(--ac)",
+        background: "color-mix(in srgb, var(--ac) 8%, transparent)",
+        borderRadius: 8,
+      } : undefined}
     >
       <button
+        className="dw-btn"
         onClick={onToggle}
         onDoubleClick={(e) => {
           if (renamable) {
@@ -117,22 +115,8 @@ function DrawerSection({
             onStartRename?.();
           }
         }}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          width: "100%",
-          padding: "8px 12px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          textAlign: "left",
-          fontFamily: "inherit",
-        }}
       >
-        <span style={{ color: "var(--tx3)", display: "flex" }}>
-          <Icons.chevron open={isOpen} />
-        </span>
+        <ChevronRight size={12} className={isOpen ? "open" : ""} />
         {renaming ? (
           <input
             ref={renameRef}
@@ -159,22 +143,16 @@ function DrawerSection({
             }}
           />
         ) : (
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: isOpen ? "var(--tx2)" : "var(--tx3)",
-              transition: "color 120ms",
-            }}
-          >
-            {title}
-          </span>
+          <span className="dw-name">{title}</span>
         )}
-        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-          <DiffBadge added={totalAdded} removed={totalRemoved} />
-          <span style={{ fontSize: 11, color: "var(--tx3)", minWidth: 18, textAlign: "right" }}>
-            {files.length}
-          </span>
+        <span className="dw-meta">
+          {(totalAdded > 0 || totalRemoved > 0) && (
+            <span className="diff">
+              {totalAdded > 0 && <span className="d-add">+{totalAdded}</span>}
+              {totalRemoved > 0 && <span className="d-del">{"\u2212"}{totalRemoved}</span>}
+            </span>
+          )}
+          <span className="badge">{files.length}</span>
           {onEject && (
             <span
               onClick={(e) => {
@@ -182,88 +160,41 @@ function DrawerSection({
                 onEject();
               }}
               title={`Eject ${title}`}
-              className="drawer-eject-btn"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 18,
-                height: 18,
-                borderRadius: 4,
-                color: "var(--tx3)",
-                cursor: "pointer",
-                opacity: 0,
-                transition: "opacity 120ms, color 100ms",
-              }}
+              className="dw-eject"
             >
-              <Icons.close />
+              <X size={12} />
             </span>
           )}
         </span>
       </button>
 
-      <div
-        style={{
-          maxHeight: isOpen ? 900 : 0,
-          overflow: "hidden",
-          transition: "max-height 250ms cubic-bezier(0.4, 0, 0.2, 1)",
-        }}
-      >
+      <div className={`dw-files ${isOpen ? "" : "closed"}`}>
         {sorted.map((file) => {
           const isActive = activeFileId === file.id;
           const isSelected = selectedIds.has(file.id);
-          const highlighted = isActive || isSelected;
           const excerpt = searchExcerpts?.get(file.id);
           return (
             <button
               key={file.id}
-              className={!highlighted ? "file-row" : undefined}
+              className={`fi ${isActive ? "active" : ""} ${isSelected ? "selected" : ""}`}
               onMouseDown={(e) => {
                 if (e.button === 0) onFileDragStart(file.id, file.name, e.clientY);
               }}
               onClick={(e) => handleFileClick(file.id, e)}
-              style={{
-                display: "flex",
-                flexDirection: excerpt ? "column" : "row",
-                alignItems: excerpt ? "flex-start" : "center",
-                gap: excerpt ? 2 : 8,
-                width: highlighted ? "calc(100% - 12px)" : "100%",
-                padding: "5px 12px 5px 32px",
-                background: isSelected
-                  ? "color-mix(in srgb, var(--warn) 15%, transparent)"
-                  : isActive
-                    ? "var(--ring)"
-                    : undefined,
-                border: "none",
-                borderRadius: highlighted ? 6 : 0,
-                margin: highlighted ? "1px 6px" : "0",
-                cursor: "grab",
-                textAlign: "left",
-                fontFamily: "inherit",
-                transition: "all 60ms",
-              }}
+              style={excerpt ? { flexDirection: "column", alignItems: "flex-start", gap: 2 } : undefined}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
-                <ExtDot extension={file.extension} size={6} />
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: file.deleted ? "var(--deleted)" : isActive ? "var(--tx)" : "var(--tx2)",
-                    fontWeight: isActive ? 500 : 400,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    flex: 1,
-                    textDecoration: file.deleted ? "line-through" : undefined,
-                  }}
-                >
-                  {file.name}
-                  <span style={{ color: file.deleted ? "var(--deleted)" : "var(--tx3)", fontWeight: 400 }}>
-                    .{file.extension}
-                  </span>
+              <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
+              <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
+                {file.name}
+                <span className="ext">.{file.extension}</span>
+              </span>
+              {(file.linesAdded || file.linesRemoved) ? (
+                <span className="diff">
+                  {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
+                  {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
                 </span>
-                <DiffBadge added={file.linesAdded} removed={file.linesRemoved} />
-              </div>
+              ) : null}
+              {file.deleted && <span className="del-badge">deleted</span>}
               {excerpt && (
                 <div
                   style={{
@@ -273,7 +204,7 @@ function DrawerSection({
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                     width: "100%",
-                    paddingLeft: 14,
+                    paddingLeft: 22,
                     lineHeight: 1.4,
                   }}
                   dangerouslySetInnerHTML={{ __html: excerpt }}
@@ -283,7 +214,6 @@ function DrawerSection({
           );
         })}
       </div>
-
     </div>
   );
 }
@@ -448,129 +378,51 @@ export function Sidebar() {
   };
 
   return (
-    <div
-      style={{
-        width: 240,
-        flexShrink: 0,
-        background: "var(--bg2)",
-        display: "flex",
-        flexDirection: "column",
-        borderRight: "1px solid var(--brd)",
-        overflow: "hidden",
-      }}
-    >
+    <div className="sidebar">
+      {/* Header */}
+      <div className="sb-head">
+        <span>Explorer</span>
+        <button className="btn-icon" onClick={handleCreateTab}>
+          <Plus size={16} />
+        </button>
+      </div>
+
       {/* Search */}
-      <div style={{ padding: "12px 12px 6px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "6px 10px",
-            background: "var(--input-bg)",
-            border: "1px solid var(--brd)",
-            borderRadius: 8,
-          }}
-        >
-          <span style={{ color: "var(--tx3)", display: "flex", flexShrink: 0 }}>
-            <Icons.search />
-          </span>
+      <div className="sb-search">
+        <div className="sb-search-in">
+          <Search size={14} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={searchMode === "content" ? "Search in files..." : "Find files..."}
-            style={{
-              flex: 1,
-              fontSize: 13,
-              background: "transparent",
-              color: "var(--tx)",
-              border: "none",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
           />
+          <div className="filter-pills">
+            <button className={`fpill ${searchMode === "filename" ? "on" : ""}`} onClick={() => setSearchMode("filename")}>Name</button>
+            <button className={`fpill ${searchMode === "content" ? "on" : ""}`} onClick={() => setSearchMode("content")}>Body</button>
+          </div>
         </div>
       </div>
 
-      {/* Search mode toggle + sort bar */}
-      <div style={{ display: "flex", gap: 1, padding: "2px 12px 4px", alignItems: "center" }}>
+      {/* Sort */}
+      <div className="sb-sort">
         {(["Name", "Modified", "Changes"] as const).map((label) => {
           const value = label.toLowerCase() as "name" | "modified" | "changes";
           return (
             <button
               key={value}
+              className={`sort-b ${sortBy === value ? "on" : ""}`}
               onClick={() => setSortBy(value)}
-              style={{
-                fontSize: 12,
-                padding: "4px 10px",
-                borderRadius: 6,
-                border: "none",
-                cursor: "pointer",
-                fontWeight: sortBy === value ? 600 : 400,
-                fontFamily: "inherit",
-                background: sortBy === value ? "var(--hover)" : "transparent",
-                color: sortBy === value ? "var(--ac)" : "var(--tx3)",
-                transition: "all 80ms",
-              }}
             >
               {label}
             </button>
           );
         })}
-        <div style={{ flex: 1 }} />
-        {/* + button to create tab */}
-        <button
-          onClick={handleCreateTab}
-          title="Create tab"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 22,
-            height: 22,
-            borderRadius: 6,
-            border: "none",
-            background: "transparent",
-            color: "var(--tx3)",
-            cursor: "pointer",
-            fontSize: 16,
-            fontWeight: 300,
-            fontFamily: "inherit",
-            transition: "all 80ms",
-          }}
-          className="sidebar-add-btn"
-        >
-          +
-        </button>
       </div>
 
-      {/* Search mode toggle */}
-      <div style={{ display: "flex", gap: 1, padding: "0 12px 6px" }}>
-        {(["filename", "content"] as const).map((mode) => (
-          <button
-            key={mode}
-            onClick={() => setSearchMode(mode)}
-            style={{
-              fontSize: 11,
-              padding: "3px 8px",
-              borderRadius: 5,
-              border: "none",
-              cursor: "pointer",
-              fontWeight: searchMode === mode ? 600 : 400,
-              fontFamily: "inherit",
-              background: searchMode === mode ? "var(--hover)" : "transparent",
-              color: searchMode === mode ? "var(--ac)" : "var(--tx3)",
-              transition: "all 80ms",
-            }}
-          >
-            {mode === "filename" ? "Name" : "Content"}
-          </button>
-        ))}
-      </div>
-      <div style={{ height: 1, background: "var(--brd)", margin: "0 12px" }} />
+      <div className="sb-div" />
 
-      {/* Drawers */}
-      <div style={{ flex: 1, overflowY: "auto", paddingTop: 4 }}>
+      {/* Tree */}
+      <div className="tree">
         {(!q || filteredPinned.length > 0) && pinnedFiles.length > 0 && (
           <DrawerSection
             id="pinned"
@@ -643,8 +495,8 @@ export function Sidebar() {
         )}
 
         {files.length === 0 && (
-          <div style={{ padding: "32px 16px", textAlign: "center" }}>
-            <div style={{ color: "var(--tx3)", opacity: 0.25, fontSize: 10 }}>drop files or folders</div>
+          <div className="empty">
+            <div className="empty-text">drop files or folders</div>
           </div>
         )}
       </div>
