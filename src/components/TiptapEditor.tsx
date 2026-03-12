@@ -177,6 +177,7 @@ export function TiptapEditor({ content, onChange, fileId, editable = true }: Tip
       {editable && <BubbleMenu
         editor={editor}
         className="tiptap-bubble-menu"
+        tippyOptions={{ appendTo: () => document.querySelector('.ui') || document.body }}
       >
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -260,6 +261,7 @@ export function TiptapEditor({ content, onChange, fileId, editable = true }: Tip
       {editable && <FloatingMenu
         editor={editor}
         className="tiptap-floating-menu"
+        tippyOptions={{ appendTo: () => document.querySelector('.ui') || document.body }}
       >
         <span style={{ fontSize: 12, color: "var(--tx3)", opacity: 0.6 }}>
           Type <kbd style={{ fontFamily: "monospace", padding: "0 4px", background: "var(--hover)", borderRadius: 3, fontSize: 11 }}>/</kbd> for commands

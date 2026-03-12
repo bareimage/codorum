@@ -104,11 +104,11 @@ body{
 @keyframes eyeLook{0%,40%,50%,100%{transform:translateX(0)}42%,48%{transform:translateX(2px)}}
 
 /* ═══ Background ═══ */
-.bg-solid{position:absolute;inset:0;z-index:0;background:var(--bg)}
-.bg-grad{position:absolute;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
+.bg-solid{position:fixed;inset:0;z-index:0;background:var(--bg)}
+.bg-grad{position:fixed;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
 
 /* ═══ UI Layer ═══ */
-.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%}
+.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%;padding-bottom:16px}
 
 /* ═══ Toolbar ═══ */
 .toolbar-w{display:flex;justify-content:center;width:100%;z-index:50}
@@ -224,9 +224,9 @@ button{cursor:pointer;font-family:inherit}
 .fc-h .del-badge{font-size:11px;padding:2px 8px;border-radius:9999px;background:var(--danger);color:#fff;font-weight:600}
 
 /* Card Body */
-.fc-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease}
+.fc-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;position:relative}
 .fc-body.closed{max-height:0!important;opacity:0}
-.fc-body.open{opacity:1}
+.fc-body.open{opacity:1;box-shadow:inset 0 12px 12px -12px var(--card),inset 0 -12px 12px -12px var(--card)}
 
 /* Markdown body */
 .md-body{padding:24px 32px 24px 52px;font-family:Georgia,"Times New Roman",serif;font-size:15px;line-height:1.8;color:var(--tx2)}
@@ -307,6 +307,8 @@ button{cursor:pointer;font-family:inherit}
   min-width: 220px;
   max-height: 320px;
   overflow-y: auto;
+  z-index: 50;
+  position: relative;
 }
 .slash-menu-item {
   display: flex;
@@ -649,10 +651,13 @@ button{cursor:pointer;font-family:inherit}
   display: flex;
   gap: 2px;
   padding: 4px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
+  background: var(--card);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid var(--brd);
   border-radius: var(--radius);
   box-shadow: 0 4px 12px var(--shadow-heavy);
+  z-index: 50;
 }
 
 /* ── Floating Menu (empty line → block type picker) ────── */
@@ -769,7 +774,7 @@ button{cursor:pointer;font-family:inherit}
 
 /* ═══ File card body styles for editors ═══ */
 .fc-body .tiptap-editor-content {
-  padding: 0;
+  padding: 24px 32px 24px 52px;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 15px;
   line-height: 1.8;
