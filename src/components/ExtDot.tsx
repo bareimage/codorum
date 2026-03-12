@@ -38,3 +38,7 @@ export function ExtDot({ extension, size = 7 }: ExtDotProps) {
     />
   );
 }
+
+ExtDot.getColor = (extension: string): string => {
+  return EXT_COLORS[extension.toLowerCase()] || "var(--text-muted)";
+};

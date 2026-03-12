@@ -22,6 +22,10 @@ interface AppState {
   // Theme
   theme: string;
 
+  // Fullscreen
+  isFullscreen: boolean;
+  toggleFullscreen: () => void;
+
   // Search
   searchMode: "filename" | "content";
   setSearchMode: (mode: "filename" | "content") => void;
@@ -98,6 +102,8 @@ export const useAppStore = create<AppState>()(
       savedFilePaths: [],
       groups: [],
       theme: "n01z",
+      isFullscreen: false,
+      toggleFullscreen: () => set((s) => ({ isFullscreen: !s.isFullscreen })),
       drawerOpen: { pinned: true, loose: true },
       sortBy: "modified",
       search: "",

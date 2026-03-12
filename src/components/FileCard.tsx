@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { ChevronRight } from "lucide-react";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { TiptapEditor } from "./TiptapEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
-import { Icons } from "./Icons";
 import { ExtDot } from "./ExtDot";
-import { DiffBadge } from "./DiffBadge";
 import { ResizeHandle } from "./ResizeHandle";
 import type { WatchedFile } from "../types/files";
 
@@ -51,6 +50,8 @@ export function FileCard({
   const addToast = useToastStore((s) => s.add);
   const cardHeight = useAppStore((s) => s.cardHeights[file.id] ?? null);
   const dirty = useAppStore((s) => s.cardDirty[file.id] ?? false);
+  const selectedIds = useAppStore((s) => s.selectedIds);
+  const isSelected = selectedIds.has(file.id);
   const setCardHeight = useAppStore((s) => s.setCardHeight);
   const setCardDirty = useAppStore((s) => s.setCardDirty);
   const [content, setContent] = useState(file.content);
@@ -59,9 +60,9 @@ export function FileCard({
   const bodyRef = useRef<HTMLDivElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mode = detectMode(file.extension);
+  const extColor = ExtDot.getColor(file.extension);
 
   // Sync content synchronously during render when file changes externally.
-  // This ensures editors mount with correct content (useEffect would be too late).
   if (file.content !== trackedContent) {
     setContent(file.content);
     setTrackedContent(file.content);
@@ -116,11 +117,10 @@ export function FileCard({
     return match ? match[1].trim() : null;
   })();
 
-
   return (
     <div
       id={file.id}
-      className={`file-card${isActive ? " active" : ""}`}
+      className={`fc${isActive ? " active" : ""}${isSelected ? " selected" : ""}`}
       onMouseEnter={() => {
         if (!isActive) {
           hoverTimer.current = setTimeout(onActivate, 500);
@@ -133,71 +133,51 @@ export function FileCard({
     >
       {/* Card header */}
       <div
-        className="file-card-header"
-        style={{ borderBottom: isCollapsed ? "none" : undefined }}
+        className="fc-h"
         onDoubleClick={(e) => {
           e.stopPropagation();
           onToggleCollapse();
         }}
       >
         <button
-          className="file-card-chevron"
+          className={`chev ${!isCollapsed ? "open" : ""}`}
           onClick={(e) => {
             e.stopPropagation();
             onToggleCollapse();
           }}
         >
-          <Icons.chevron open={!isCollapsed} />
+          <ChevronRight size={16} />
         </button>
-        <ExtDot extension={file.extension} />
+        <span className="cdot" style={{ background: extColor }} />
         <span
-          className="file-card-name"
+          className="ftitle"
           style={file.deleted ? { color: "var(--deleted)", textDecoration: "line-through" } : undefined}
         >
           {file.name}
-          {file.extension && (
-            <span style={{ color: file.deleted ? "var(--deleted)" : "var(--tx3)", fontWeight: 400 }}>
-              .{file.extension}
-            </span>
-          )}
+          {file.extension && <span className="ext">.{file.extension}</span>}
         </span>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <span className="file-card-time">{timeAgo(file.modified)}</span>
-          <DiffBadge added={file.linesAdded} removed={file.linesRemoved} />
-          {file.pinned && (
-            <span style={{ color: "var(--warn)", fontSize: 10, flexShrink: 0 }}>
-              &#x25CF;
-            </span>
-          )}
-          {file.deleted && (
-            <span
-              style={{
-                color: "var(--danger)",
-                fontSize: 11,
-                flexShrink: 0,
-                background: "var(--hover)",
-                padding: "2px 8px",
-                borderRadius: 4,
-                opacity: 0.8,
-              }}
-            >
-              deleted
-            </span>
-          )}
+        <div className="fmeta">
+          {file.pinned && <span className="pin" />}
+          {file.deleted && <span className="del-badge">deleted</span>}
           {dirty && !file.deleted && (
-            <span
-              style={{
-                color: "var(--ac)",
-                fontSize: 11,
-                flexShrink: 0,
-                background: "var(--hover)",
-                padding: "2px 8px",
-                borderRadius: 4,
-              }}
-            >
+            <span style={{
+              fontSize: 11,
+              padding: "2px 8px",
+              borderRadius: 9999,
+              background: "var(--hover)",
+              color: "var(--ac)",
+              fontWeight: 600,
+            }}>
               modified
             </span>
           )}
+          <span className="ts">{timeAgo(file.modified)}</span>
+          {(file.linesAdded || file.linesRemoved) ? (
+            <span className="diff">
+              {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
+              {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -205,7 +185,7 @@ export function FileCard({
       {isCollapsed && subtitle && (
         <div
           style={{
-            padding: "0 20px 12px 48px",
+            padding: "0 24px 12px 52px",
             fontFamily: "Georgia, 'Times New Roman', serif",
             fontStyle: "italic",
             fontSize: 13,
@@ -219,48 +199,48 @@ export function FileCard({
         </div>
       )}
 
-      {/* Card body — hidden when collapsed */}
-      {!isCollapsed && (
-        <div
-          ref={bodyRef}
-          className="file-card-body"
-          onClick={(e) => e.stopPropagation()}
-          style={cardHeight ? { maxHeight: cardHeight, overflowY: "auto" } : undefined}
-        >
+      {/* Card body */}
+      <div
+        ref={bodyRef}
+        className={`fc-body ${isCollapsed ? "closed" : "open"}`}
+        onClick={(e) => e.stopPropagation()}
+        style={!isCollapsed && cardHeight ? { maxHeight: cardHeight, overflowY: "auto" } : isCollapsed ? undefined : undefined}
+      >
+        {!isCollapsed && (
           <ErrorBoundary>
-          {mode === "markdown" && typeof content === "string" && (
-            <TiptapEditor
-              key={`tiptap-${file.id}-${file._rev ?? 0}`}
-              content={content}
-              onChange={handleMarkdownChange}
-              fileId={file.id}
-              editable={isActive && !file.deleted}
-            />
-          )}
-          {mode === "code" && typeof content === "string" && (
-            <CodeEditor
-              key={`code-${file.id}-${file._rev ?? 0}`}
-              content={content}
-              language={file.extension}
-              onChange={handleTextChange}
-              fileId={file.id}
-              editable={isActive && !file.deleted}
-            />
-          )}
-          {mode === "text" && typeof content === "string" && (
-            <textarea
-              key={`text-${file.id}-${file._rev ?? 0}`}
-              ref={textareaRef}
-              className="source-editor"
-              value={content}
-              onChange={(e) => handleTextChange(e.target.value)}
-              readOnly={!isActive || file.deleted}
-              spellCheck={false}
-            />
-          )}
+            {mode === "markdown" && typeof content === "string" && (
+              <TiptapEditor
+                key={`tiptap-${file.id}-${file._rev ?? 0}`}
+                content={content}
+                onChange={handleMarkdownChange}
+                fileId={file.id}
+                editable={isActive && !file.deleted}
+              />
+            )}
+            {mode === "code" && typeof content === "string" && (
+              <CodeEditor
+                key={`code-${file.id}-${file._rev ?? 0}`}
+                content={content}
+                language={file.extension}
+                onChange={handleTextChange}
+                fileId={file.id}
+                editable={isActive && !file.deleted}
+              />
+            )}
+            {mode === "text" && typeof content === "string" && (
+              <textarea
+                key={`text-${file.id}-${file._rev ?? 0}`}
+                ref={textareaRef}
+                className="source-editor"
+                value={content}
+                onChange={(e) => handleTextChange(e.target.value)}
+                readOnly={!isActive || file.deleted}
+                spellCheck={false}
+              />
+            )}
           </ErrorBoundary>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Resize handle — only when expanded */}
       {!isCollapsed && (

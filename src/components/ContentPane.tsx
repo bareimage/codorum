@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useRef, useCallback } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { sortFiles } from "../utils/sortFiles";
 import { FileCard } from "./FileCard";
@@ -16,6 +17,8 @@ export function ContentPane() {
     openFile,
     cardCollapsed,
     toggleCardCollapse,
+    isFullscreen,
+    toggleFullscreen,
   } = useAppStore();
 
   const q = search.toLowerCase().trim();
@@ -131,34 +134,31 @@ export function ContentPane() {
   return (
     <div
       ref={scrollRef}
-      style={{
-        flex: 1,
-        overflowY: "auto",
-        background: "var(--bg)",
-        padding: "28px 36px",
-        transition: "background 200ms",
-      }}
+      className={`content ${isFullscreen ? "fullscreen" : ""}`}
     >
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 24 }}>
-        <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.015em" }}>Files</span>
-        <span style={{ fontSize: 12, color: "var(--tx3)" }}>{totalVisible} visible</span>
+      <div className="c-head">
+        <h1>Files</h1>
+        <span className="sub">{totalVisible} visible</span>
+        <div className="acts">
+          <button className="btn-round" onClick={toggleFullscreen}>
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+        </div>
       </div>
 
       {sections.length === 0 && (
-        <div style={{ textAlign: "center", padding: "120px 20px", color: "var(--tx3)" }}>
-          <div style={{ fontSize: 13, opacity: 0.5 }}>
+        <div className="empty">
+          <div className="empty-text">
             {search ? "no matches" : "drop files or folders"}
           </div>
         </div>
       )}
 
       {sections.map((section) => (
-        <div key={section.key} style={{ marginBottom: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--tx3)", flexShrink: 0 }}>
-              {section.title}
-            </span>
-            <span style={{ flex: 1, height: 1, background: "var(--brd)", opacity: 0.5 }} />
+        <div key={section.key} className="sec">
+          <div className="sec-h">
+            <span className="lbl">{section.title}</span>
+            <span className="ln" />
           </div>
 
           {section.files.map((file) => (
