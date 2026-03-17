@@ -190,10 +190,13 @@ export function FileCard({
             </span>
           ) : null}
         </div>
-        <div style={{ width: "100%", paddingLeft: 16 }}>
+      </div>
+      
+      {file.history && file.history.length > 0 && (
+        <div style={{ width: "100%", padding: "0 24px 12px 52px" }}>
           <MicroTimeline history={file.history} active={isActive} />
         </div>
-      </div>
+      )}
 
       {/* Collapsed subtitle */}
       {isCollapsed && subtitle && (

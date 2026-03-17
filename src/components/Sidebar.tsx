@@ -182,21 +182,25 @@ function DrawerSection({
                 if (e.button === 0) onFileDragStart(file.id, file.name, e.clientY);
               }}
               onClick={(e) => handleFileClick(file.id, e)}
-              style={excerpt ? { flexDirection: "column", alignItems: "flex-start", gap: 2 } : undefined}
+              style={{ flexDirection: "column", alignItems: "flex-start", gap: 2, paddingBottom: file.history?.length ? 8 : undefined }}
             >
-              <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
-              <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
-                {file.name}
-                <span className="ext">.{file.extension}</span>
-              </span>
-              {(file.linesAdded || file.linesRemoved) ? (
-                <span className="diff">
-                  {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
-                  {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%" }}>
+                <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
+                <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
+                  {file.name}
+                  <span className="ext">.{file.extension}</span>
                 </span>
-              ) : null}
-              {file.deleted && <span className="del-badge">deleted</span>}
-              <MicroTimeline history={file.history} active={isActive} />
+                {(file.linesAdded || file.linesRemoved) ? (
+                  <span className="diff">
+                    {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
+                    {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
+                  </span>
+                ) : null}
+                {file.deleted && <span className="del-badge">deleted</span>}
+              </div>
+              <div style={{ width: "100%", marginLeft: 2, boxSizing: "border-box" }}>
+                <MicroTimeline history={file.history} active={isActive} />
+              </div>
               {excerpt && (
                 <div
                   style={{
