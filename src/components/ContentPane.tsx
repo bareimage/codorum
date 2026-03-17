@@ -1,8 +1,8 @@
 import { useMemo, useEffect, useRef, useCallback } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { sortFiles } from "../utils/sortFiles";
 import { FileCard } from "./FileCard";
+import { DockTimeline } from "./DockTimeline";
 import type { WatchedFile } from "../types/files";
 
 export function ContentPane() {
@@ -18,8 +18,9 @@ export function ContentPane() {
     cardCollapsed,
     toggleCardCollapse,
     isFullscreen,
-    toggleFullscreen,
   } = useAppStore();
+
+  const activeFile = useMemo(() => files.find((f) => f.id === activeFileId), [files, activeFileId]);
 
   const q = search.toLowerCase().trim();
 
@@ -139,11 +140,6 @@ export function ContentPane() {
       <div className="c-head">
         <h1>Files</h1>
         <span className="sub">{totalVisible} visible</span>
-        <div className="acts">
-          <button className="btn-round" onClick={toggleFullscreen}>
-            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-          </button>
-        </div>
       </div>
 
       {sections.length === 0 && (
@@ -175,6 +171,11 @@ export function ContentPane() {
       ))}
 
       <div style={{ height: 80 }} />
+      
+      {/* Global Dock Scrubber for Active File */}
+      {activeFile && activeFile.history && activeFile.history.length > 0 && (
+        <DockTimeline file={activeFile} />
+      )}
     </div>
   );
 }

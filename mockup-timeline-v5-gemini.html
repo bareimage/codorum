@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="n01z">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codorum — Timeline v5 (Gemini: Docked Timeline & Micro-Scrubbers)</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & THEMES
+   ═══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#000;--bg2:rgba(30,30,35,.65);--card:rgba(45,45,50,.65);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.6);
+  --tx3:rgba(255,255,255,.4);--ac:#0A84FF;--ac2:#5E5CE6;--ac3:#30D158;
+  --warn:#FF9F0A;--danger:#FF453A;--brd:rgba(255,255,255,.1);
+  --input-bg:rgba(0,0,0,.2);--cmd-bg:rgba(30,30,35,.85);
+  --bg-gradient:radial-gradient(circle at 20% 0%,rgba(94,92,230,.5) 0%,transparent 50%),radial-gradient(circle at 80% 100%,rgba(10,132,255,.5) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,69,58,.3) 0%,transparent 50%);
+  --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="paper"]{
+  --bg:#F5F5F7;--bg2:rgba(255,255,255,.65);--card:rgba(255,255,255,.8);
+  --hover:rgba(0,0,0,.05);--tx:#1D1D1F;--tx2:rgba(0,0,0,.6);--tx3:rgba(0,0,0,.4);
+  --ac:#007AFF;--ac2:#5856D6;--ac3:#34C759;--warn:#FF9500;--danger:#FF3B30;--brd:rgba(0,0,0,.08);
+  --input-bg:rgba(0,0,0,.04);--cmd-bg:rgba(255,255,255,.85);
+  --bg-gradient:radial-gradient(circle at 0% 0%,rgba(88,86,214,.3) 0%,transparent 50%),radial-gradient(circle at 100% 100%,rgba(0,122,255,.3) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,59,48,.2) 0%,transparent 50%);
+}
+[data-theme="phosphor"]{
+  --bg:#00120a;--bg2:rgba(10,40,25,.5);--card:rgba(20,50,35,.5);
+  --hover:rgba(255,255,255,.15);--tx:#fff;--tx2:rgba(255,255,255,.7);--tx3:rgba(255,255,255,.5);
+  --ac:#34C759;--ac2:#32ADE6;--ac3:#A2845E;--warn:#FFD60A;--danger:#FF453A;--brd:rgba(255,255,255,.15);
+  --input-bg:rgba(0,0,0,.25);--cmd-bg:rgba(10,40,25,.85);
+  --bg-gradient:radial-gradient(circle at 10% 20%,rgba(0,176,155,.5) 0%,transparent 60%),radial-gradient(circle at 90% 80%,rgba(150,201,61,.5) 0%,transparent 60%);
+}
+[data-theme="ember"]{
+  --bg:#1c0a00;--bg2:rgba(45,20,10,.6);--card:rgba(60,25,15,.6);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.7);--tx3:rgba(255,255,255,.5);
+  --ac:#FF9500;--ac2:#FF2D55;--ac3:#FFCC00;--warn:#FFD60A;--danger:#FF3B30;--brd:rgba(255,255,255,.1);
+  --input-bg:rgba(0,0,0,.2);--cmd-bg:rgba(45,20,10,.85);
+  --bg-gradient:radial-gradient(circle at 80% 20%,rgba(255,78,80,.5) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(249,212,35,.5) 0%,transparent 60%);
+}
+
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:var(--font-sans);background:var(--bg);color:var(--tx);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
+  transition:background 200ms ease,color 200ms ease;
+  display:flex;flex-direction:column;padding:16px;gap:16px;position:relative;
+}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+
+@keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.bg-solid{position:fixed;inset:0;z-index:0;background:var(--bg)}
+.bg-grad{position:fixed;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
+.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%}
+
+/* Toolbar */
+.toolbar-w{display:flex;justify-content:center;width:100%;z-index:50}
+.toolbar{height:48px;display:flex;align-items:center;padding:0 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.1);min-width:400px}
+.brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;letter-spacing:-.02em}
+.sep{width:1px;height:16px;background:var(--brd);margin:0 16px}
+.toolbar-r{margin-left:auto;display:flex;gap:8px;align-items:center;}
+button{cursor:pointer;font-family:inherit;background:transparent;border:none}
+.btn-ghost{height:32px;padding:0 16px;border:1px solid var(--brd);border-radius:9999px;font-size:13px;font-weight:500;color:var(--tx2);transition:background .2s}
+.btn-ghost:hover{background:var(--hover);color:var(--tx)}
+
+/* Main */
+.main{display:flex;flex:1;overflow:hidden;gap:16px}
+
+/* Sidebar */
+.sidebar{width:280px;flex-shrink:0;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);display:flex;flex-direction:column;border:1px solid var(--brd);border-radius:12px;overflow:hidden}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 12px;font-size:13px;font-weight:600;color:var(--tx2);letter-spacing:-.02em}
+.tree{flex:1;overflow-y:auto;padding:8px 0 16px}
+.fi{display:flex;flex-direction:column;padding:8px 12px;border-radius:8px;text-align:left;color:var(--tx2);transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);margin:0 12px 2px;cursor:pointer;}
+.fi:hover{background:var(--hover)}
+.fi.active{background:var(--ac);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);transform:scale(1.02)}
+.fi-top{display:flex;align-items:center;gap:12px;width:100%}
+.fi .dot{width:10px;height:10px;border-radius:9999px;flex-shrink:0}
+.fi .fl{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}
+.fi .fl .ext{font-weight:400;color:var(--tx3)}
+.fi.active .fl .ext{color:rgba(255,255,255,.7)}
+.fi.active .dot{background:#fff!important;box-shadow:0 0 8px rgba(255,255,255,0.8)}
+
+/* MICRO TIMELINE (Inside Sidebar & Cards) */
+.micro-tl{display:flex;align-items:center;height:8px;margin-top:6px;padding-left:22px;position:relative;width:100%;gap:3px;opacity:0.7;transition:opacity .2s}
+.fi:hover .micro-tl, .fi.active .micro-tl { opacity: 1; }
+.micro-axis{position:absolute;left:22px;right:10px;top:50%;height:1px;background:var(--tx3);opacity:0.3;z-index:0}
+.micro-node{width:6px;height:6px;border-radius:50%;z-index:2;position:relative}
+.micro-node.add{background:var(--ac3)}
+.micro-node.del{background:var(--danger)}
+.micro-node.mix{background:var(--ac2)}
+.fi.active .micro-axis{background:#fff;opacity:0.4}
+.fi.active .micro-node{box-shadow:0 0 0 1px var(--ac)}
+
+/* Content */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:12px}
+.c-head{display:flex;align-items:baseline;gap:12px;padding:24px 32px 16px; border-bottom:1px solid var(--brd); margin-bottom:16px}
+.c-head h1{font-size:24px;font-weight:600;letter-spacing:-.02em}
+
+.content-scroll{flex:1;overflow-y:auto;}
+
+/* File Card */
+.fc{background:var(--card);border-radius:10px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden;}
+.fc.active{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac), 0 8px 32px rgba(0,0,0,0.2)}
+.fc-h{display:flex;flex-direction:column;padding:16px 24px;cursor:pointer;transition:background .1s;}
+.fc-h:hover{background:rgba(255,255,255,.03)}
+.fc-h-main{display:flex;align-items:center;gap:12px;}
+.fc-h .cdot{width:12px;height:12px;border-radius:9999px;flex-shrink:0}
+.fc-h .ftitle{font-size:16px;font-weight:600;letter-spacing:-.02em;flex:1}
+.fc-h .ftitle .ext{color:var(--tx3);font-weight:500}
+.fc-body{padding:20px 24px;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:var(--tx2);overflow-x:auto; background:rgba(0,0,0,0.15); border-top:1px solid var(--brd)}
+.fc-h .micro-tl{padding-left:24px;margin-top:8px;}
+
+/* ═══════════════════════════════════════════════════════════
+   BOTTOM DOCK: THE ACTIVE FILE SCRUBBER
+   ═══════════════════════════════════════════════════════════ */
+.dock-w{
+  flex-shrink:0;
+  background:var(--bg2);
+  backdrop-filter:blur(40px);
+  -webkit-backdrop-filter:blur(40px);
+  border:1px solid var(--brd);
+  border-radius:16px;
+  overflow:visible;
+  display:flex;
+  flex-direction:column;
+  height:140px;
+  transition:all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:0 -10px 40px rgba(0,0,0,0.2);
+  position:relative;
+}
+.dock-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:16px 24px 0;
+}
+.dock-title{font-size:14px;font-weight:600;color:var(--tx); display:flex; align-items:center; gap:8px;}
+.dock-title .dot{width:8px;height:8px;border-radius:50%;background:var(--ac)}
+.dock-meta{font-size:12px;color:var(--tx3);font-family:var(--font-mono);}
+
+/* Main Timeline Track */
+.dock-track-w{
+  flex:1;
+  position:relative;
+  margin:10px 24px 24px;
+  border-radius:12px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(255,255,255,0.05);
+  box-shadow:inset 0 4px 12px rgba(0,0,0,0.3);
+  overflow:visible; /* Playhead bleeds out */
+}
+
+/* Axis */
+.dock-axis{
+  position:absolute;
+  left:0; right:0; top:50%;
+  height:1px;
+  background:var(--brd);
+}
+
+/* Nodes container */
+.dock-nodes{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  padding:0 30px;
+}
+/* Node */
+.dn{
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  top:50%;
+  transform:translate(-50%, -50%); /* Centered on exact left % */
+  cursor:pointer;
+  z-index:10;
+}
+
+/* Big Nodes for Bottom Dock */
+.dn-circle{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:3px solid var(--bg);
+  box-shadow:0 2px 8px rgba(0,0,0,0.5);
+  transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display:flex;align-items:center;justify-content:center;
+}
+.dn:hover .dn-circle {
+  transform:scale(1.5);
+  z-index:20;
+}
+.dn-circle.add{background:var(--ac3)}
+.dn-circle.del{background:var(--danger)}
+.dn-circle.mix{background:var(--ac2)}
+
+/* Playhead Scrubber */
+.playhead{
+  position:absolute;
+  top:-10px;
+  bottom:-10px;
+  width:2px;
+  background:var(--warn);
+  z-index:30;
+  box-shadow:0 0 12px rgba(255,159,10,0.8);
+  pointer-events:none;
+  transition:left 0.1s linear;
+}
+/* Draggable handle */
+.playhead-handle{
+  position:absolute;
+  top:-8px;
+  left:-8px;
+  width:18px;
+  height:18px;
+  background:var(--warn);
+  border-radius:4px;
+  pointer-events:auto;
+  cursor:grab;
+  border:2px solid #fff;
+  transition:transform 0.2s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.5);
+}
+.playhead-handle:active{
+  cursor:grabbing;
+  transform:scale(1.2);
+}
+/* Active Banner Overlay */
+.scrub-banner{
+  position:absolute;
+  top:-40px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--warn);
+  color:#000;
+  padding:6px 16px;
+  border-radius:20px;
+  font-weight:700;
+  font-size:12px;
+  box-shadow:0 4px 16px rgba(255,159,10,0.4);
+  opacity:0;
+  transition:all 0.3s;
+  pointer-events:none;
+}
+.scrub-banner.visible{
+  top:-20px;
+  opacity:1;
+}
+
+/* Time tooltips on nodes */
+.dn-time{
+  position:absolute;
+  top:20px;
+  font-size:10px;
+  font-family:var(--font-mono);
+  color:var(--tx3);
+  opacity:0;
+  transition:opacity 0.2s;
+  white-space:nowrap;
+}
+.dn:hover .dn-time{opacity:1;}
+
+.approach-label{position:fixed;top:12px;right:16px;z-index:100;font-size:11px;font-weight:600;padding:6px 14px;border-radius:6px;background:var(--ac);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+
+<div class="approach-label">Gemini v5: Docked Global Scrubber</div>
+<div class="bg-solid"></div>
+<div class="bg-grad"></div>
+
+<div class="ui">
+
+  <div class="toolbar-w">
+    <div class="toolbar">
+      <div class="brand">Codorum</div>
+      <div class="sep"></div>
+      <div class="toolbar-r">
+        <button class="btn-ghost" id="themeBtn">n01z</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- SIDEBAR with Micro Timelines -->
+    <div class="sidebar">
+      <div class="sb-head"><span>Workspace</span></div>
+      <div class="tree">
+        
+        <div class="fi active" onclick="activateFile('App.tsx', this)">
+          <div class="fi-top">
+            <span class="dot" style="background:#0A84FF"></span>
+            <span class="fl">App<span class="ext">.tsx</span></span>
+          </div>
+          <!-- Micro Timeline -->
+          <div class="micro-tl">
+            <div class="micro-axis"></div>
+            <div class="micro-node add"></div>
+            <div class="micro-node add"></div>
+            <div class="micro-node mix" style="margin-left:10px"></div>
+            <div class="micro-node del"></div>
+            <div class="micro-node add" style="margin-left:5px"></div>
+          </div>
+        </div>
+
+        <div class="fi" onclick="activateFile('watcher.rs', this)">
+          <div class="fi-top">
+            <span class="dot" style="background:#FF9500"></span>
+            <span class="fl">watcher<span class="ext">.rs</span></span>
+          </div>
+          <div class="micro-tl">
+            <div class="micro-axis"></div>
+            <div class="micro-node add" style="margin-left:20px"></div>
+            <div class="micro-node mix"></div>
+            <div class="micro-node del" style="margin-left:15px"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CONTENT without internal huge timelines -->
+    <div class="content">
+      <div class="c-head">
+        <h1 id="activeFileTitle">App.tsx</h1>
+      </div>
+      <div class="content-scroll">
+
+        <!-- FILE CARD -->
+        <div class="fc active">
+          <div class="fc-h">
+             <div class="fc-h-main">
+                <span class="cdot" style="background:#0A84FF"></span>
+                <span class="ftitle">App<span class="ext">.tsx</span></span>
+             </div>
+             <!-- Larger Micro Timeline in Header -->
+             <div class="micro-tl" style="height:12px; gap:8px;">
+                <div class="micro-axis" style="left:24px;"></div>
+                <div class="micro-node add" style="width:8px;height:8px;"></div>
+                <div class="micro-node add" style="width:8px;height:8px;"></div>
+                <div class="micro-node mix" style="width:8px;height:8px;margin-left:20px;"></div>
+                <div class="micro-node del" style="width:8px;height:8px;"></div>
+                <div class="micro-node add" style="width:8px;height:8px;margin-left:10px;"></div>
+             </div>
+          </div>
+          <div class="fc-body">
+<span style="color:#c678dd">import</span> { useEffect } <span style="color:#c678dd">from</span> <span style="color:#98c379">"react"</span>;
+<span style="color:var(--tx3)">// Timeline is removed from inside the card!</span>
+<span style="color:var(--tx3)">// Look down at the bottom dock element!</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div> <!-- /main -->
+
+  <!-- DOCKED ACTIVE SCRUBBER -->
+  <div class="dock-w" id="dock">
+    <div class="scrub-banner" id="banner">Viewing 2:22 PM Variant</div>
+    <div class="dock-head">
+      <div class="dock-title">
+        <span class="dot" style="background:#0A84FF" id="dockCol"></span>
+        <span id="dockTitle">App.tsx</span>
+      </div>
+      <span class="dock-meta">Drag bottom scrubber to rewind file</span>
+    </div>
+
+    <div class="dock-track-w" id="track">
+      <div class="dock-axis"></div>
+      
+      <div class="dock-nodes" id="dockNodes">
+        <!-- Injected via JS based on selected file -->
+      </div>
+
+      <!-- Playhead -->
+      <div class="playhead" id="playhead" style="left:98%">
+        <div class="playhead-handle" id="handle"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Theme cycling
+const themes = ["n01z", "paper", "phosphor", "ember"];
+let ti = 0;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  ti = (ti + 1) % themes.length;
+  document.documentElement.setAttribute("data-theme", themes[ti]);
+  document.getElementById("themeBtn").textContent = themes[ti];
+});
+
+// App data structure matching micro timelines
+const fileData = {
+  'App.tsx': {
+    color: '#0A84FF',
+    nodes: [
+      { pct: 10, type: 'add', time: '2:15 PM' },
+      { pct: 15, type: 'add', time: '2:18 PM' },
+      { pct: 40, type: 'mix', time: '2:22 PM' },
+      { pct: 45, type: 'del', time: '2:31 PM' },
+      { pct: 70, type: 'add', time: '2:36 PM' },
+      { pct: 90, type: 'mix', time: '2:50 PM' },
+    ]
+  },
+  'watcher.rs': {
+    color: '#FF9500',
+    nodes: [
+      { pct: 30, type: 'add', time: '1:00 PM' },
+      { pct: 35, type: 'mix', time: '1:10 PM' },
+      { pct: 80, type: 'del', time: '1:45 PM' },
+    ]
+  }
+};
+
+const dockTitle = document.getElementById("dockTitle");
+const dockCol = document.getElementById("dockCol");
+const dockNodes = document.getElementById("dockNodes");
+const activeFileTitle = document.getElementById("activeFileTitle");
+const playhead = document.getElementById("playhead");
+const banner = document.getElementById("banner");
+const dock = document.getElementById("dock");
+
+function renderDockNodes(filename) {
+  const data = fileData[filename];
+  if(!data) return;
+  
+  dockTitle.textContent = filename;
+  activeFileTitle.textContent = filename;
+  dockCol.style.background = data.color;
+  
+  // Animate dock bump
+  dock.style.transform = "translateY(10px)";
+  setTimeout(() => dock.style.transform = "translateY(0)", 150);
+  
+  dockNodes.innerHTML = '';
+  data.nodes.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'dn';
+    el.style.left = n.pct + '%';
+    
+    // Add icon for 'add'
+    const icon = n.type === 'add' ? '<span style="color:#fff;font-weight:900;font-size:12px;margin-top:-2px">+</span>' : '';
+    
+    el.innerHTML = `
+      <div class="dn-circle ${n.type}">${icon}</div>
+      <div class="dn-time">${n.time}</div>
+    `;
+    
+    // Click to snap playhead
+    el.addEventListener('click', () => {
+       playhead.style.left = n.pct + '%';
+       banner.classList.add('visible');
+       banner.textContent = `Viewing ${n.time} snapshot`;
+    });
+    
+    dockNodes.appendChild(el);
+  });
+  
+  // Reset playhead to end
+  playhead.style.left = '98%';
+  banner.classList.remove('visible');
+}
+
+// Sidebar click handler
+window.activateFile = function(filename, el) {
+  document.querySelectorAll('.fi').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  renderDockNodes(filename);
+}
+
+// Drag logic for playhead
+const track = document.getElementById('track');
+const handle = document.getElementById('handle');
+let isDragging = false;
+
+handle.addEventListener('mousedown', () => {
+  isDragging = true;
+  document.body.style.cursor = 'grabbing';
+  playhead.style.transition = 'none'; // disable transition for smooth drag
+});
+
+window.addEventListener('mousemove', (e) => {
+  if(!isDragging) return;
+  const rect = track.getBoundingClientRect();
+  let pct = ((e.clientX - rect.left) / rect.width) * 100;
+  pct = Math.max(0, Math.min(100, pct));
+  playhead.style.left = pct + '%';
+  
+  // Show scrubbing banner
+  if(!banner.classList.contains('visible')){
+      banner.classList.add('visible');
+  }
+  banner.textContent = "Scrubbing history...";
+});
+
+window.addEventListener('mouseup', () => {
+  if(isDragging) {
+    isDragging = false;
+    document.body.style.cursor = 'default';
+    playhead.style.transition = 'left 0.1s linear';
+  }
+});
+
+// Init
+renderDockNodes('App.tsx');
+
+</script>
+
+</body>
+</html>

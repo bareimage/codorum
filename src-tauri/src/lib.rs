@@ -47,6 +47,16 @@ fn random_placeholder() -> String {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileSnapshot {
+    pub id: String,
+    pub timestamp: u64,
+    pub content: String,
+    pub patch: Option<String>,
+    pub lines_added: usize,
+    pub lines_removed: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WatchedFile {
     pub id: String,
     pub path: String,
@@ -55,6 +65,7 @@ pub struct WatchedFile {
     pub content: String,
     pub modified: u64,
     pub pinned: bool,
+    pub history: Vec<FileSnapshot>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,7 +103,7 @@ pub struct SavedFileEntry {
 }
 
 pub struct AppState {
-    pub files: Mutex<Vec<WatchedFile>>,
+    pub files: std::sync::Arc<std::sync::Mutex<Vec<WatchedFile>>>,
     pub watcher: Mutex<FileWatcherManager>,
 }
 
@@ -108,6 +119,20 @@ fn read_file_info(path: &PathBuf) -> Option<WatchedFile> {
         .ok()?
         .as_secs();
 
+    let now = SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    let initial_snapshot = FileSnapshot {
+        id: uuid::Uuid::new_v4().to_string(),
+        timestamp: now,
+        content: content.clone(),
+        patch: None,
+        lines_added: content.lines().count(),
+        lines_removed: 0,
+    };
+
     Some(WatchedFile {
         id: uuid::Uuid::new_v4().to_string(),
         path: path.to_string_lossy().to_string(),
@@ -116,6 +141,7 @@ fn read_file_info(path: &PathBuf) -> Option<WatchedFile> {
         content,
         modified,
         pinned: false,
+        history: vec![initial_snapshot],
     })
 }
 
@@ -184,6 +210,36 @@ fn save_file(id: String, content: String, state: State<AppState>) -> Result<(), 
     let mut files = state.files.lock().expect("mutex poisoned");
     let file = files.iter_mut().find(|f| f.id == id).ok_or("File not found")?;
     std::fs::write(&file.path, &content).map_err(|e| e.to_string())?;
+
+    // Create a new snapshot if content actually changed
+    if file.content != content {
+        let diff = diffy::create_patch(&file.content, &content);
+        let patch_str = diff.to_string();
+
+        // Count added and removed lines from the patch (very basic heuristic)
+        let lines_added = patch_str.lines().filter(|l| l.starts_with('+') && !l.starts_with("+++")).count();
+        let lines_removed = patch_str.lines().filter(|l| l.starts_with('-') && !l.starts_with("---")).count();
+
+        let now = SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+
+        file.history.push(FileSnapshot {
+            id: uuid::Uuid::new_v4().to_string(),
+            timestamp: now,
+            content: content.clone(),
+            patch: Some(patch_str),
+            lines_added,
+            lines_removed,
+        });
+        
+        // Cap history to 50 items to prevent out of memory issues for now
+        if file.history.len() > 50 {
+            file.history.remove(0);
+        }
+    }
+
     file.content = content;
     if let Ok(meta) = std::fs::metadata(&file.path) {
         if let Ok(mod_time) = meta.modified() {
@@ -428,15 +484,59 @@ fn restore_files(saved: Vec<SavedFileEntry>, state: State<AppState>) -> Vec<Watc
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let shared_files = std::sync::Arc::new(std::sync::Mutex::new(Vec::<WatchedFile>::new()));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .setup(|app| {
+        .setup(move |app| {
             let handle = app.handle().clone();
+            let files_for_watcher = shared_files.clone();
+            
             let watcher_mgr = FileWatcherManager::new(move |event| {
                 match event {
                     FileEvent::Changed(path) => {
-                        let _ = handle.emit("file-changed", path);
+                        let mut files = files_for_watcher.lock().expect("mutex poisoned");
+                        if let Some(file) = files.iter_mut().find(|f| f.path == path) {
+                            if let Ok(content) = std::fs::read_to_string(&path) {
+                                if file.content != content {
+                                    let diff = diffy::create_patch(&file.content, &content);
+                                    let patch_str = diff.to_string();
+                                    
+                                    let lines_added = patch_str.lines().filter(|l| l.starts_with('+') && !l.starts_with("+++")).count();
+                                    let lines_removed = patch_str.lines().filter(|l| l.starts_with('-') && !l.starts_with("---")).count();
+                                    
+                                    let now = std::time::SystemTime::now()
+                                        .duration_since(std::time::UNIX_EPOCH)
+                                        .unwrap_or_default()
+                                        .as_secs();
+                                        
+                                    file.history.push(FileSnapshot {
+                                        id: uuid::Uuid::new_v4().to_string(),
+                                        timestamp: now,
+                                        content: content.clone(),
+                                        patch: Some(patch_str),
+                                        lines_added,
+                                        lines_removed,
+                                    });
+                                    
+                                    if file.history.len() > 50 {
+                                        file.history.remove(0);
+                                    }
+                                    
+                                    file.content = content.clone();
+                                    if let Ok(meta) = std::fs::metadata(&path) {
+                                        if let Ok(mod_time) = meta.modified() {
+                                            if let Ok(dur) = mod_time.duration_since(std::time::UNIX_EPOCH) {
+                                                file.modified = dur.as_secs();
+                                            }
+                                        }
+                                    }
+                                    
+                                    let _ = handle.emit("file-changed", file.clone());
+                                }
+                            }
+                        }
                     }
                     FileEvent::Removed(path) => {
                         let _ = handle.emit("file-removed", path);
@@ -463,8 +563,8 @@ pub fn run() {
             });
 
             app.manage(AppState {
-                files: Mutex::new(Vec::new()),
-                watcher: Mutex::new(watcher_mgr),
+                files: shared_files.clone(),
+                watcher: std::sync::Mutex::new(watcher_mgr),
             });
 
             Ok(())

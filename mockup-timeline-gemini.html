@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="n01z">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codorum — Discrete Node Timeline Mockup</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & THEMES (from main app)
+   ═══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#000;--bg2:rgba(30,30,35,.65);--card:rgba(45,45,50,.65);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.6);
+  --tx3:rgba(255,255,255,.4);--ac:#0A84FF;--ac2:#5E5CE6;--ac3:#30D158;
+  --warn:#FF9F0A;--danger:#FF453A;--brd:rgba(255,255,255,.1);
+  --ring:rgba(10,132,255,.3);--input-bg:rgba(0,0,0,.2);
+  --cmd-bg:rgba(30,30,35,.85);--deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 20% 0%,rgba(94,92,230,.5) 0%,transparent 50%),radial-gradient(circle at 80% 100%,rgba(10,132,255,.5) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,69,58,.3) 0%,transparent 50%);
+  --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="paper"]{
+  --bg:#F5F5F7;--bg2:rgba(255,255,255,.65);--card:rgba(255,255,255,.8);
+  --hover:rgba(0,0,0,.05);--tx:#1D1D1F;--tx2:rgba(0,0,0,.6);
+  --tx3:rgba(0,0,0,.4);--ac:#007AFF;--ac2:#5856D6;--ac3:#34C759;
+  --warn:#FF9500;--danger:#FF3B30;--brd:rgba(0,0,0,.08);
+  --ring:rgba(0,122,255,.2);--input-bg:rgba(0,0,0,.04);
+  --cmd-bg:rgba(255,255,255,.85);--deleted:rgba(0,0,0,.3);
+  --bg-gradient:radial-gradient(circle at 0% 0%,rgba(88,86,214,.3) 0%,transparent 50%),radial-gradient(circle at 100% 100%,rgba(0,122,255,.3) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,59,48,.2) 0%,transparent 50%);
+}
+[data-theme="phosphor"]{
+  --bg:#00120a;--bg2:rgba(10,40,25,.5);--card:rgba(20,50,35,.5);
+  --hover:rgba(255,255,255,.15);--tx:#fff;--tx2:rgba(255,255,255,.7);
+  --tx3:rgba(255,255,255,.5);--ac:#34C759;--ac2:#32ADE6;--ac3:#A2845E;
+  --warn:#FFD60A;--danger:#FF453A;--brd:rgba(255,255,255,.15);
+  --ring:rgba(52,199,89,.3);--input-bg:rgba(0,0,0,.25);
+  --cmd-bg:rgba(10,40,25,.85);--deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 10% 20%,rgba(0,176,155,.5) 0%,transparent 60%),radial-gradient(circle at 90% 80%,rgba(150,201,61,.5) 0%,transparent 60%);
+}
+[data-theme="ember"]{
+  --bg:#1c0a00;--bg2:rgba(45,20,10,.6);--card:rgba(60,25,15,.6);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.7);
+  --tx3:rgba(255,255,255,.5);--ac:#FF9500;--ac2:#FF2D55;--ac3:#FFCC00;
+  --warn:#FFD60A;--danger:#FF3B30;--brd:rgba(255,255,255,.1);
+  --ring:rgba(255,149,0,.3);--input-bg:rgba(0,0,0,.2);
+  --cmd-bg:rgba(45,20,10,.85);--deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 80% 20%,rgba(255,78,80,.5) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(249,212,35,.5) 0%,transparent 60%);
+}
+
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:var(--font-sans);background:var(--bg);color:var(--tx);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
+  transition:background 200ms ease,color 200ms ease;
+  display:flex;flex-direction:column;padding:16px;gap:16px;
+  position:relative;
+}
+::selection{background:rgba(10,132,255,.25)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+@keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes eyeBlink{0%,42%,50%,100%{transform:scaleY(0)}44%,48%{transform:scaleY(1)}}
+@keyframes eyeLook{0%,40%,50%,100%{transform:translateX(0)}42%,48%{transform:translateX(2px)}}
+
+.bg-solid{position:fixed;inset:0;z-index:0;background:var(--bg)}
+.bg-grad{position:fixed;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
+
+.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%}
+
+/* ═══ Toolbar ═══ */
+.toolbar-w{display:flex;justify-content:center;width:100%;z-index:50}
+.toolbar{height:48px;display:flex;align-items:center;padding:0 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.1);flex-shrink:0;min-width:400px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.eye-lid{transform-origin:center;animation:eyeBlink 6s ease-in-out infinite}
+.eye-iris{animation:eyeLook 6s ease-in-out infinite}
+.sep{width:1px;height:16px;background:var(--brd);margin:0 16px}
+.file-count{font-size:13px;font-weight:500;color:var(--tx3)}
+.toolbar-r{margin-left:auto;display:flex;gap:8px;align-items:center;padding-left:24px}
+
+/* Buttons */
+button{cursor:pointer;font-family:inherit}
+.btn-pill{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;background:var(--input-bg);border:1px solid var(--brd);border-radius:9999px;color:var(--tx2);font-size:13px}
+.btn-pill:hover{background:var(--hover);color:var(--tx)}
+.btn-ghost{height:32px;padding:0 16px;background:transparent;border:1px solid var(--brd);border-radius:9999px;font-size:13px;font-weight:500;color:var(--tx2)}
+.btn-ghost:hover{background:var(--hover);color:var(--tx)}
+.btn-icon{width:28px;height:28px;border-radius:9999px;color:var(--tx2);display:flex;align-items:center;justify-content:center;background:transparent;border:none}
+.btn-icon:hover{background:var(--hover);color:var(--tx)}
+.kbd{font-size:11px;font-weight:500;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--tx2)}
+
+/* Main Layout */
+.main{display:flex;flex:1;overflow:hidden;gap:16px}
+
+/* ═══ Sidebar ═══ */
+.sidebar{width:280px;flex-shrink:0;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);display:flex;flex-direction:column;border:1px solid var(--brd);border-radius:24px;overflow:hidden}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 12px}
+.sb-head span{font-size:13px;font-weight:600;color:var(--tx2);letter-spacing:-.02em}
+.tree{flex:1;overflow-y:auto;padding:8px 0 16px}
+.fi{display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px;border-radius:12px;background:transparent;border:none;text-align:left;margin-bottom:2px;color:var(--tx2);transition:background .1s;margin:0 12px;width:calc(100% - 24px)}
+.fi:hover{background:var(--hover)}
+.fi.active{background:var(--ac);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.fi .dot{width:10px;height:10px;border-radius:9999px;flex-shrink:0}
+.fi .fl{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}
+.fi .fl .ext{font-weight:400;color:var(--tx3)}
+.fi.active .fl .ext{color:rgba(255,255,255,.7)}
+.fi.active .dot{background:#fff!important}
+
+/* ═══ Content Pane ═══ */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:24px}
+.c-head{display:flex;align-items:baseline;gap:12px;padding:24px 32px 0;margin-bottom:16px}
+.c-head h1{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.c-head .sub{font-size:14px;color:var(--tx3);font-weight:500}
+.c-head .acts{margin-left:auto;display:flex;gap:8px}
+
+/* File Card */
+.fc{background:var(--card);border-radius:20px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.04)}
+.fc.active{border-color:transparent;box-shadow:0 0 0 2px rgba(10,132,255,.5),0 4px 24px rgba(0,0,0,.04)}
+.fc-h{display:flex;align-items:center;gap:12px;padding:16px 24px;cursor:pointer;transition:background .1s}
+.fc-h:hover{background:rgba(255,255,255,.03)}
+.fc-h .cdot{width:12px;height:12px;border-radius:9999px;flex-shrink:0}
+.fc-h .ftitle{font-size:16px;font-weight:600;letter-spacing:-.02em;flex:1}
+.fc-h .ftitle .ext{color:var(--tx3);font-weight:500}
+.fc-h .ts{margin-left:auto;font-size:13px;font-weight:500;color:var(--tx3)}
+.fc-body{padding:24px 32px;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:var(--tx2);max-height:200px;overflow-y:auto}
+
+/* ═══════════════════════════════════════════════════════════
+   DISCRETE NODE TIMELINE (Replaces Block/Lane approach)
+   ═══════════════════════════════════════════════════════════ */
+/* Global timeline area */
+.tl-global-w{flex-shrink:0;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:16px;overflow:hidden;padding:12px 20px;}
+.tl-title{font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--tx);}
+.tl-subtitle{font-size:12px;color:var(--tx3);margin-left:8px;}
+
+/* Node Track Container */
+.node-timeline{
+  display:flex;
+  position:relative;
+  align-items:center;
+  height:90px;
+  overflow-x:auto;
+  margin-top:8px;
+  background:rgba(0,0,0,0.2);
+  border-radius:8px;
+  border:1px solid var(--brd);
+  padding:0 32px;
+}
+.horizontal-line{
+  position:absolute;
+  left:0;
+  right:0;
+  top:65%; /* Line passes exactly through centers of circles */
+  height:1px;
+  background-color:rgba(255,255,255,0.2);
+  z-index:1;
+}
+
+.nodes{
+  display:flex;
+  align-items:center;
+  position:relative;
+  z-index:2;
+  gap:36px; /* Spacing between events */
+}
+
+/* Individual node container */
+.node-group{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* Timestamp Text */
+.node-time{
+  position:absolute;
+  bottom:26px; /* Push above tick */
+  font-family:var(--font-sans);
+  font-size:12px;
+  color:#fff;
+  white-space:nowrap;
+  font-weight:500;
+  letter-spacing:-0.03em;
+}
+
+/* Tick mark going UP from the circle to the time */
+.node-tick{
+  position:absolute;
+  bottom:10px; /* Starts just above the circle */
+  width:1px;
+  height:12px;
+  background-color:rgba(255,255,255,0.4);
+}
+
+/* The colored circles */
+.node-circle{
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 0 2px var(--bg); /* To create separation between standard background and overlapping instances */
+  cursor:pointer;
+  transition:transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position:relative;
+  z-index:5;
+}
+.node-circle:hover{
+  transform:scale(1.4);
+  z-index:10;
+}
+
+/* Colors based on image */
+.node-circle.add { background-color:#30D158; } /* Bright Green */
+.node-circle.del { background-color:#FF453A; } /* Bright Red */
+.node-circle.edit { background-color:#0A84FF; } /* Bright Blue */
+.node-circle.mix1 { background-color:#FFD60A; } /* Yellow */
+.node-circle.mix2 { background-color:#0A84FF; margin-left:-6px; } /* Overlapping blue */
+.node-circle.faded { opacity:0.6; }
+
+/* The White Plus inside Add blocks */
+.icon-plus{
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  line-height:1;
+  font-family:monospace;
+  margin-top:-1px; /* visual center */
+}
+
+/* Overlapping circles container */
+.overlap-group{
+  display:flex;
+  align-items:center;
+}
+
+/* Per-file variant styling */
+.fc-timeline{
+  padding:0 32px 24px;
+  border-top:1px solid var(--brd);
+}
+.fc-timeline .node-timeline {
+  height: 80px;
+  background:transparent;
+  border:none;
+}
+.fc-timeline .horizontal-line {
+  top: 60%;
+}
+.fc-header {
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--tx3);
+  font-weight:600;
+  margin-top:12px;
+}
+
+/* Scroll area constraint */
+.content-scroll{flex:1;overflow-y:auto;padding-bottom:16px}
+</style>
+</head>
+<body>
+
+<div class="bg-solid"></div>
+<div class="bg-grad"></div>
+
+<div class="ui">
+
+  <!-- ═══ Toolbar ═══ -->
+  <div class="toolbar-w">
+    <div class="toolbar">
+      <div class="brand">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 22h20L12 2z" stroke="var(--tx3)" stroke-width="1.5" fill="none"/>
+          <path d="M7.5 15C7.5 15 9 12 12 12C15 12 16.5 15 16.5 15C16.5 15 15 18 12 18C9 18 7.5 15 7.5 15Z" stroke="var(--tx3)" stroke-width="1.2" fill="none"/>
+          <circle cx="12" cy="15" r="1.5" fill="var(--ac)" class="eye-iris"/>
+          <rect class="eye-lid" x="7" y="11.5" width="10" height="7" rx="5" fill="var(--bg2)"/>
+        </svg>
+        <span class="brand-name">Codorum</span>
+      </div>
+      <div class="sep"></div>
+      <span class="file-count">Gemini V3 Mockup</span>
+      <div class="toolbar-r">
+        <button class="btn-ghost" id="themeBtn" title="Theme">n01z</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Main Area ═══ -->
+  <div class="main">
+
+    <!-- Content Pane -->
+    <div class="content">
+      <div class="c-head">
+        <h1>Files (Discrete Nodes)</h1>
+      </div>
+
+      <div class="content-scroll">
+
+        <!-- ═══ FILE CARD 1 ═══ -->
+        <div class="fc active">
+          <div class="fc-h">
+            <span class="cdot" style="background:#0A84FF"></span>
+            <span class="ftitle">mockup-timeline<span class="ext">.html</span></span>
+            <span class="ts">just now</span>
+          </div>
+
+          <!-- Code preview -->
+          <div class="fc-body">
+<span style="color:#c678dd">&lt;div class="node-circle add"&gt;</span>
+<span style="color:var(--tx3)">// Pivot to the circle-nodes timeline based on reference image</span>
+          </div>
+
+          <!-- ▼ PER-FILE NODE TIMELINE ▼ -->
+          <div class="fc-timeline">
+            <div class="fc-header">File History</div>
+            <div class="node-timeline">
+              <div class="horizontal-line"></div>
+              
+              <div class="nodes">
+                <!-- Node: Add -->
+                <div class="node-group">
+                  <div class="node-time">10:00 AM</div>
+                  <div class="node-tick"></div>
+                  <div class="node-circle add"><span class="icon-plus">+</span></div>
+                </div>
+                
+                <!-- Node: Add -->
+                <div class="node-group">
+                  <div class="node-time">10:00 AM</div>
+                  <div class="node-tick"></div>
+                  <div class="node-circle add"><span class="icon-plus">+</span></div>
+                </div>
+
+                <!-- Node: Del -->
+                <div class="node-group">
+                  <div class="node-time">10:15 AM</div>
+                  <div class="node-tick"></div>
+                  <div class="node-circle del"></div>
+                </div>
+                
+                <!-- Node: Del -->
+                <div class="node-group">
+                  <div class="node-time">10:15 AM</div>
+                  <div class="node-tick"></div>
+                  <div class="node-circle del"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content-scroll -->
+    </div><!-- /content -->
+
+  </div><!-- /main -->
+
+  <!-- ═══ GLOBAL DISCRETE TIMELINE (bottom bar) ═══ -->
+  <div class="tl-global-w">
+    <div style="display:flex; align-items:center;">
+      <span class="tl-title">Global History</span>
+      <span class="tl-subtitle">Discrete Node View</span>
+    </div>
+
+    <!-- The Node Track exactly matching the user image -->
+    <div class="node-timeline">
+      <div class="horizontal-line"></div>
+      
+      <div class="nodes">
+        
+        <!-- 1 -->
+        <div class="node-group">
+          <div class="node-time">10:00 AM</div>
+          <div class="node-tick"></div>
+          <div class="node-circle add"><span class="icon-plus">+</span></div>
+        </div>
+
+        <!-- 2 -->
+        <div class="node-group">
+          <div class="node-time">10:00 AM</div>
+          <div class="node-tick"></div>
+          <div class="node-circle add"><span class="icon-plus">+</span></div>
+        </div>
+
+        <!-- 3 -->
+        <div class="node-group">
+          <div class="node-time">10:15 AM</div>
+          <div class="node-tick"></div>
+          <div class="node-circle del"></div>
+        </div>
+
+        <!-- 4 -->
+        <div class="node-group">
+          <div class="node-time">10:15 AM</div>
+          <div class="node-tick"></div>
+          <div class="node-circle del"></div>
+        </div>
+
+        <!-- 5 -->
+        <div class="node-group">
+          <div class="node-time">10:15 AM</div>
+          <div class="node-tick"></div>
+          <div class="node-circle add"><span class="icon-plus">+</span></div>
+        </div>
+
+        <!-- 6 -->
+        <div class="node-group">
+          <div class="node-time">10:30 AM</div>
+          <div class="node-tick"></div>
+          <div class="node-circle del"></div>
+        </div>
+
+        <!-- 7 -->
+        <div class="node-group">
+          <div class="node-time">10:00 AM</div>
+          <div class="node-tick"></div>
+          <div class="node-circle edit"></div>
+        </div>
+
+        <!-- 8: Overlap Yellow/Blue -->
+        <div class="node-group">
+          <div class="node-time">10:15 AM</div>
+          <div class="node-tick"></div>
+          <div class="overlap-group">
+            <div class="node-circle mix1"></div>
+            <div class="node-circle mix2"></div>
+          </div>
+        </div>
+
+        <!-- 9: Overlap Yellow/Blue -->
+        <div class="node-group">
+          <div class="node-time">10:30 AM</div>
+          <div class="node-tick"></div>
+          <div class="overlap-group">
+            <div class="node-circle mix1"></div>
+            <div class="node-circle mix2"></div>
+          </div>
+        </div>
+
+        <!-- 10: Overlap Yellow/Blue Faded -->
+        <div class="node-group">
+          <div class="node-time">10:30 AM</div>
+          <div class="node-tick"></div>
+          <div class="overlap-group">
+            <div class="node-circle mix1 faded"></div>
+            <div class="node-circle mix2 faded"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /ui -->
+
+<script>
+// Theme cycling
+const themes = ["n01z", "paper", "phosphor", "ember"];
+let ti = 0;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  ti = (ti + 1) % themes.length;
+  document.documentElement.setAttribute("data-theme", themes[ti]);
+  document.getElementById("themeBtn").textContent = themes[ti];
+});
+</script>
+
+</body>
+</html>
