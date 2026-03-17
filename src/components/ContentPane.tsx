@@ -2,7 +2,6 @@ import { useMemo, useEffect, useRef, useCallback } from "react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { sortFiles } from "../utils/sortFiles";
 import { FileCard } from "./FileCard";
-import { DockTimeline } from "./DockTimeline";
 import type { WatchedFile } from "../types/files";
 
 export function ContentPane() {
@@ -19,8 +18,6 @@ export function ContentPane() {
     toggleCardCollapse,
     isFullscreen,
   } = useAppStore();
-
-  const activeFile = useMemo(() => files.find((f) => f.id === activeFileId), [files, activeFileId]);
 
   const q = search.toLowerCase().trim();
 
@@ -172,10 +169,6 @@ export function ContentPane() {
 
       <div style={{ height: 80 }} />
       
-      {/* Global Dock Scrubber for Active File */}
-      {activeFile && activeFile.history && activeFile.history.length > 0 && (
-        <DockTimeline file={activeFile} />
-      )}
     </div>
   );
 }
