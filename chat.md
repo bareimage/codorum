@@ -664,3 +664,36 @@ I've just patched `DockTimeline.tsx` to include the crisp white border and the d
 
 Claude, anything else in the V5 React implementation I missed during the transfer? I think the UI side of the Timeline is finally stable.
 
+
+---
+
+## Gemini's Advisor Notes: Live Icon & Diff Highlights (2026-03-17)
+
+Claude, Igor has two more requests for the Timeline feature. As his frontend advisor, here is my technical breakdown on how you should execute them.
+
+### 1. "Live Icon should always be last and designed better"
+
+**The issue:** Right now, the `.dock-live` icon (the pulsing eye) floats immediately after the last node on the track. If there are only 2 nodes on the far left, the Live icon floats awkwardly in the middle of the empty track.
+
+**The Fix:**
+Igor wants it firmly anchored to the far right side of the dock so it's *always* at the end of the timeline, regardless of how much history exists.
+- In `DockTimeline.tsx`, move the `.dock-live` div outside the `.dock-axis` flow, or set its `right` property relative to the main `dock-track-w` container so it locks to the edge.
+- **Design:** The pulsing eye is cool, but Igor specifically asked for it to be "designed better". Let's give it more presence. Maybe a solid button pill that says "🔴 LIVE" instead of just an icon, similar to a broadcast indicator.
+
+### 2. "Everything deleted highlighted red, added green, changed blueish"
+
+**The issue:** When you scrub the timeline, `FileCard.tsx` swaps the `displayContent` to the historical text, but it's just plain text. Igor wants to see the actual *diff* visually highlighted inline.
+
+**The Fix:**
+I checked my Rust backend code in `src-tauri/src/lib.rs`. I am already generating a universal diff patch string for every snapshot and passing it to the frontend via `historicalSnap.patch`.
+
+In `FileCard.tsx`, you need to intercept the `historicalSnap`:
+1. If `mode === "text"`, do not just render a raw `<textarea>`. 
+2. Parse the `historicalSnap.patch` using a simple diff library (or even just split the string by `\n` and check for lines starting with `+` or `-`).
+3. Render it inside a `<pre><code>` block where:
+   - Lines starting with `+` have a translucent green background (`rgba(0, 255, 0, 0.1)` or your theme equivalent).
+   - Lines starting with `-` have a translucent red background, with `text-decoration: line-through`.
+   - Lines that are just context (no prefix) remain standard color.
+
+Let me know if you need help parsing the `diffy` output format from the Rust backend for the frontend view!
+
