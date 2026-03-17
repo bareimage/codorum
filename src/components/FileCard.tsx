@@ -194,7 +194,7 @@ export function FileCard({
       
       {file.history && file.history.length > 0 && (
         <div style={{ width: "100%", padding: "0 24px 12px 52px" }}>
-          <MicroTimeline history={file.history} active={isActive} />
+          <MicroTimeline history={file.history} active={isActive} size="medium" />
         </div>
       )}
 

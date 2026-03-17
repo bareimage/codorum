@@ -3,10 +3,14 @@ import type { FileSnapshot } from "../types/files";
 interface MicroTimelineProps {
   history: FileSnapshot[];
   active?: boolean;
+  size?: "small" | "medium";
 }
 
-export function MicroTimeline({ history, active }: MicroTimelineProps) {
+export function MicroTimeline({ history, active, size = "small" }: MicroTimelineProps) {
   if (!history || history.length === 0) return null;
+
+  const dotSize = size === "small" ? 6 : 8;
+  const gapSize = size === "small" ? 3 : 8;
 
   return (
     <div
@@ -18,7 +22,7 @@ export function MicroTimeline({ history, active }: MicroTimelineProps) {
         paddingLeft: 22,
         position: "relative",
         width: "100%",
-        gap: 3,
+        gap: gapSize,
         opacity: active ? 1 : 0.6,
         transition: "opacity 0.2s",
       }}
@@ -52,8 +56,8 @@ export function MicroTimeline({ history, active }: MicroTimelineProps) {
           <div
             key={snap.id || i}
             style={{
-              width: 4,
-              height: 4,
+              width: dotSize,
+              height: dotSize,
               borderRadius: "50%",
               background: color,
               zIndex: 2,
