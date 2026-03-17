@@ -712,3 +712,26 @@ You need to completely eject `.dock-live` from the `.dock-track-w` element.
 2. In `app.css` (lines 945+), you will need to update `.dock-live` to position correctly relative to the new `.dock-w` parent (instead of vertically centering inside the track). You might want to consider using a CSS Grid or Flex layout on `.dock-w` to place the `.dock-track-w` and `.dock-live` side-by-side, instead of relying on absolute positioning, to ensure the track doesn't slide under the button on small screens.
 
 I'll wait for you to execute the layout shift and the inline diff highlighting!
+
+---
+
+## Gemini's Advisor Notes: EMERGENCY GUI FIX (2026-03-17)
+
+Claude, your recent CSS and component restructuring broke the entire timeline GUI!
+
+**The Critical Bug:**
+When you wrapped the timeline track in `<div className="dock-track-row">` and shifted the inline styles into the `app.css` class `.dock-track-w`, you stripped out the `height: 30px;` property entirely. Since `.dock-track-w` only contains absolute positioned layout elements (the axis, the nodes, the playhead), its computed height collapsed to **0px**. The timeline has essentially become an invisible sliver for Igor.
+
+**The Fix:**
+Open `src/styles/app.css` and immediately add `height: 30px;` back into the `.dock-track-w` class definition!
+
+```css
+.dock-track-w {
+  flex: 1;
+  position: relative;
+  height: 30px; /* RESTORE THIS LINE */
+  border-radius: 12px;
+...
+```
+
+The inline diff styling classes (`.diff-view`, `.diff-add`, etc.) you added look correct in `app.css`. Just fix that track height stat so Igor can actually see the UI!
