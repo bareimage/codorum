@@ -163,7 +163,7 @@ export function DockTimeline({ file }: DockTimelineProps) {
   };
 
   const handleTrackClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest(".dn, .playhead-handle")) return;
+    if ((e.target as HTMLElement).closest(".dn")) return;
     const track = trackRef.current;
     if (!track) return;
     const rect = track.getBoundingClientRect();
@@ -224,80 +224,80 @@ export function DockTimeline({ file }: DockTimelineProps) {
         </span>
       </div>
 
-      <div
-        className="dock-track-w"
-        ref={trackRef}
-        onClick={handleTrackClick}
-      >
-        <div className="dock-axis" />
+      <div className="dock-track-row">
+        <div
+          className="dock-track-w"
+          ref={trackRef}
+          onClick={handleTrackClick}
+          onMouseDown={(e) => {
+            if ((e.target as HTMLElement).closest(".dn")) return;
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+        >
+          <div className="dock-axis" />
 
-        {/* Live indicator at track end */}
+          <div className="dock-nodes">
+            {history.map((snap) => {
+              const pct = tsToPct(snap.timestamp);
+              const type = snapshotType(snap);
+              const isSelected = activeSnapshotTs === snap.timestamp;
+              return (
+                <div
+                  key={snap.id}
+                  className="dn"
+                  style={{ left: `${pct}%` }}
+                  onClick={() => handleNodeClick(snap)}
+                >
+                  <div
+                    className={`dn-circle ${type}`}
+                    style={
+                      isSelected
+                        ? {
+                            transform: "scale(1.3)",
+                            boxShadow: `0 0 0 2px var(--bg), 0 0 0 4px var(--ac)`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {type === "add" && (
+                      <span
+                        style={{
+                          color: "#fff",
+                          fontSize: 12,
+                          fontWeight: 900,
+                          lineHeight: 1,
+                          fontFamily: "monospace",
+                          marginTop: -1,
+                        }}
+                      >
+                        +
+                      </span>
+                    )}
+                  </div>
+                  <div className="dn-time">{formatTime(snap.timestamp)}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div
+            className="playhead"
+            style={{
+              left: `${playheadPct}%`,
+              transition: isDragging ? "none" : "left 0.1s linear",
+            }}
+          />
+        </div>
+
+        {/* Live indicator — outside track, anchored right */}
         <div
           className={`dock-live${activeSnapshotTs !== null ? " inactive" : ""}`}
           onClick={jumpToLive}
+          title="Return to Live"
         >
           <span className="dock-live-dot" />
-          <span className="dock-live-text">Live</span>
-        </div>
-
-        <div className="dock-nodes">
-          {history.map((snap) => {
-            const pct = tsToPct(snap.timestamp);
-            const type = snapshotType(snap);
-            const isSelected = activeSnapshotTs === snap.timestamp;
-            return (
-              <div
-                key={snap.id}
-                className="dn"
-                style={{ left: `${pct}%` }}
-                onClick={() => handleNodeClick(snap)}
-              >
-                <div
-                  className={`dn-circle ${type}`}
-                  style={
-                    isSelected
-                      ? {
-                          transform: "scale(1.3)",
-                          boxShadow: `0 0 0 2px var(--bg), 0 0 0 4px var(--ac)`,
-                        }
-                      : undefined
-                  }
-                >
-                  {type === "add" && (
-                    <span
-                      style={{
-                        color: "#fff",
-                        fontSize: 12,
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        fontFamily: "monospace",
-                        marginTop: -1,
-                      }}
-                    >
-                      +
-                    </span>
-                  )}
-                </div>
-                <div className="dn-time">{formatTime(snap.timestamp)}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div
-          className="playhead"
-          style={{
-            left: `${playheadPct}%`,
-            transition: isDragging ? "none" : "left 0.1s linear",
-          }}
-        >
-          <div
-            className="playhead-handle"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-          />
+          <span className="dock-live-text">LIVE</span>
         </div>
       </div>
     </div>

@@ -9,7 +9,31 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { ExtDot } from "./ExtDot";
 import { ResizeHandle } from "./ResizeHandle";
 import { MicroTimeline } from "./MicroTimeline";
-import type { WatchedFile } from "../types/files";
+import type { WatchedFile, FileSnapshot } from "../types/files";
+
+function DiffView({ snap }: { snap: FileSnapshot }) {
+  const lines = (snap.patch || snap.content).split("\n");
+  const hasPatch = !!snap.patch;
+  return (
+    <pre className="diff-view">
+      <code>
+        {lines.map((line, i) => {
+          let cls = "diff-ctx";
+          if (hasPatch) {
+            if (line.startsWith("+") && !line.startsWith("+++")) cls = "diff-add";
+            else if (line.startsWith("-") && !line.startsWith("---")) cls = "diff-del";
+            else if (line.startsWith("@@")) cls = "diff-hunk";
+          }
+          return (
+            <div key={i} className={cls}>
+              {line}
+            </div>
+          );
+        })}
+      </code>
+    </pre>
+  );
+}
 
 const MARKUP_EXTS = new Set(["md", "markdown", "mdx"]);
 const CODE_EXTS = new Set([
@@ -104,15 +128,6 @@ export function FileCard({
     }
   }, [file.id, file.content, setCardDirty]);
 
-  // Auto-size textarea to content
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = "auto";
-      el.style.height = el.scrollHeight + "px";
-    }
-  }, [content]);
-
   // Extract first heading for collapsed subtitle
   const subtitle = (() => {
     if (!content) return null;
@@ -128,6 +143,15 @@ export function FileCard({
   // If scrubbing, show the historical content. Otherwise show the live state variable.
   const displayContent = historicalSnap ? historicalSnap.content : content;
   const isReadOnly = !isActive || file.deleted || historicalSnap !== null;
+
+  // Auto-size textarea to content
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    }
+  }, [displayContent, activeSnapshotTs, file._rev]);
 
   return (
     <div
@@ -258,15 +282,19 @@ export function FileCard({
               />
             )}
             {mode === "text" && typeof displayContent === "string" && (
-              <textarea
-                key={`text-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
-                ref={textareaRef}
-                className="source-editor"
-                value={displayContent}
-                onChange={(e) => handleTextChange(e.target.value)}
-                readOnly={isReadOnly}
-                spellCheck={false}
-              />
+              historicalSnap ? (
+                <DiffView snap={historicalSnap} />
+              ) : (
+                <textarea
+                  key={`text-${file.id}-${file._rev ?? 0}`}
+                  ref={textareaRef}
+                  className="source-editor"
+                  value={displayContent}
+                  onChange={(e) => handleTextChange(e.target.value)}
+                  readOnly={isReadOnly}
+                  spellCheck={false}
+                />
+              )
             )}
           </ErrorBoundary>
         )}
