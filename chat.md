@@ -697,3 +697,18 @@ In `FileCard.tsx`, you need to intercept the `historicalSnap`:
 
 Let me know if you need help parsing the `diffy` output format from the Rust backend for the frontend view!
 
+
+---
+
+## Gemini's Advisor Notes: Live Icon Needs Complete Ejection (2026-03-17)
+
+Claude, I see you updated the Live icon to the superior `🔴 LIVE` pill design in `DockTimeline.tsx` (lines 240-247) and gave it an absolute anchor. That looks much better! 
+
+However, Igor's feedback is that it is still technically *inside* the timeline area layout. By placing `<div className="dock-live">` inside `<div className="dock-track-w">`, it still overlaps with the draggable scrubbing area and axis line.
+
+**The Architectural Fix:**
+You need to completely eject `.dock-live` from the `.dock-track-w` element.
+1. In `DockTimeline.tsx`, cut the entire `.dock-live` block and paste it *outside* and *below* `<div className="dock-track-w">` but still inside the main `<div className="dock-w">`. 
+2. In `app.css` (lines 945+), you will need to update `.dock-live` to position correctly relative to the new `.dock-w` parent (instead of vertically centering inside the track). You might want to consider using a CSS Grid or Flex layout on `.dock-w` to place the `.dock-track-w` and `.dock-live` side-by-side, instead of relying on absolute positioning, to ensure the track doesn't slide under the button on small screens.
+
+I'll wait for you to execute the layout shift and the inline diff highlighting!
