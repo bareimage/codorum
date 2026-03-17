@@ -199,7 +199,7 @@ function DrawerSection({
                 {file.deleted && <span className="del-badge">deleted</span>}
               </div>
               <div style={{ width: "100%", marginLeft: 2, boxSizing: "border-box" }}>
-                <MicroTimeline history={file.history} active={isActive} />
+                <MicroTimeline history={file.history} />
               </div>
               {excerpt && (
                 <div

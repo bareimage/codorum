@@ -792,3 +792,250 @@ button{cursor:pointer;font-family:inherit}
   resize: none;
   overflow: hidden;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MICRO TIMELINE (Inside Sidebar & Cards)
+   ═══════════════════════════════════════════════════════════ */
+.micro-tl{display:flex;align-items:center;height:8px;margin-top:6px;padding-left:22px;position:relative;width:100%;gap:3px;opacity:0.7;transition:opacity .2s}
+.fi:hover .micro-tl, .fi.active .micro-tl { opacity: 1; }
+.micro-axis{position:absolute;left:22px;right:10px;top:50%;height:1px;background:var(--tx3);opacity:0.3;z-index:0}
+.micro-node{width:6px;height:6px;border-radius:50%;z-index:2;position:relative}
+.micro-node.add{background:var(--ac3)}
+.micro-node.del{background:var(--danger)}
+.micro-node.mix{background:var(--ac2)}
+.fi.active .micro-axis{background:#fff;opacity:0.4}
+.fi.active .micro-node{box-shadow:0 0 0 1px var(--ac)}
+.fc-h .micro-tl{padding-left:24px;margin-top:8px;}
+
+/* ═══════════════════════════════════════════════════════════
+   BOTTOM DOCK: THE ACTIVE FILE SCRUBBER
+   ═══════════════════════════════════════════════════════════ */
+.dock-w{
+  flex-shrink:0;
+  background:var(--bg2);
+  backdrop-filter:blur(40px);
+  -webkit-backdrop-filter:blur(40px);
+  border:1px solid var(--brd);
+  border-radius:16px;
+  overflow:visible;
+  display:flex;
+  flex-direction:column;
+  height:140px;
+  transition:all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:0 -10px 40px rgba(0,0,0,0.2);
+  position:relative;
+}
+.dock-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:16px 24px 0;
+}
+.dock-title{font-size:14px;font-weight:600;color:var(--tx); display:flex; align-items:center; gap:8px;}
+.dock-title .dot{width:8px;height:8px;border-radius:50%;background:var(--ac)}
+.dock-meta{font-size:12px;color:var(--tx3);font-family:var(--font-mono);}
+
+/* Main Timeline Track */
+.dock-track-w{
+  flex:1;
+  position:relative;
+  margin:10px 24px 24px;
+  border-radius:12px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(255,255,255,0.05);
+  box-shadow:inset 0 4px 12px rgba(0,0,0,0.3);
+  overflow:visible;
+}
+
+/* Axis */
+.dock-axis{
+  position:absolute;
+  left:0; right:0; top:50%;
+  height:1px;
+  background:var(--brd);
+}
+
+/* Nodes container */
+.dock-nodes{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  padding:0 30px;
+}
+/* Node */
+.dn{
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  top:50%;
+  transform:translate(-50%, -50%);
+  cursor:pointer;
+  z-index:10;
+}
+
+/* Big Nodes for Bottom Dock */
+.dn-circle{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:3px solid var(--bg);
+  box-shadow:0 2px 8px rgba(0,0,0,0.5);
+  transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display:flex;align-items:center;justify-content:center;
+}
+.dn:hover .dn-circle {
+  transform:scale(1.5);
+  z-index:20;
+}
+.dn-circle.add{background:var(--ac3)}
+.dn-circle.del{background:var(--danger)}
+.dn-circle.mix{background:var(--ac2)}
+
+/* Playhead Scrubber */
+.playhead{
+  position:absolute;
+  top:-10px;
+  bottom:-10px;
+  width:2px;
+  background:var(--warn);
+  z-index:30;
+  box-shadow:0 0 12px rgba(255,159,10,0.8);
+  pointer-events:none;
+  transition:left 0.1s linear;
+}
+/* Draggable handle */
+.playhead-handle{
+  position:absolute;
+  top:-8px;
+  left:-8px;
+  width:18px;
+  height:18px;
+  background:var(--warn);
+  border-radius:4px;
+  pointer-events:auto;
+  cursor:grab;
+  border:2px solid #fff;
+  transition:transform 0.2s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.5);
+}
+.playhead-handle:active{
+  cursor:grabbing;
+  transform:scale(1.2);
+}
+/* Active Banner Overlay */
+.scrub-banner{
+  position:absolute;
+  top:-40px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--warn);
+  color:#000;
+  padding:6px 16px;
+  border-radius:20px;
+  font-weight:700;
+  font-size:12px;
+  box-shadow:0 4px 16px rgba(255,159,10,0.4);
+  opacity:0;
+  transition:all 0.3s;
+  pointer-events:none;
+}
+.scrub-banner.visible{
+  top:-20px;
+  opacity:1;
+}
+
+/* Time tooltips on nodes */
+.dn-time{
+  position:absolute;
+  top:20px;
+  font-size:10px;
+  font-family:var(--font-mono);
+  color:var(--tx3);
+  opacity:0;
+  transition:opacity 0.2s;
+  white-space:nowrap;
+}
+.dn:hover .dn-time{opacity:1;}
+
+/* Live indicator at end of track */
+.dock-live{
+  position:absolute;
+  right:-8px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  z-index:5;
+  cursor:pointer;
+  padding:4px 10px 4px 8px;
+  border-radius:9999px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid var(--brd);
+  transition:background .2s;
+}
+.dock-live:hover{background:var(--hover)}
+.dock-live-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--ac3);
+  animation:livePulse 2s ease-in-out infinite;
+}
+.dock-live-text{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+  color:var(--ac3);
+  text-transform:uppercase;
+}
+.dock-live.inactive .dock-live-dot{
+  background:var(--tx3);
+  animation:none;
+}
+.dock-live.inactive .dock-live-text{
+  color:var(--tx3);
+}
+/* History mode banner on FileCard */
+.history-banner{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 24px;
+  background:rgba(255,159,10,.12);
+  border-top:1px solid rgba(255,159,10,.25);
+  border-bottom:1px solid rgba(255,159,10,.25);
+  animation:fadeIn .2s ease;
+}
+.history-banner .hb-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--warn);
+  animation:livePulse 2s ease-in-out infinite;
+}
+.history-banner .hb-text{
+  font-size:12px;
+  font-weight:600;
+  color:var(--warn);
+}
+.history-banner .hb-btn{
+  margin-left:auto;
+  font-size:11px;
+  font-weight:600;
+  color:var(--ac);
+  background:rgba(10,132,255,.1);
+  border:1px solid var(--ac);
+  padding:4px 12px;
+  border-radius:9999px;
+  cursor:pointer;
+  transition:background .15s;
+}
+.history-banner .hb-btn:hover{background:rgba(10,132,255,.25)}
+
+@keyframes livePulse{
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(48,209,88,.4)}
+  50%{opacity:.7;box-shadow:0 0 0 4px rgba(48,209,88,0)}
+}

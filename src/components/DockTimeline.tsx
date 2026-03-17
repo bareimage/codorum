@@ -1,7 +1,20 @@
-import { useRef, useEffect, useState } from "react";
-import { motion, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useAppStore } from "../stores/app-store";
-import type { WatchedFile } from "../types/files";
+import type { WatchedFile, FileSnapshot } from "../types/files";
+import { ExtDot } from "./ExtDot";
+
+function snapshotType(snap: FileSnapshot): "add" | "del" | "mix" {
+  if (snap.lines_added > 0 && snap.lines_removed === 0) return "add";
+  if (snap.lines_removed > 0 && snap.lines_added === 0) return "del";
+  return "mix";
+}
+
+function formatTime(ts: number): string {
+  return new Date(ts * 1000).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 interface DockTimelineProps {
   file: WatchedFile;
@@ -9,249 +22,284 @@ interface DockTimelineProps {
 
 export function DockTimeline({ file }: DockTimelineProps) {
   const setActiveSnapshot = useAppStore((s) => s.setActiveSnapshot);
-  const activeSnapshotTs = useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
+  const activeSnapshotTs =
+    useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
+  const selectedIds = useAppStore((s) => s.selectedIds);
+
   const history = file.history || [];
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [playheadPct, setPlayheadPct] = useState(98);
+  const [isDragging, setIsDragging] = useState(false);
+  const [bouncing, setBouncing] = useState(false);
+  const prevFileId = useRef(file.id);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const playheadX = useMotionValue(0);
-  const [width, setWidth] = useState(0);
+  const firstTs = history.length > 0 ? history[0].timestamp : 0;
+  const lastTs = history.length > 0 ? history[history.length - 1].timestamp : 0;
+  const timeSpan = Math.max(lastTs - firstTs, 1);
 
+  const tsToPct = useCallback(
+    (ts: number) => ((ts - firstTs) / timeSpan) * 100,
+    [firstTs, timeSpan],
+  );
+
+  const nearestSnap = useCallback(
+    (pct: number): FileSnapshot | null => {
+      if (history.length === 0) return null;
+      const targetTs = firstTs + (pct / 100) * timeSpan;
+      let closest = history[0];
+      let minDiff = Infinity;
+      for (const snap of history) {
+        const diff = Math.abs(snap.timestamp - targetTs);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = snap;
+        }
+      }
+      return closest;
+    },
+    [history, firstTs, timeSpan],
+  );
+
+  // Bounce animation on file switch
   useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new ResizeObserver((entries) => {
-      setWidth(entries[0].contentRect.width);
-    });
-    observer.observe(containerRef.current);
-    
-    // Default playhead to the end (live)
+    if (prevFileId.current !== file.id) {
+      prevFileId.current = file.id;
+      setPlayheadPct(98);
+      setActiveSnapshot(file.id, null);
+      setBouncing(true);
+      const t = setTimeout(() => setBouncing(false), 400);
+      return () => clearTimeout(t);
+    }
+  }, [file.id, setActiveSnapshot]);
+
+  // Keep playhead synced when activeSnapshot changes externally
+  useEffect(() => {
     if (activeSnapshotTs === null) {
-      if (containerRef.current) {
-        playheadX.set(containerRef.current.getBoundingClientRect().width);
-      }
+      setPlayheadPct(98);
+    } else {
+      setPlayheadPct(tsToPct(activeSnapshotTs));
     }
-    
-    return () => observer.disconnect();
-  }, [history.length, activeSnapshotTs, playheadX]);
+  }, [activeSnapshotTs, tsToPct]);
 
-  // When scrubbing visually, determine the nearest snapshot
-  const handleDrag = () => {
-    if (history.length === 0 || width === 0) return;
-    
-    const x = playheadX.get();
-    
-    // Live boundary -> if we are in the last 15px, we are "Live"
-    if (x > width - 15) {
-      if (activeSnapshotTs !== null) {
+  // Playhead drag handlers
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const onMove = (e: MouseEvent) => {
+      const track = trackRef.current;
+      if (!track) return;
+      const rect = track.getBoundingClientRect();
+      const pct = Math.max(
+        0,
+        Math.min(100, ((e.clientX - rect.left) / rect.width) * 100),
+      );
+      setPlayheadPct(pct);
+
+      if (pct > 95) {
         setActiveSnapshot(file.id, null);
+      } else {
+        const snap = nearestSnap(pct);
+        if (snap) setActiveSnapshot(file.id, snap.timestamp);
       }
-      return;
-    }
+    };
 
-    // Otherwise, find the closest node
-    const firstTs = history[0].timestamp;
-    const lastTs = history[history.length - 1].timestamp;
-    const span = Math.max(lastTs - firstTs, 1);
-    
-    // Reverse map X coordinate back to timestamp
-    const scrubbedTs = firstTs + (x / width) * span;
-    
-    // Find closest snap by time
-    let closest = history[0];
-    let minDiff = Infinity;
-    for (const snap of history) {
-      const diff = Math.abs(snap.timestamp - scrubbedTs);
-      if (diff < minDiff) {
-        minDiff = diff;
-        closest = snap;
+    const onUp = () => setIsDragging(false);
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [isDragging, file.id, setActiveSnapshot, nearestSnap]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (history.length === 0) return;
+
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isEditing =
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        (e.target as HTMLElement)?.isContentEditable ||
+        !!(e.target as HTMLElement)?.closest?.(".cm-editor");
+      if (isEditing) return;
+
+      if (e.key === "l" || e.key === "L") {
+        e.preventDefault();
+        setActiveSnapshot(file.id, null);
+        return;
       }
-    }
-    
-    if (activeSnapshotTs !== closest.timestamp) {
-      setActiveSnapshot(file.id, closest.timestamp);
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        let curIdx = history.length - 1;
+        if (activeSnapshotTs !== null) {
+          const found = history.findIndex(
+            (s) => s.timestamp === activeSnapshotTs,
+          );
+          if (found !== -1) curIdx = found;
+        }
+        const nextIdx =
+          e.key === "ArrowLeft"
+            ? Math.max(0, curIdx - 1)
+            : Math.min(history.length - 1, curIdx + 1);
+        const snap = history[nextIdx];
+        setActiveSnapshot(file.id, snap.timestamp);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [history, activeSnapshotTs, file.id, setActiveSnapshot]);
+
+  // Early return AFTER all hooks
+  if (selectedIds.size > 0 || history.length === 0) return null;
+
+  const handleNodeClick = (snap: FileSnapshot) => {
+    const pct = tsToPct(snap.timestamp);
+    setPlayheadPct(pct);
+    setActiveSnapshot(file.id, snap.timestamp);
+  };
+
+  const handleTrackClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest(".dn, .playhead-handle")) return;
+    const track = trackRef.current;
+    if (!track) return;
+    const rect = track.getBoundingClientRect();
+    const pct = Math.max(
+      0,
+      Math.min(100, ((e.clientX - rect.left) / rect.width) * 100),
+    );
+    setPlayheadPct(pct);
+    if (pct > 95) {
+      setActiveSnapshot(file.id, null);
+    } else {
+      const snap = nearestSnap(pct);
+      if (snap) setActiveSnapshot(file.id, snap.timestamp);
     }
   };
 
   const jumpToLive = () => {
-    playheadX.set(width);
+    setPlayheadPct(98);
     setActiveSnapshot(file.id, null);
   };
 
-  if (history.length === 0) return null;
-
-  const firstTs = history[0].timestamp;
-  const lastTs = history[history.length - 1].timestamp;
-  const timeSpan = Math.max(lastTs - firstTs, 1);
+  const bannerText = activeSnapshotTs
+    ? `Viewing ${formatTime(activeSnapshotTs)} snapshot`
+    : "";
+  const extColor = ExtDot.getColor(file.extension);
 
   return (
-    <motion.div
-      initial={{ y: 50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 50, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      style={{
-        position: "fixed",
-        bottom: 24,
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "min(600px, 90vw)",
-        height: 60,
-        background: "var(--card)",
-        border: "1px solid var(--border)",
-        borderRadius: 12,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-        display: "flex",
-        alignItems: "center",
-        padding: "0 24px",
-        zIndex: 50,
-      }}
+    <div
+      className="dock-w"
+      style={bouncing ? { transform: "translateY(10px)" } : undefined}
     >
-      <div
-        ref={containerRef}
-        style={{
-          position: "relative",
-          width: "100%",
-          height: 30,
-        }}
-      >
-        {/* Track Line */}
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: 0,
-            right: 0,
-            height: 2,
-            background: "var(--border)",
-            transform: "translateY(-50%)",
-            borderRadius: 1,
-          }}
-        />
-
-        {/* Nodes */}
-        {history.map((snap) => {
-          const ratio = (snap.timestamp - firstTs) / timeSpan;
-          const isSelected = activeSnapshotTs === snap.timestamp;
-          
-          let color = "var(--ac)";
-          if (snap.lines_added > 0 && snap.lines_removed === 0) color = "var(--ac3)";
-          if (snap.lines_removed > 0 && snap.lines_added === 0) color = "var(--danger)";
-          if (snap.lines_added > 0 && snap.lines_removed > 0) color = "var(--warn)";
-
-          return (
-            <motion.div
-              key={snap.id}
-              initial={{ scale: 0 }}
-              animate={{ scale: isSelected ? 1.5 : 1 }}
-              style={{
-                position: "absolute",
-                left: `${ratio * 100}%`,
-                top: "50%",
-                width: 10,
-                height: 10,
-                marginTop: -5,
-                marginLeft: -5,
-                borderRadius: "50%",
-                background: color,
-                boxShadow: isSelected ? `0 0 0 2px var(--bg), 0 0 0 4px ${color}` : "0 0 0 2px var(--card)",
-                cursor: "pointer",
-                zIndex: isSelected ? 10 : 5,
-              }}
-              onClick={() => {
-                playheadX.set(ratio * width);
-                setActiveSnapshot(file.id, snap.timestamp);
-              }}
-              whileHover={{ scale: 1.3 }}
-            />
-          );
-        })}
-
-        {/* Live Indicator at the very end */}
-        <div
-          style={{
-            position: "absolute",
-            left: "100%",
-            top: "50%",
-            transform: "translateY(-50%) translateX(12px)",
-            fontSize: 10,
-            fontWeight: 800,
-            color: activeSnapshotTs === null ? "var(--ac)" : "var(--tx3)",
-            cursor: "pointer",
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-          }}
-          onClick={jumpToLive}
-        >
-          LIVE
-        </div>
-
-        {/* Draggable Playhead */}
-        <motion.div
-          drag="x"
-          dragConstraints={containerRef}
-          dragElastic={0}
-          dragMomentum={false}
-          onDrag={handleDrag}
-          style={{
-            x: playheadX,
-            position: "absolute",
-            top: -10,
-            bottom: -10,
-            width: 4,
-            marginLeft: -2,
-            background: "var(--warn)",
-            borderRadius: 2,
-            cursor: "grab",
-            zIndex: 20,
-            boxShadow: "0 0 10px var(--warn)",
-          }}
-          whileDrag={{ cursor: "grabbing", scaleY: 1.2 }}
-        >
-          {/* Playhead Handle */}
-          <div
-            style={{
-              position: "absolute",
-              top: -8,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              background: "var(--warn)",
-              border: "2px solid #fff",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-            }}
-          />
-        </motion.div>
+      <div className={`scrub-banner${activeSnapshotTs ? " visible" : ""}`}>
+        {bannerText}
       </div>
 
-      {/* Scrub Banner Info */}
-      {activeSnapshotTs !== null && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+      <div className="dock-head">
+        <div className="dock-title">
+          <span className="dot" style={{ background: extColor }} />
+          <span>
+            {file.name}
+            {file.extension && (
+              <span style={{ color: "var(--tx3)", fontWeight: 500 }}>
+                .{file.extension}
+              </span>
+            )}
+          </span>
+        </div>
+        <span className="dock-meta">
+          {history.length} changes
+          {activeSnapshotTs !== null && (
+            <span
+              style={{ marginLeft: 8, cursor: "pointer", color: "var(--ac)" }}
+              onClick={jumpToLive}
+            >
+              ↩ Return to Live
+            </span>
+          )}
+        </span>
+      </div>
+
+      <div
+        className="dock-track-w"
+        ref={trackRef}
+        onClick={handleTrackClick}
+      >
+        <div className="dock-axis" />
+
+        {/* Live indicator at track end */}
+        <div
+          className={`dock-live${activeSnapshotTs !== null ? " inactive" : ""}`}
+          onClick={jumpToLive}
+        >
+          <span className="dock-live-dot" />
+          <span className="dock-live-text">Live</span>
+        </div>
+
+        <div className="dock-nodes">
+          {history.map((snap) => {
+            const pct = tsToPct(snap.timestamp);
+            const type = snapshotType(snap);
+            const isSelected = activeSnapshotTs === snap.timestamp;
+            return (
+              <div
+                key={snap.id}
+                className="dn"
+                style={{ left: `${pct}%` }}
+                onClick={() => handleNodeClick(snap)}
+              >
+                <div
+                  className={`dn-circle ${type}`}
+                  style={
+                    isSelected
+                      ? {
+                          transform: "scale(1.3)",
+                          boxShadow: `0 0 0 2px var(--bg), 0 0 0 4px var(--ac)`,
+                        }
+                      : undefined
+                  }
+                >
+                  {type === "add" && (
+                    <span
+                      style={{
+                        color: "#fff",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        lineHeight: 1,
+                        fontFamily: "monospace",
+                        marginTop: -1,
+                      }}
+                    >
+                      +
+                    </span>
+                  )}
+                </div>
+                <div className="dn-time">{formatTime(snap.timestamp)}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          className="playhead"
           style={{
-            position: "absolute",
-            top: -40,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "var(--warn)",
-            color: "#000",
-            padding: "4px 12px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 600,
-            pointerEvents: "none",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            whiteSpace: "nowrap",
+            left: `${playheadPct}%`,
+            transition: isDragging ? "none" : "left 0.1s linear",
           }}
         >
-          <span style={{ opacity: 0.8 }}>Viewing snapshot:</span>
-          {new Date(activeSnapshotTs * 1000).toLocaleTimeString()}
-        </motion.div>
-      )}
-    </motion.div>
+          <div
+            className="playhead-handle"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

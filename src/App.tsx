@@ -9,6 +9,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { Toasts } from "./components/Toasts";
 import { EjectBar } from "./components/EjectBar";
 import { DropZone } from "./components/DropZone";
+import { DockTimeline } from "./components/DockTimeline";
 import { useAppStore } from "./stores/app-store";
 import { useToastStore } from "./stores/toast-store";
 import { useCommandStore } from "./stores/command-store";
@@ -18,6 +19,10 @@ export default function App() {
   const { addFiles, addGroup } = useAppStore();
   const theme = useAppStore((s) => s.theme);
   const isFullscreen = useAppStore((s) => s.isFullscreen);
+  const activeFileId = useAppStore((s) => s.activeFileId);
+  const files = useAppStore((s) => s.files);
+  const activeFile = activeFileId ? files.find((f) => f.id === activeFileId) : undefined;
+  const showDock = !!(activeFile && activeFile.history && activeFile.history.length > 0);
   const addToast = useToastStore((s) => s.add);
   const [dropHovering, setDropHovering] = useState(false);
 
@@ -43,54 +48,30 @@ export default function App() {
 
   // Listen for file changes from Tauri backend
   useEffect(() => {
-    const unlisten = listen<string>("file-changed", async (event) => {
-      const rawPath = event.payload;
+    const unlisten = listen<WatchedFile>("file-changed", (event) => {
+      const updated = event.payload;
       const { files, updateFile, setCardDirty } = useAppStore.getState();
 
-      // Normalize slashes so paths always match
-      const norm = rawPath.replace(/\\/g, "/");
-      const file = files.find((f) => f.path.replace(/\\/g, "/") === norm);
+      const file = files.find((f) => f.id === updated.id);
       if (!file) return;
 
-      try {
-        const result = await invoke<{ content: string; modified: number }>(
-          "refresh_file",
-          { path: file.path },
-        );
-        if (result) {
-          // Re-read store after await to avoid stale comparison
-          const current = useAppStore.getState().files.find((f) => f.id === file.id);
-          const currentContent = current?.content ?? file.content;
+      // Skip if content unchanged (e.g. our own save triggered the watcher)
+      if (updated.content === file.content) return;
 
-          // Skip if content unchanged (e.g. our own save triggered the watcher)
-          if (result.content === currentContent) return;
+      // Compute diff stats from the latest snapshot if available
+      const latestSnap = updated.history.length > 0
+        ? updated.history[updated.history.length - 1]
+        : null;
 
-          const oldLines = (currentContent || "").split("\n");
-          const newLines = result.content.split("\n");
-          const oldSet = new Set(oldLines);
-          const newSet = new Set(newLines);
-
-          let added = 0;
-          let removed = 0;
-          for (const line of newLines) {
-            if (!oldSet.has(line)) added++;
-          }
-          for (const line of oldLines) {
-            if (!newSet.has(line)) removed++;
-          }
-
-          updateFile(file.id, {
-            content: result.content,
-            modified: result.modified,
-            linesAdded: added,
-            linesRemoved: removed,
-          });
-          setCardDirty(file.id, false);
-          addToast("Updated", file.name, "cyan");
-        }
-      } catch {
-        // File may have been deleted
-      }
+      updateFile(file.id, {
+        content: updated.content,
+        modified: updated.modified,
+        linesAdded: latestSnap?.lines_added ?? 0,
+        linesRemoved: latestSnap?.lines_removed ?? 0,
+        history: updated.history,
+      });
+      setCardDirty(file.id, false);
+      addToast("Updated", file.name, "cyan");
     });
     return () => {
       unlisten.then((fn) => fn());
@@ -247,6 +228,7 @@ export default function App() {
           {!isFullscreen && <Sidebar />}
           <ContentPane />
         </div>
+        {showDock && activeFile && <DockTimeline file={activeFile} />}
       </div>
       <CommandPalette />
       <EjectBar />

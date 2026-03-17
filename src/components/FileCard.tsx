@@ -63,6 +63,7 @@ export function FileCard({
   const mode = detectMode(file.extension);
   const extColor = ExtDot.getColor(file.extension);
   const activeSnapshotTs = useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
+  const setActiveSnapshot = useAppStore((s) => s.setActiveSnapshot);
 
   // Sync content synchronously during render when file changes externally.
   if (file.content !== trackedContent) {
@@ -190,11 +191,23 @@ export function FileCard({
             </span>
           ) : null}
         </div>
+        {file.history && file.history.length > 0 && (
+          <MicroTimeline history={file.history} size="medium" />
+        )}
       </div>
-      
-      {file.history && file.history.length > 0 && (
-        <div style={{ width: "100%", padding: "0 24px 12px 52px" }}>
-          <MicroTimeline history={file.history} active={isActive} size="medium" />
+
+      {/* History mode banner */}
+      {historicalSnap && (
+        <div className="history-banner">
+          <span className="hb-dot" />
+          <span className="hb-text">
+            Viewing snapshot from {new Date(historicalSnap.timestamp * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+            {historicalSnap.lines_added > 0 && ` · +${historicalSnap.lines_added}`}
+            {historicalSnap.lines_removed > 0 && ` · −${historicalSnap.lines_removed}`}
+          </span>
+          <button className="hb-btn" onClick={() => setActiveSnapshot(file.id, null)}>
+            Return to Live
+          </button>
         </div>
       )}
 
