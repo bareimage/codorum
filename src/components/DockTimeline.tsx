@@ -198,11 +198,11 @@ export function DockTimeline({ file }: DockTimelineProps) {
             bottom: -10,
             width: 4,
             marginLeft: -2,
-            background: "var(--ac)",
+            background: "var(--warn)",
             borderRadius: 2,
             cursor: "grab",
             zIndex: 20,
-            boxShadow: "0 0 10px var(--ac)",
+            boxShadow: "0 0 10px var(--warn)",
           }}
           whileDrag={{ cursor: "grabbing", scaleY: 1.2 }}
         >
@@ -213,10 +213,12 @@ export function DockTimeline({ file }: DockTimelineProps) {
               top: -8,
               left: "50%",
               transform: "translateX(-50%)",
-              width: 14,
-              height: 14,
-              borderRadius: "50%",
-              background: "var(--ac)",
+              width: 18,
+              height: 18,
+              borderRadius: 4,
+              background: "var(--warn)",
+              border: "2px solid #fff",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
             }}
           />
         </motion.div>
@@ -232,8 +234,8 @@ export function DockTimeline({ file }: DockTimelineProps) {
             top: -40,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "var(--ac)",
-            color: "var(--bg)",
+            background: "var(--warn)",
+            color: "#000",
             padding: "4px 12px",
             borderRadius: 8,
             fontSize: 12,
