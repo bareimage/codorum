@@ -38,6 +38,10 @@ interface AppState {
   cardHeights: Record<string, number | null>;
   cardDirty: Record<string, boolean>;
 
+  // Timeline
+  activeSnapshots: Record<string, number | null>;
+  setActiveSnapshot: (fileId: string, timestamp: number | null) => void;
+
   // Drawer & stream actions
   toggleDrawer: (key: string) => void;
   setSortBy: (sort: "name" | "modified" | "changes") => void;
@@ -112,6 +116,11 @@ export const useAppStore = create<AppState>()(
       cardCollapsed: {},
       cardHeights: {},
       cardDirty: {},
+      activeSnapshots: {},
+      setActiveSnapshot: (fileId, timestamp) =>
+        set((s) => ({
+          activeSnapshots: { ...s.activeSnapshots, [fileId]: timestamp },
+        })),
       selectedIds: new Set<string>(),
       lastSelectedId: null,
 

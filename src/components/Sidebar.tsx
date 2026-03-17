@@ -6,6 +6,7 @@ import { useToastStore } from "../stores/toast-store";
 import { sortFiles } from "../utils/sortFiles";
 import { ExtDot } from "./ExtDot";
 import { StatusBar } from "./StatusBar";
+import { MicroTimeline } from "./MicroTimeline";
 import type { WatchedFile } from "../types/files";
 
 // ─── Mouse-based drag state (shared across all sections) ───
@@ -195,6 +196,7 @@ function DrawerSection({
                 </span>
               ) : null}
               {file.deleted && <span className="del-badge">deleted</span>}
+              <MicroTimeline history={file.history} active={isActive} />
               {excerpt && (
                 <div
                   style={{

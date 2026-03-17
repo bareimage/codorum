@@ -242,7 +242,7 @@ export default function App() {
       <div className="bg-solid" />
       <div className="bg-grad" />
       <div className="ui">
-        {!isFullscreen && <Toolbar />}
+        <Toolbar />
         <div className="main">
           {!isFullscreen && <Sidebar />}
           <ContentPane />

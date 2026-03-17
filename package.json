@@ -51,6 +51,7 @@
     "@tiptap/suggestion": "^3.20.1",
     "@types/dompurify": "^3.0.5",
     "dompurify": "^3.3.2",
+    "framer-motion": "^12.38.0",
     "highlight.js": "^11.11.1",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.577.0",

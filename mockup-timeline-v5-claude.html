@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="n01z">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codorum — Timeline v5 Claude (Refined Dock + Subtle Micro-Scrubbers)</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#000;--bg2:rgba(30,30,35,.65);--card:rgba(45,45,50,.65);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.6);
+  --tx3:rgba(255,255,255,.4);--ac:#0A84FF;--ac2:#5E5CE6;--ac3:#30D158;
+  --warn:#FF9F0A;--danger:#FF453A;--brd:rgba(255,255,255,.1);
+  --input-bg:rgba(0,0,0,.2);--cmd-bg:rgba(30,30,35,.85);
+  --bg-gradient:radial-gradient(circle at 20% 0%,rgba(94,92,230,.5) 0%,transparent 50%),radial-gradient(circle at 80% 100%,rgba(10,132,255,.5) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,69,58,.3) 0%,transparent 50%);
+  --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="paper"]{
+  --bg:#F5F5F7;--bg2:rgba(255,255,255,.65);--card:rgba(255,255,255,.8);
+  --hover:rgba(0,0,0,.05);--tx:#1D1D1F;--tx2:rgba(0,0,0,.6);--tx3:rgba(0,0,0,.4);
+  --ac:#007AFF;--ac2:#5856D6;--ac3:#34C759;--warn:#FF9500;--danger:#FF3B30;--brd:rgba(0,0,0,.08);
+  --input-bg:rgba(0,0,0,.04);--cmd-bg:rgba(255,255,255,.85);
+  --bg-gradient:radial-gradient(circle at 0% 0%,rgba(88,86,214,.3) 0%,transparent 50%),radial-gradient(circle at 100% 100%,rgba(0,122,255,.3) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,59,48,.2) 0%,transparent 50%);
+}
+[data-theme="phosphor"]{
+  --bg:#00120a;--bg2:rgba(10,40,25,.5);--card:rgba(20,50,35,.5);
+  --hover:rgba(255,255,255,.15);--tx:#fff;--tx2:rgba(255,255,255,.7);--tx3:rgba(255,255,255,.5);
+  --ac:#34C759;--ac2:#32ADE6;--ac3:#A2845E;--warn:#FFD60A;--danger:#FF453A;--brd:rgba(255,255,255,.15);
+  --input-bg:rgba(0,0,0,.25);--cmd-bg:rgba(10,40,25,.85);
+  --bg-gradient:radial-gradient(circle at 10% 20%,rgba(0,176,155,.5) 0%,transparent 60%),radial-gradient(circle at 90% 80%,rgba(150,201,61,.5) 0%,transparent 60%);
+}
+[data-theme="ember"]{
+  --bg:#1c0a00;--bg2:rgba(45,20,10,.6);--card:rgba(60,25,15,.6);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.7);--tx3:rgba(255,255,255,.5);
+  --ac:#FF9500;--ac2:#FF2D55;--ac3:#FFCC00;--warn:#FFD60A;--danger:#FF3B30;--brd:rgba(255,255,255,.1);
+  --input-bg:rgba(0,0,0,.2);--cmd-bg:rgba(45,20,10,.85);
+  --bg-gradient:radial-gradient(circle at 80% 20%,rgba(255,78,80,.5) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(249,212,35,.5) 0%,transparent 60%);
+}
+
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;transition:background 200ms ease,color 200ms ease;display:flex;flex-direction:column;padding:16px;gap:16px;position:relative}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+
+@keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes eyeBlink{0%,42%,50%,100%{transform:scaleY(0)}44%,48%{transform:scaleY(1)}}
+@keyframes eyeLook{0%,40%,50%,100%{transform:translateX(0)}42%,48%{transform:translateX(2px)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes nodePopIn{from{opacity:0;transform:translate(-50%,-50%) scale(0)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes dockBounce{0%{transform:translateY(8px)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 4px rgba(255,159,10,.3)}50%{box-shadow:0 0 12px rgba(255,159,10,.6)}}
+
+.bg-solid{position:fixed;inset:0;z-index:0;background:var(--bg)}
+.bg-grad{position:fixed;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
+.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%}
+
+/* ═══ Toolbar ═══ */
+.toolbar-w{display:flex;justify-content:center;width:100%;z-index:50}
+.toolbar{height:48px;display:flex;align-items:center;padding:0 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.1);min-width:400px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.eye-lid{transform-origin:center;animation:eyeBlink 6s ease-in-out infinite}
+.eye-iris{animation:eyeLook 6s ease-in-out infinite}
+.sep{width:1px;height:16px;background:var(--brd);margin:0 16px}
+.file-count{font-size:13px;font-weight:500;color:var(--tx3)}
+.toolbar-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+button{cursor:pointer;font-family:inherit;background:transparent;border:none}
+.btn-ghost{height:32px;padding:0 16px;border:1px solid var(--brd);border-radius:9999px;font-size:13px;font-weight:500;color:var(--tx2);transition:background .2s}
+.btn-ghost:hover{background:var(--hover);color:var(--tx)}
+.btn-pill{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;background:var(--input-bg);border:1px solid var(--brd);border-radius:9999px;color:var(--tx2);font-size:13px}
+.btn-pill:hover{background:var(--hover);color:var(--tx)}
+.kbd{font-size:11px;font-weight:500;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--tx2)}
+
+.main{display:flex;flex:1;overflow:hidden;gap:16px}
+
+/* ═══ Sidebar (12px) ═══ */
+.sidebar{width:280px;flex-shrink:0;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);display:flex;flex-direction:column;border:1px solid var(--brd);border-radius:12px;overflow:hidden}
+.sb-head{display:flex;align-items:center;padding:20px 24px 12px;font-size:13px;font-weight:600;color:var(--tx2);letter-spacing:-.02em}
+.tree{flex:1;overflow-y:auto;padding:8px 0 16px}
+
+/* File item with micro-scrubber */
+.fi{display:flex;flex-direction:column;padding:8px 12px 6px;border-radius:8px;color:var(--tx2);transition:all .15s ease;margin:0 12px 2px;cursor:pointer}
+.fi:hover{background:var(--hover)}
+.fi.active{background:var(--ac);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.fi-top{display:flex;align-items:center;gap:12px}
+.fi .dot{width:10px;height:10px;border-radius:9999px;flex-shrink:0;transition:box-shadow .2s ease}
+.fi .fl{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}
+.fi .fl .ext{font-weight:400;color:var(--tx3)}
+.fi.active .fl .ext{color:rgba(255,255,255,.7)}
+.fi.active .dot{background:#fff!important}
+.diff{display:inline-flex;gap:4px;font-family:var(--font-mono);font-size:11px;font-weight:500}
+.d-add{color:var(--ac3)}.d-del{color:var(--danger)}
+.fi.active .d-add,.fi.active .d-del{color:#fff}
+
+/* Micro-scrubber: ultra-subtle sparkline */
+.micro-tl{display:flex;align-items:center;height:6px;margin:4px 0 0 22px;gap:3px;opacity:.5;transition:opacity .2s ease}
+.fi:hover .micro-tl,.fi.active .micro-tl{opacity:.9}
+.micro-dot{width:4px;height:4px;border-radius:9999px;flex-shrink:0;transition:transform .15s ease}
+.micro-dot.add{background:var(--ac3)}
+.micro-dot.del{background:var(--danger)}
+.micro-dot.edit{background:var(--ac)}
+.micro-dot.mix{background:var(--warn)}
+.fi.active .micro-dot{box-shadow:0 0 3px rgba(255,255,255,.4)}
+.micro-gap{flex:1;min-width:2px;max-width:12px}
+
+/* ═══ Content (12px) ═══ */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:12px}
+.c-head{display:flex;align-items:baseline;gap:12px;padding:24px 32px 0;margin-bottom:16px}
+.c-head h1{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.c-head .sub{font-size:14px;color:var(--tx3);font-weight:500}
+.content-scroll{flex:1;overflow-y:auto;padding-bottom:16px}
+
+/* File Card (10px) */
+.fc{background:var(--card);border-radius:10px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden}
+.fc.active{border-color:transparent;box-shadow:0 0 0 2px rgba(10,132,255,.5),0 4px 24px rgba(0,0,0,.08)}
+.fc-h{display:flex;align-items:center;gap:12px;padding:16px 24px;cursor:pointer;transition:background .1s;position:relative}
+.fc-h:hover{background:rgba(255,255,255,.03)}
+.fc-h .cdot{width:12px;height:12px;border-radius:9999px;flex-shrink:0}
+.fc-h .ftitle{font-size:16px;font-weight:600;letter-spacing:-.02em;flex:1}
+.fc-h .ftitle .ext{color:var(--tx3);font-weight:500}
+.fc-h .fmeta{margin-left:auto;display:flex;align-items:center;gap:16px}
+.fc-h .ts{font-size:13px;font-weight:500;color:var(--tx3)}
+
+/* Card header micro-timeline: ultra subtle, 3px dots, no axis */
+.fc-micro{display:flex;align-items:center;gap:3px;margin-left:24px;opacity:.4;transition:opacity .2s}
+.fc:hover .fc-micro,.fc.active .fc-micro{opacity:.7}
+.fc-micro .micro-dot{width:3px;height:3px}
+
+.fc-body{padding:24px 32px;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:var(--tx2);border-top:1px solid var(--brd)}
+
+/* ═══ BOTTOM DOCK: Active file scrubber ═══ */
+.dock{
+  flex-shrink:0;
+  background:var(--bg2);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border:1px solid var(--brd);
+  border-radius:12px;
+  overflow:visible;
+  display:flex;flex-direction:column;
+  transition:all .3s cubic-bezier(.16,1,.3,1);
+  position:relative;
+}
+.dock-head{display:flex;align-items:center;gap:10px;padding:12px 20px 0}
+.dock-file{display:flex;align-items:center;gap:8px}
+.dock-file .dot{width:8px;height:8px;border-radius:9999px}
+.dock-file .name{font-size:13px;font-weight:600}
+.dock-file .name .ext{color:var(--tx3);font-weight:500}
+.dock-meta{font-size:11px;color:var(--tx3);margin-left:auto;font-family:var(--font-mono)}
+
+/* Track area */
+.dock-track{position:relative;height:48px;margin:8px 20px 14px;border-radius:8px;background:var(--input-bg);cursor:pointer}
+
+/* Axis line */
+.dock-track::before{content:"";position:absolute;left:12px;right:12px;top:50%;height:1px;background:var(--brd)}
+
+/* Dock nodes — positioned absolutely by % */
+.dn{position:absolute;top:50%;transform:translate(-50%,-50%);cursor:pointer;z-index:5;padding:4px}
+.dn-dot{width:14px;height:14px;border-radius:9999px;border:2px solid var(--bg);transition:transform .2s cubic-bezier(.175,.885,.32,1.275),box-shadow .2s ease;display:flex;align-items:center;justify-content:center}
+.dn:hover .dn-dot{transform:scale(1.4);z-index:10}
+.dn.active .dn-dot{box-shadow:0 0 0 3px var(--ac),0 0 10px rgba(10,132,255,.4);transform:scale(1.2)}
+.dn-dot.add{background:var(--ac3)}
+.dn-dot.del{background:var(--danger)}
+.dn-dot.edit{background:var(--ac)}
+.dn-dot.mix{background:var(--warn)}
+.dn-dot .dn-icon{color:#fff;font-size:9px;font-weight:800;font-family:var(--font-mono);line-height:1}
+
+/* Node tooltip */
+.dn-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);opacity:0;pointer-events:none;font-size:10px;font-weight:500;font-family:var(--font-mono);white-space:nowrap;padding:4px 8px;border-radius:6px;background:var(--cmd-bg);backdrop-filter:blur(12px);border:1px solid var(--brd);color:var(--tx);transition:opacity .15s,transform .15s;z-index:20}
+.dn:hover .dn-tip{opacity:1;transform:translateX(-50%) scale(1)}
+
+/* Playhead — circular handle, accent line */
+.playhead{position:absolute;top:0;height:100%;width:2px;background:var(--ac);z-index:15;pointer-events:none;transition:left .08s linear;border-radius:1px}
+.playhead::before{content:"";position:absolute;top:-8px;left:-7px;width:16px;height:16px;border-radius:9999px;background:var(--ac);box-shadow:0 0 10px rgba(10,132,255,.5);pointer-events:auto;cursor:grab;transition:transform .15s ease,box-shadow .15s ease}
+.playhead:hover::before{transform:scale(1.2);box-shadow:0 0 16px rgba(10,132,255,.7)}
+.playhead.dragging::before{transform:scale(1.3);cursor:grabbing}
+/* Glow trail when dragging */
+.playhead.dragging{box-shadow:0 0 20px rgba(10,132,255,.3),0 0 40px rgba(10,132,255,.15)}
+
+/* Scrub banner */
+.scrub-banner{position:absolute;top:-32px;left:50%;transform:translateX(-50%) translateY(4px);opacity:0;background:var(--warn);color:#000;padding:4px 14px;border-radius:9999px;font-weight:600;font-size:11px;font-family:var(--font-mono);box-shadow:0 2px 12px rgba(255,159,10,.4);pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap}
+.scrub-banner.visible{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Time ruler */
+.dock-ruler{display:flex;justify-content:space-between;padding:0 20px 10px;font-size:9px;font-family:var(--font-mono);color:var(--tx3)}
+
+/* Legend */
+.dock-legend{display:flex;gap:12px;padding:0 20px 10px;font-size:9px;color:var(--tx3)}
+.dock-legend-item{display:flex;align-items:center;gap:4px}
+.dock-legend-dot{width:6px;height:6px;border-radius:9999px}
+.dock-legend-dot.lg-add{background:var(--ac3)}
+.dock-legend-dot.lg-del{background:var(--danger)}
+.dock-legend-dot.lg-edit{background:var(--ac)}
+.dock-legend-dot.lg-mix{background:var(--warn)}
+
+.approach-label{position:fixed;top:12px;right:16px;z-index:100;font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;background:var(--ac2);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+
+<div class="approach-label">v5 Claude: Refined Dock + Subtle Micros</div>
+<div class="bg-solid"></div>
+<div class="bg-grad"></div>
+
+<div class="ui">
+
+  <!-- Toolbar -->
+  <div class="toolbar-w">
+    <div class="toolbar">
+      <div class="brand">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 22h20L12 2z" stroke="var(--tx3)" stroke-width="1.5" fill="none"/>
+          <path d="M7.5 15C7.5 15 9 12 12 12C15 12 16.5 15 16.5 15C16.5 15 15 18 12 18C9 18 7.5 15 7.5 15Z" stroke="var(--tx3)" stroke-width="1.2" fill="none"/>
+          <circle cx="12" cy="15" r="1.5" fill="var(--ac)" class="eye-iris"/>
+          <rect class="eye-lid" x="7" y="11.5" width="10" height="7" rx="5" fill="var(--bg2)"/>
+        </svg>
+        <span class="brand-name">Codorum</span>
+      </div>
+      <div class="sep"></div>
+      <span class="file-count">5 files</span>
+      <div class="toolbar-r">
+        <button class="btn-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="kbd">&#8984;K</span>
+        </button>
+        <button class="btn-ghost" id="themeBtn">n01z</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- Sidebar with micro-scrubbers -->
+    <div class="sidebar">
+      <div class="sb-head">Watched</div>
+      <div class="tree" id="sidebarTree">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="c-head">
+        <h1>Files</h1>
+        <span class="sub">5 visible</span>
+      </div>
+      <div class="content-scroll" id="cardContainer">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Dock -->
+  <div class="dock" id="dock">
+    <div class="scrub-banner" id="banner"></div>
+    <div class="dock-head">
+      <div class="dock-file">
+        <span class="dot" id="dockDot"></span>
+        <span class="name" id="dockName"></span>
+      </div>
+      <span class="dock-meta" id="dockMeta"></span>
+    </div>
+    <div class="dock-track" id="dockTrack">
+      <div class="playhead" id="playhead" style="left:95%"></div>
+    </div>
+    <div class="dock-ruler">
+      <span id="r0"></span><span id="r1"></span><span id="r2"></span><span id="r3"></span><span id="r4"></span>
+    </div>
+    <div class="dock-legend">
+      <span class="dock-legend-item"><span class="dock-legend-dot lg-add"></span>Added</span>
+      <span class="dock-legend-item"><span class="dock-legend-dot lg-del"></span>Deleted</span>
+      <span class="dock-legend-item"><span class="dock-legend-dot lg-edit"></span>Edited</span>
+      <span class="dock-legend-item"><span class="dock-legend-dot lg-mix"></span>Mixed</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// === DATA ===
+const files = [
+  { name:'App', ext:'.tsx', color:'#0A84FF', diff:'+12 -3',
+    nodes:[
+      {pct:5,type:'add',tip:'+4 lines',time:'2:15 PM'},
+      {pct:12,type:'add',tip:'+2 lines',time:'2:18 PM'},
+      {pct:28,type:'mix',tip:'+8 -3 lines',time:'2:22 PM'},
+      {pct:38,type:'add',tip:'+6 lines',time:'2:27 PM'},
+      {pct:45,type:'del',tip:'-4 lines',time:'2:31 PM'},
+      {pct:55,type:'add',tip:'+12 lines',time:'2:36 PM'},
+      {pct:62,type:'edit',tip:'refactor',time:'2:40 PM'},
+      {pct:68,type:'add',tip:'+3 lines',time:'2:43 PM'},
+      {pct:78,type:'del',tip:'-7 lines',time:'2:50 PM'},
+      {pct:88,type:'mix',tip:'+14 -2 lines',time:'2:58 PM'},
+      {pct:96,type:'add',tip:'+10 lines',time:'3:07 PM'},
+    ]},
+  { name:'watcher', ext:'.rs', color:'#FF9500', diff:'+45 -8',
+    nodes:[
+      {pct:20,type:'add',tip:'+18 lines',time:'2:20 PM'},
+      {pct:35,type:'add',tip:'+12 lines',time:'2:30 PM'},
+      {pct:50,type:'mix',tip:'+15 -6 lines',time:'2:38 PM'},
+      {pct:65,type:'del',tip:'-2 lines',time:'2:45 PM'},
+      {pct:85,type:'add',tip:'+8 lines',time:'2:55 PM'},
+      {pct:95,type:'edit',tip:'cleanup',time:'3:05 PM'},
+    ]},
+  { name:'app-store', ext:'.ts', color:'#5E5CE6', diff:'+7',
+    nodes:[
+      {pct:40,type:'add',tip:'+4 lines',time:'2:30 PM'},
+      {pct:55,type:'add',tip:'+3 lines',time:'2:42 PM'},
+      {pct:90,type:'add',tip:'+1 line',time:'3:00 PM'},
+    ]},
+  { name:'Sidebar', ext:'.tsx', color:'#30D158', diff:'',
+    nodes:[
+      {pct:70,type:'edit',tip:'style tweak',time:'2:48 PM'},
+    ]},
+  { name:'old-utils', ext:'.ts', color:'#FF453A', diff:'-22',
+    nodes:[
+      {pct:80,type:'del',tip:'-14 lines',time:'2:52 PM'},
+      {pct:90,type:'del',tip:'-8 lines',time:'2:58 PM'},
+    ]},
+];
+
+let activeIdx = 0;
+
+// === RENDER SIDEBAR ===
+const tree = document.getElementById('sidebarTree');
+files.forEach((f, i) => {
+  const el = document.createElement('div');
+  el.className = 'fi' + (i === 0 ? ' active' : '');
+  el.onclick = () => activate(i);
+
+  let microHTML = '<div class="micro-tl">';
+  let lastPct = 0;
+  f.nodes.forEach(n => {
+    if (n.pct - lastPct > 15) microHTML += '<span class="micro-gap"></span>';
+    microHTML += `<span class="micro-dot ${n.type}"></span>`;
+    lastPct = n.pct;
+  });
+  microHTML += '</div>';
+
+  const diffHTML = f.diff ? `<span class="diff"><span class="${f.diff.includes('+') ? 'd-add' : 'd-del'}">${f.diff}</span></span>` : '';
+
+  el.innerHTML = `
+    <div class="fi-top">
+      <span class="dot" style="background:${f.color}"></span>
+      <span class="fl">${f.name}<span class="ext">${f.ext}</span></span>
+      ${diffHTML}
+    </div>
+    ${microHTML}
+  `;
+  tree.appendChild(el);
+});
+
+// === RENDER CARDS ===
+const cards = document.getElementById('cardContainer');
+files.forEach((f, i) => {
+  const el = document.createElement('div');
+  el.className = 'fc' + (i === 0 ? ' active' : '');
+  el.id = 'fc-' + i;
+
+  let microHTML = '<div class="fc-micro">';
+  let lastPct = 0;
+  f.nodes.forEach(n => {
+    if (n.pct - lastPct > 15) microHTML += '<span class="micro-gap" style="width:6px"></span>';
+    microHTML += `<span class="micro-dot ${n.type}"></span>`;
+    lastPct = n.pct;
+  });
+  microHTML += '</div>';
+
+  el.innerHTML = `
+    <div class="fc-h" onclick="activate(${i})">
+      <span class="cdot" style="background:${f.color}"></span>
+      <span class="ftitle">${f.name}<span class="ext">${f.ext}</span></span>
+      <div class="fmeta">
+        ${f.diff ? `<span class="diff"><span class="${f.diff.includes('+') ? 'd-add' : 'd-del'}">${f.diff}</span></span>` : ''}
+        <span class="ts">${f.nodes.length ? f.nodes[f.nodes.length-1].time : ''}</span>
+      </div>
+    </div>
+    ${microHTML}
+  `;
+  cards.appendChild(el);
+});
+
+// === DOCK ===
+const dock = document.getElementById('dock');
+const dockTrack = document.getElementById('dockTrack');
+const dockDot = document.getElementById('dockDot');
+const dockName = document.getElementById('dockName');
+const dockMeta = document.getElementById('dockMeta');
+const playhead = document.getElementById('playhead');
+const bannerEl = document.getElementById('banner');
+
+function renderDock(f) {
+  dockDot.style.background = f.color;
+  dockName.innerHTML = f.name + '<span class="ext">' + f.ext + '</span>';
+  dockMeta.textContent = f.nodes.length + ' changes';
+
+  // Clear old nodes
+  dockTrack.querySelectorAll('.dn').forEach(n => n.remove());
+
+  // Add nodes with staggered animation
+  f.nodes.forEach((n, i) => {
+    const el = document.createElement('div');
+    el.className = 'dn';
+    el.style.left = n.pct + '%';
+    el.style.animation = `nodePopIn .25s cubic-bezier(.175,.885,.32,1.275) ${i * .04}s backwards`;
+    el.innerHTML = `
+      <span class="dn-tip">${n.tip} · ${n.time}</span>
+      <span class="dn-dot ${n.type}">${n.type === 'add' ? '<span class="dn-icon">+</span>' : ''}</span>
+    `;
+    el.onclick = () => snapTo(n);
+    dockTrack.appendChild(el);
+  });
+
+  // Time ruler
+  if (f.nodes.length >= 2) {
+    const times = f.nodes.map(n => n.time);
+    const step = Math.max(1, Math.floor(times.length / 5));
+    for (let i = 0; i < 5; i++) {
+      const idx = Math.min(i * step, times.length - 1);
+      document.getElementById('r' + i).textContent = times[idx] || '';
+    }
+  }
+
+  // Bounce animation
+  dock.style.animation = 'none';
+  dock.offsetHeight; // reflow
+  dock.style.animation = 'dockBounce .35s cubic-bezier(.16,1,.3,1)';
+
+  // Reset playhead
+  playhead.style.left = '95%';
+  bannerEl.classList.remove('visible');
+}
+
+function snapTo(node) {
+  playhead.style.transition = 'left .15s ease';
+  playhead.style.left = node.pct + '%';
+  bannerEl.textContent = node.time + ' · ' + node.tip;
+  bannerEl.classList.add('visible');
+}
+
+function activate(idx) {
+  activeIdx = idx;
+  // Sidebar
+  tree.querySelectorAll('.fi').forEach((el, i) => el.classList.toggle('active', i === idx));
+  // Cards
+  cards.querySelectorAll('.fc').forEach((el, i) => el.classList.toggle('active', i === idx));
+  // Dock
+  renderDock(files[idx]);
+}
+
+// === PLAYHEAD DRAG ===
+let dragging = false;
+playhead.querySelector('::before') // can't select pseudo, attach to playhead itself
+playhead.addEventListener('mousedown', (e) => {
+  // Check if clicking the handle area (top part)
+  dragging = true;
+  playhead.classList.add('dragging');
+  playhead.style.transition = 'none';
+  e.preventDefault();
+});
+// Also allow clicking the track to move playhead
+dockTrack.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.dn')) return;
+  if (e.target === playhead || e.target === playhead.firstChild) return;
+  const rect = dockTrack.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+  playhead.style.transition = 'left .12s ease';
+  playhead.style.left = pct + '%';
+  updateBannerFromPct(pct);
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  const rect = dockTrack.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+  playhead.style.left = pct + '%';
+  updateBannerFromPct(pct);
+});
+
+window.addEventListener('mouseup', () => {
+  if (dragging) {
+    dragging = false;
+    playhead.classList.remove('dragging');
+    playhead.style.transition = 'left .08s linear';
+  }
+});
+
+function updateBannerFromPct(pct) {
+  const f = files[activeIdx];
+  // Find nearest node
+  let nearest = f.nodes[0];
+  let minDist = Infinity;
+  f.nodes.forEach(n => {
+    if (Math.abs(n.pct - pct) < minDist) {
+      minDist = Math.abs(n.pct - pct);
+      nearest = n;
+    }
+  });
+  if (pct < 92) {
+    bannerEl.textContent = nearest.time + ' · ' + nearest.tip;
+    bannerEl.classList.add('visible');
+  } else {
+    bannerEl.classList.remove('visible');
+  }
+}
+
+// Arrow keys + L
+document.addEventListener('keydown', (e) => {
+  const f = files[activeIdx];
+  if (!f.nodes.length) return;
+
+  if (e.key === 'l' || e.key === 'L') {
+    playhead.style.transition = 'left .2s ease';
+    playhead.style.left = '95%';
+    bannerEl.classList.remove('visible');
+    return;
+  }
+
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const curPct = parseFloat(playhead.style.left) || 95;
+    // Find current node index
+    let curIdx = 0;
+    let minDist = Infinity;
+    f.nodes.forEach((n, i) => {
+      if (Math.abs(n.pct - curPct) < minDist) { minDist = Math.abs(n.pct - curPct); curIdx = i; }
+    });
+    const nextIdx = e.key === 'ArrowLeft' ? Math.max(0, curIdx - 1) : Math.min(f.nodes.length - 1, curIdx + 1);
+    snapTo(f.nodes[nextIdx]);
+  }
+});
+
+// Theme cycling
+const themes = ["n01z", "paper", "phosphor", "ember"];
+let ti = 0;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  ti = (ti + 1) % themes.length;
+  document.documentElement.setAttribute("data-theme", themes[ti]);
+  document.getElementById("themeBtn").textContent = themes[ti];
+});
+
+// Init
+renderDock(files[0]);
+</script>
+
+</body>
+</html>

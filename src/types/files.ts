@@ -1,3 +1,12 @@
+export interface FileSnapshot {
+  id: string;
+  timestamp: number;
+  content: string;
+  patch?: string;
+  lines_added: number;
+  lines_removed: number;
+}
+
 export interface WatchedFile {
   id: string;
   path: string;
@@ -6,6 +15,7 @@ export interface WatchedFile {
   content: string;
   modified: number;
   pinned: boolean;
+  history: FileSnapshot[];
   linesAdded?: number;
   linesRemoved?: number;
   /** Internal revision counter — incremented on each external update to force editor remount */

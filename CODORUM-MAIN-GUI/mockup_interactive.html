@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="n01z">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codorum — Interactive Mockup</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#000;--bg2:rgba(30,30,35,.65);--card:rgba(45,45,50,.65);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.6);
+  --tx3:rgba(255,255,255,.4);--ac:#0A84FF;--ac2:#5E5CE6;--ac3:#30D158;
+  --warn:#FF9F0A;--danger:#FF453A;--brd:rgba(255,255,255,.1);
+  --ring:rgba(10,132,255,.3);--input-bg:rgba(0,0,0,.2);
+  --cmd-bg:rgba(30,30,35,.85);--cmd-shadow:0 20px 40px rgba(0,0,0,.5);
+  --deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 20% 0%,rgba(94,92,230,.5) 0%,transparent 50%),radial-gradient(circle at 80% 100%,rgba(10,132,255,.5) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,69,58,.3) 0%,transparent 50%);
+  --shadow-heavy:rgba(0,0,0,.4);
+  --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="paper"]{
+  --bg:#F5F5F7;--bg2:rgba(255,255,255,.65);--card:rgba(255,255,255,.8);
+  --hover:rgba(0,0,0,.05);--tx:#1D1D1F;--tx2:rgba(0,0,0,.6);
+  --tx3:rgba(0,0,0,.4);--ac:#007AFF;--ac2:#5856D6;--ac3:#34C759;
+  --warn:#FF9500;--danger:#FF3B30;--brd:rgba(0,0,0,.08);
+  --ring:rgba(0,122,255,.2);--input-bg:rgba(0,0,0,.04);
+  --cmd-bg:rgba(255,255,255,.85);--cmd-shadow:0 20px 40px rgba(0,0,0,.1);
+  --deleted:rgba(0,0,0,.3);
+  --bg-gradient:radial-gradient(circle at 0% 0%,rgba(88,86,214,.3) 0%,transparent 50%),radial-gradient(circle at 100% 100%,rgba(0,122,255,.3) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,59,48,.2) 0%,transparent 50%);
+}
+[data-theme="phosphor"]{
+  --bg:#00120a;--bg2:rgba(10,40,25,.5);--card:rgba(20,50,35,.5);
+  --hover:rgba(255,255,255,.15);--tx:#fff;--tx2:rgba(255,255,255,.7);
+  --tx3:rgba(255,255,255,.5);--ac:#34C759;--ac2:#32ADE6;--ac3:#A2845E;
+  --warn:#FFD60A;--danger:#FF453A;--brd:rgba(255,255,255,.15);
+  --ring:rgba(52,199,89,.3);--input-bg:rgba(0,0,0,.25);
+  --cmd-bg:rgba(10,40,25,.85);--cmd-shadow:0 20px 40px rgba(0,0,0,.6);
+  --deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 10% 20%,rgba(0,176,155,.5) 0%,transparent 60%),radial-gradient(circle at 90% 80%,rgba(150,201,61,.5) 0%,transparent 60%);
+}
+[data-theme="ember"]{
+  --bg:#1c0a00;--bg2:rgba(45,20,10,.6);--card:rgba(60,25,15,.6);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.7);
+  --tx3:rgba(255,255,255,.5);--ac:#FF9500;--ac2:#FF2D55;--ac3:#FFCC00;
+  --warn:#FFD60A;--danger:#FF3B30;--brd:rgba(255,255,255,.1);
+  --ring:rgba(255,149,0,.3);--input-bg:rgba(0,0,0,.2);
+  --cmd-bg:rgba(45,20,10,.85);--cmd-shadow:0 20px 40px rgba(0,0,0,.6);
+  --deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 80% 20%,rgba(255,78,80,.5) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(249,212,35,.5) 0%,transparent 60%);
+}
+
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:var(--font-sans);background:var(--bg);color:var(--tx);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
+  transition:background 200ms ease,color 200ms ease;
+  display:flex;flex-direction:column;padding:16px;gap:16px;
+  position:relative;
+}
+::selection{background:rgba(10,132,255,.25)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+/* ═══ Animations ═══ */
+@keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes barIn{from{opacity:0;transform:translateX(-50%) translateY(6px) scale(.98)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px) scale(.96)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes cmdIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes eyeBlink{0%,42%,50%,100%{transform:scaleY(0)}44%,48%{transform:scaleY(1)}}
+@keyframes eyeLook{0%,40%,50%,100%{transform:translateX(0)}42%,48%{transform:translateX(2px)}}
+
+/* ═══ Background ═══ */
+.bg-solid{position:absolute;inset:0;z-index:0;background:var(--bg)}
+.bg-grad{position:absolute;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
+
+/* ═══ UI Layer ═══ */
+.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%}
+
+/* ═══ Toolbar ═══ */
+.toolbar-w{display:flex;justify-content:center;width:100%;z-index:50}
+.toolbar{height:48px;display:flex;align-items:center;padding:0 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.1);flex-shrink:0;min-width:400px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.eye-lid{transform-origin:center;animation:eyeBlink 6s ease-in-out infinite}
+.eye-iris{animation:eyeLook 6s ease-in-out infinite}
+.sep{width:1px;height:16px;background:var(--brd);margin:0 16px}
+.file-count{font-size:13px;font-weight:500;color:var(--tx3)}
+.toolbar-r{margin-left:auto;display:flex;gap:8px;align-items:center;padding-left:24px}
+
+/* ═══ Buttons ═══ */
+button{cursor:pointer;font-family:inherit}
+.btn-pill{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;background:var(--input-bg);border:1px solid var(--brd);border-radius:9999px;color:var(--tx2);font-size:13px}
+.btn-pill:hover{background:var(--hover);color:var(--tx)}
+.btn-ghost{height:32px;padding:0 16px;background:transparent;border:1px solid var(--brd);border-radius:9999px;font-size:13px;font-weight:500;color:var(--tx2)}
+.btn-ghost:hover{background:var(--hover);color:var(--tx)}
+.btn-icon{width:28px;height:28px;border-radius:9999px;color:var(--tx2);display:flex;align-items:center;justify-content:center;background:transparent;border:none}
+.btn-icon:hover{background:var(--hover);color:var(--tx)}
+.btn-round{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:var(--input-bg);border:1px solid var(--brd);color:var(--tx2);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.btn-round:hover{background:var(--hover);color:var(--tx)}
+.kbd{font-size:11px;font-weight:500;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--tx2)}
+
+/* ═══ Main Layout ═══ */
+.main{display:flex;flex:1;overflow:hidden;gap:16px}
+
+/* ═══ Sidebar ═══ */
+.sidebar{width:280px;flex-shrink:0;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);display:flex;flex-direction:column;border:1px solid var(--brd);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,.08);overflow:hidden;transition:width .2s ease}
+.sidebar.hidden{display:none}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 12px}
+.sb-head span{font-size:13px;font-weight:600;color:var(--tx2);letter-spacing:-.02em}
+
+/* Search */
+.sb-search{padding:0 16px 12px}
+.sb-search-in{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--input-bg);border:1px solid transparent;border-radius:9999px}
+.sb-search-in:focus-within{border-color:var(--ac)}
+.sb-search-in svg{color:var(--tx3);flex-shrink:0;margin-left:4px}
+.sb-search-in input{flex:1;font-size:14px;background:transparent;color:var(--tx);border:none;outline:none;min-width:0;font-family:inherit}
+.sb-search-in input::placeholder{color:var(--tx3)}
+.filter-pills{display:flex;gap:4px;flex-shrink:0;margin-right:4px}
+.fpill{font-size:10px;font-weight:600;padding:4px 8px;border-radius:9999px;background:transparent;border:none;color:var(--tx3);cursor:pointer}
+.fpill.on{background:var(--tx);color:var(--bg)}
+
+/* Sort */
+.sb-sort{display:flex;gap:4px;padding:0 20px 12px}
+.sort-b{font-size:12px;padding:6px 12px;border-radius:9999px;border:none;background:transparent;color:var(--tx3);font-weight:400}
+.sort-b.on{background:var(--hover);color:var(--tx);font-weight:500}
+.sb-div{height:1px;background:var(--brd);margin:4px 20px}
+
+/* Tree */
+.tree{flex:1;overflow-y:auto;padding:8px 0 16px}
+.drawer{margin-bottom:8px}
+.dw-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 20px;background:transparent;border:none;text-align:left;color:var(--tx)}
+.dw-btn svg{color:var(--tx3);transition:transform .15s ease;flex-shrink:0}
+.dw-btn svg.open{transform:rotate(90deg)}
+.dw-name{font-size:14px;font-weight:600;letter-spacing:-.02em}
+.dw-meta{margin-left:auto;display:flex;align-items:center;gap:8px}
+.diff{display:inline-flex;gap:4px;font-family:var(--font-mono);font-size:11px;font-weight:500}
+.d-add{color:var(--ac3)}.d-del{color:var(--danger)}
+.badge{font-size:12px;font-weight:500;color:var(--tx3);min-width:20px;text-align:center;background:var(--input-bg);padding:2px 8px;border-radius:9999px}
+.dw-eject{width:24px;height:24px;border-radius:9999px;background:transparent;border:none;color:var(--tx3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.drawer:hover .dw-eject{opacity:1}
+.dw-eject:hover{color:var(--danger);background:var(--hover)}
+.dw-files{padding:4px 12px 8px}
+.dw-files.closed{display:none}
+
+/* File item */
+.fi{display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px;border-radius:12px;background:transparent;border:none;text-align:left;margin-bottom:2px;color:var(--tx2);transition:background .1s}
+.fi:hover{background:var(--hover)}
+.fi.active{background:var(--ac);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.fi.selected{background:rgba(10,132,255,.15);color:var(--tx)}
+.fi.active.selected{background:var(--ac);color:#fff}
+.fi .dot{width:10px;height:10px;border-radius:9999px;flex-shrink:0;box-shadow:0 0 2px rgba(0,0,0,.15)}
+.fi.active .dot{background:#fff!important}
+.fi .fl{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}
+.fi .fl .ext{font-weight:400;color:var(--tx3)}
+.fi.active .fl{font-weight:500}
+.fi.active .fl .ext{color:rgba(255,255,255,.7)}
+.fi.active .d-add,.fi.active .d-del{color:#fff}
+.fi .del-badge{font-size:10px;padding:2px 6px;border-radius:9999px;background:var(--danger);color:#fff;font-weight:600}
+
+/* ═══ Content Pane ═══ */
+.content{flex:1;overflow-y:auto;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,.08);padding:32px 40px}
+.content.fullscreen{border-radius:24px}
+.c-head{display:flex;align-items:baseline;gap:12px;margin-bottom:32px}
+.c-head h1{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.c-head .sub{font-size:14px;color:var(--tx3);font-weight:500}
+.c-head .acts{margin-left:auto;display:flex;gap:8px}
+
+/* Section */
+.sec{margin-bottom:40px}
+.sec-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sec-h .lbl{font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--tx3);text-transform:uppercase;flex-shrink:0}
+.sec-h .ln{flex:1;height:1px;background:var(--brd);opacity:.5}
+
+/* File Card */
+.fc{background:var(--card);border-radius:20px;border:1px solid var(--brd);margin-bottom:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.04);animation:slideUp .2s ease}
+.fc.active{border-color:transparent;box-shadow:0 0 0 2px rgba(10,132,255,.5),0 4px 24px rgba(0,0,0,.04)}
+.fc.selected{box-shadow:0 0 0 2px rgba(10,132,255,.25)}
+.fc-h{display:flex;align-items:center;gap:12px;padding:16px 24px;cursor:pointer;transition:background .1s}
+.fc-h:hover{background:rgba(255,255,255,.03)}
+.fc.active .fc-h{border-bottom:1px solid var(--brd);background:rgba(255,255,255,.03)}
+.fc-h .chev{flex-shrink:0;color:var(--tx3);background:transparent;border:none;padding:0;transition:transform .15s}
+.fc-h .chev.open svg{transform:rotate(90deg)}
+.fc-h .cdot{width:12px;height:12px;border-radius:9999px;flex-shrink:0;box-shadow:0 0 2px rgba(0,0,0,.15)}
+.fc-h .ftitle{font-size:16px;font-weight:600;letter-spacing:-.02em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-h .ftitle .ext{color:var(--tx3);font-weight:500}
+.fc-h .fmeta{margin-left:auto;display:flex;align-items:center;gap:16px}
+.fc-h .ts{font-size:13px;font-weight:500;color:var(--tx3);flex-shrink:0}
+.fc-h .diff{font-size:12px}
+.fc-h .pin{width:8px;height:8px;border-radius:9999px;background:var(--warn)}
+.fc-h .del-badge{font-size:11px;padding:2px 8px;border-radius:9999px;background:var(--danger);color:#fff;font-weight:600}
+
+/* Card Body */
+.fc-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease}
+.fc-body.closed{max-height:0!important;opacity:0}
+.fc-body.open{opacity:1}
+
+/* Markdown body */
+.md-body{padding:24px 32px 24px 52px;font-family:Georgia,"Times New Roman",serif;font-size:15px;line-height:1.8;color:var(--tx2)}
+.md-body h1{font-family:var(--font-sans);font-size:1.55em;font-weight:700;margin:1.5em 0 .6em;line-height:1.25;color:var(--tx);letter-spacing:-.02em}
+.md-body h2{font-family:var(--font-sans);font-size:1.1em;font-weight:700;margin:1.3em 0 .5em;line-height:1.35;color:var(--tx)}
+.md-body h3{font-family:var(--font-sans);font-size:.95em;font-weight:600;margin:1.2em 0 .4em;color:var(--tx2)}
+.md-body p{margin:0 0 .75em}
+.md-body blockquote{border-left:3px solid var(--ac);margin:1em 0;padding:.4em 0 .4em 1.2em;color:var(--tx2);font-style:italic}
+.md-body pre{font-family:var(--font-mono);font-size:13px;line-height:1.6;background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:16px 20px;margin:1em 0;overflow-x:auto;color:var(--tx2)}
+.md-body code{font-family:var(--font-mono);font-size:.85em;background:var(--hover);border:1px solid var(--brd);padding:1px 6px;border-radius:5px;color:var(--ac2)}
+.md-body pre code{background:none;border:none;padding:0;color:var(--tx)}
+.md-body ul{padding-left:1.5em;margin:.5em 0}
+.md-body li{margin:.2em 0}
+.md-body>*:first-child{margin-top:0}
+
+/* Code body */
+.code-body{padding:24px 32px 24px 52px;overflow:hidden;font-size:14px;font-family:var(--font-mono);color:var(--tx2);line-height:1.7}
+.kw{color:#c678dd}.str{color:#98c379}.cmt{color:var(--tx3);font-style:italic}.num{color:var(--warn)}.fn{color:#61afef}.type{color:#e06c75}.attr{color:var(--ac2)}
+
+/* ═══ Command Palette ═══ */
+.cmd-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;animation:fadeIn .12s ease}
+.cmd-overlay.hidden{display:none}
+.cmd{width:480px;background:var(--cmd-bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:16px;box-shadow:var(--cmd-shadow);overflow:hidden;animation:cmdIn .15s ease}
+.cmd-input{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--brd)}
+.cmd-input svg{color:var(--tx3);flex-shrink:0}
+.cmd-input input{flex:1;background:transparent;border:none;outline:none;font-size:15px;color:var(--tx);font-family:inherit}
+.cmd-input input::placeholder{color:var(--tx3)}
+.cmd-list{max-height:300px;overflow-y:auto;padding:8px}
+.cmd-sep{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);padding:12px 12px 6px}
+.cmd-item{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:none;border-radius:10px;background:transparent;color:var(--tx);font-size:14px;font-family:inherit;text-align:left;transition:background .06s}
+.cmd-item:hover,.cmd-item.hi{background:var(--hover)}
+.cmd-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--hover);font-size:14px;flex-shrink:0}
+.cmd-item .kbd{margin-left:auto}
+.cmd-item .cmd-sub{margin-left:auto;font-size:12px;color:var(--tx3)}
+.cmd-foot{display:flex;gap:16px;padding:10px 16px;border-top:1px solid var(--brd);font-size:11px;color:var(--tx3)}
+.cmd-foot span{display:flex;align-items:center;gap:4px}
+
+/* ═══ Eject Bar ═══ */
+.ej-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.2);animation:barIn .2s ease;white-space:nowrap}
+.ej-bar.hidden{display:none}
+.ej-bar .ej-label{font-size:13px;font-weight:500;color:var(--tx2)}
+.ej-bar .ej-label strong{color:var(--tx);font-weight:600}
+.btn-danger{height:32px;padding:0 16px;background:var(--danger);border:none;border-radius:9999px;color:#fff;font-size:13px;font-weight:600;font-family:inherit}
+.btn-danger:hover{filter:brightness(1.15)}
+.btn-cancel{height:32px;padding:0 16px;background:transparent;border:1px solid var(--brd);border-radius:9999px;color:var(--tx2);font-size:13px;font-weight:500;font-family:inherit}
+.btn-cancel:hover{background:var(--hover);color:var(--tx)}
+
+/* ═══ Drop Zone ═══ */
+.dz-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;animation:fadeIn .12s ease}
+.dz-overlay.hidden{display:none}
+.dz-box{width:400px;padding:64px;border:2px dashed var(--ac);border-radius:24px;text-align:center;background:var(--cmd-bg);backdrop-filter:blur(40px)}
+.dz-box .dz-icon{font-size:48px;margin-bottom:16px;opacity:.6}
+.dz-box .dz-text{font-size:18px;font-weight:600;color:var(--tx)}
+.dz-box .dz-sub{font-size:13px;color:var(--tx3);margin-top:8px}
+
+/* ═══ Toasts ═══ */
+.toasts{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column-reverse;gap:8px}
+.toast{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:toastIn .2s ease;max-width:320px}
+.toast-dot{width:8px;height:8px;border-radius:9999px;flex-shrink:0}
+.toast-text{font-size:13px;font-weight:500}
+.toast-detail{font-size:12px;color:var(--tx3);margin-left:4px}
+
+/* ═══ Empty state ═══ */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;color:var(--tx3);text-align:center;gap:8px}
+.empty .empty-icon{font-size:32px;opacity:.4;margin-bottom:8px}
+.empty .empty-text{font-size:15px;font-weight:500}
+.empty .empty-sub{font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="bg-solid"></div>
+<div class="bg-grad" id="bgGrad"></div>
+
+<!-- ═══ UI ═══ -->
+<div class="ui" id="app"></div>
+
+<!-- ═══ Command Palette ═══ -->
+<div class="cmd-overlay hidden" id="cmdOverlay">
+  <div class="cmd" id="cmdBox">
+    <div class="cmd-input">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="cmdInput" type="text" placeholder="Search commands…" autocomplete="off">
+    </div>
+    <div class="cmd-list" id="cmdList"></div>
+    <div class="cmd-foot">
+      <span><kbd class="kbd">↑↓</kbd> Navigate</span>
+      <span><kbd class="kbd">⏎</kbd> Open</span>
+      <span><kbd class="kbd">esc</kbd> Close</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Drop Zone ═══ -->
+<div class="dz-overlay hidden" id="dzOverlay">
+  <div class="dz-box">
+    <div class="dz-icon">↓</div>
+    <div class="dz-text">Drop files here</div>
+    <div class="dz-sub">Files and folders will be added to your project</div>
+  </div>
+</div>
+
+<!-- ═══ Toasts ═══ -->
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════ */
+const THEMES = ['n01z','paper','phosphor','ember'];
+const EXT_COLORS = {
+  md:'var(--ac)',markdown:'var(--ac)',mdx:'var(--ac)',
+  ts:'var(--ac2)',tsx:'var(--ac2)',rs:'var(--danger)',
+  css:'var(--ac3)',scss:'var(--ac3)',js:'var(--warn)',
+  jsx:'var(--warn)',py:'var(--ac3)',go:'var(--ac)',
+  html:'var(--danger)',json:'var(--warn)',yaml:'var(--ac3)',
+  yml:'var(--ac3)',toml:'var(--ac3)',
+};
+const MD_EXTS = new Set(['md','markdown','mdx']);
+
+const now = Date.now()/1000;
+let state = {
+  themeIndex: 0,
+  files: [
+    {id:'f1',name:'README',ext:'md',pinned:true,modified:now-120,added:12,removed:3,deleted:false,
+     content:`<h1>Codorum</h1><p>A desktop file watcher that monitors text and markdown files in real-time with diff visualization.</p><blockquote><p>Transparency for your codebase</p></blockquote><h2>Quick Start</h2><p>Install dependencies and run the dev server:</p><pre><code>npm install\nnpm run tauri dev</code></pre><ul><li>Live file monitoring with drag-and-drop</li><li>Real-time diff visualization</li><li>WYSIWYG Markdown editor</li><li>4 built-in themes</li></ul>`},
+    {id:'f2',name:'App',ext:'tsx',group:'src',modified:now-300,added:28,removed:5,deleted:false,
+     content:`<span class="cmt">// Root application component</span>\n<span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">"react"</span>;\n<span class="kw">import</span> { invoke } <span class="kw">from</span> <span class="str">"@tauri-apps/api/core"</span>;\n<span class="kw">import</span> { Toolbar } <span class="kw">from</span> <span class="str">"./components/Toolbar"</span>;\n<span class="kw">import</span> { Sidebar } <span class="kw">from</span> <span class="str">"./components/Sidebar"</span>;\n\n<span class="kw">export default function</span> <span class="fn">App</span>() {\n  <span class="kw">const</span> { addFiles } = <span class="fn">useAppStore</span>();\n  <span class="kw">const</span> theme = <span class="fn">useAppStore</span>(s => s.theme);\n\n  <span class="kw">return</span> (\n    &lt;<span class="type">div</span> <span class="attr">className</span>=<span class="str">"flex flex-col h-screen"</span>&gt;\n      &lt;<span class="type">Toolbar</span> /&gt;\n      &lt;<span class="type">Sidebar</span> /&gt;\n      &lt;<span class="type">ContentPane</span> /&gt;\n    &lt;/<span class="type">div</span>&gt;\n  );\n}`},
+    {id:'f3',name:'main',ext:'tsx',group:'src',modified:now-3600,added:0,removed:0,deleted:false,
+     content:`<span class="kw">import</span> React <span class="kw">from</span> <span class="str">"react"</span>;\n<span class="kw">import</span> ReactDOM <span class="kw">from</span> <span class="str">"react-dom/client"</span>;\n<span class="kw">import</span> App <span class="kw">from</span> <span class="str">"./App"</span>;\n<span class="kw">import</span> <span class="str">"./styles/app.css"</span>;\n\nReactDOM.<span class="fn">createRoot</span>(\n  document.<span class="fn">getElementById</span>(<span class="str">"root"</span>)!\n).<span class="fn">render</span>(\n  &lt;<span class="type">React.StrictMode</span>&gt;\n    &lt;<span class="type">App</span> /&gt;\n  &lt;/<span class="type">React.StrictMode</span>&gt;\n);`},
+    {id:'f4',name:'app',ext:'css',group:'src',modified:now-7200,added:0,removed:0,deleted:false,
+     content:`<span class="cmt">/* ═══ THEMES ═══ */</span>\n<span class="fn">:root</span> {\n  <span class="attr">--bg</span>: <span class="str">#18181b</span>;\n  <span class="attr">--bg2</span>: <span class="str">#111113</span>;\n  <span class="attr">--card</span>: <span class="str">#1f1f23</span>;\n  <span class="attr">--ac</span>: <span class="str">#5bc4c4</span>;\n  <span class="attr">--ac2</span>: <span class="str">#a78bfa</span>;\n}\n\n<span class="fn">.file-card</span> {\n  <span class="attr">background</span>: <span class="fn">var</span>(<span class="attr">--card</span>);\n  <span class="attr">border-radius</span>: <span class="num">12px</span>;\n  <span class="attr">border</span>: <span class="num">1px</span> solid <span class="fn">var</span>(<span class="attr">--brd</span>);\n  <span class="attr">transition</span>: all <span class="num">150ms</span> ease;\n}`},
+    {id:'f5',name:'Sidebar',ext:'tsx',group:'src',modified:now-600,added:8,removed:0,deleted:false,
+     content:`<span class="kw">import</span> { useMemo, useState } <span class="kw">from</span> <span class="str">"react"</span>;\n<span class="kw">import</span> { useAppStore } <span class="kw">from</span> <span class="str">"../stores/app-store"</span>;\n\n<span class="kw">export function</span> <span class="fn">Sidebar</span>() {\n  <span class="kw">const</span> { files, groups } = <span class="fn">useAppStore</span>();\n  <span class="kw">const</span> [search, setSearch] = <span class="fn">useState</span>(<span class="str">""</span>);\n\n  <span class="kw">return</span> (\n    &lt;<span class="type">div</span> <span class="attr">style</span>={{ width: <span class="num">240</span> }}&gt;\n      &lt;<span class="type">SearchBox</span> /&gt;\n      &lt;<span class="type">DrawerSection</span> /&gt;\n    &lt;/<span class="type">div</span>&gt;\n  );\n}`},
+    {id:'f6',name:'notes',ext:'md',modified:now-86400,added:0,removed:0,deleted:false,
+     content:`<h2>Development Notes</h2><p>Some quick notes about the architecture and design decisions made during development.</p><h3>File Watching</h3><p>Using the <code>notify</code> crate with FSEvents backend on macOS for native performance.</p><p>Events are debounced at 200ms to prevent rapid-fire updates during batch saves.</p>`},
+    {id:'f7',name:'config',ext:'json',modified:now-172800,added:0,removed:0,deleted:true,
+     content:`{\n  <span class="attr">"appName"</span>: <span class="str">"Codorum"</span>,\n  <span class="attr">"version"</span>: <span class="str">"0.1.0"</span>,\n  <span class="attr">"window"</span>: {\n    <span class="attr">"width"</span>: <span class="num">1200</span>,\n    <span class="attr">"height"</span>: <span class="num">800</span>\n  }\n}`},
+  ],
+  groups: [
+    {id:'pinned',name:'Pinned',fileIds:['f1']},
+    {id:'src',name:'src',fileIds:['f2','f3','f4','f5'],ejectable:true},
+    {id:'loose',name:'Loose',fileIds:['f6','f7']},
+  ],
+  activeFileId: 'f2',
+  selectedIds: new Set(),
+  collapsedCards: new Set(['f3','f4','f5','f6','f7']),
+  openDrawers: new Set(['pinned','src','loose']),
+  searchQuery: '',
+  searchMode: 'name',  // 'name' | 'body'
+  sortMode: 'name',    // 'name' | 'modified' | 'changes'
+  isFullscreen: false,
+  isCmdOpen: false,
+  cmdQuery: '',
+  cmdIndex: 0,
+};
+
+const COMMANDS = [
+  {type:'sep',label:'Actions'},
+  {type:'cmd',id:'add-folder',label:'Add Folder',icon:'📁'},
+  {type:'cmd',id:'add-file',label:'Add Files',icon:'📄'},
+  {type:'cmd',id:'create-tab',label:'Create Tab',icon:'＋'},
+  {type:'cmd',id:'new-src',label:'New File in src',icon:'＋'},
+  {type:'sep',label:'Appearance'},
+  {type:'cmd',id:'theme',label:'Cycle Theme',icon:'🎨',kbd:'⌘T',sub:''},
+];
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════ */
+function timeAgo(ts) {
+  const d = Math.floor(Date.now()/1000 - ts);
+  if (d < 60) return 'just now';
+  if (d < 3600) return Math.floor(d/60)+'m ago';
+  if (d < 86400) return Math.floor(d/3600)+'h ago';
+  return Math.floor(d/86400)+'d ago';
+}
+function extColor(ext) { return EXT_COLORS[ext] || 'var(--tx3)'; }
+function isMd(ext) { return MD_EXTS.has(ext); }
+function getFile(id) { return state.files.find(f=>f.id===id); }
+
+function addToast(text, detail, color) {
+  const id = 't'+Date.now()+Math.random();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<span class="toast-dot" style="background:${color||'var(--ac)'}"></span><span class="toast-text">${text}</span>${detail?`<span class="toast-detail">${detail}</span>`:''}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(24px)'; el.style.transition='all .2s ease'; setTimeout(()=>el.remove(),200); }, 2500);
+}
+
+function visibleFiles() {
+  let files = state.files;
+  const q = state.searchQuery.toLowerCase().trim();
+  if (q) {
+    files = files.filter(f => {
+      if (state.searchMode === 'name') return (f.name+'.'+f.ext).toLowerCase().includes(q);
+      return f.content.replace(/<[^>]*>/g,'').toLowerCase().includes(q);
+    });
+  }
+  return files;
+}
+
+function sortFiles(fileIds) {
+  const files = fileIds.map(getFile).filter(Boolean);
+  if (state.sortMode === 'modified') files.sort((a,b) => b.modified - a.modified);
+  else if (state.sortMode === 'changes') files.sort((a,b) => ((b.added||0)+(b.removed||0)) - ((a.added||0)+(a.removed||0)));
+  else files.sort((a,b) => (a.name+'.'+a.ext).localeCompare(b.name+'.'+b.ext));
+  return files;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════════════════ */
+function render() {
+  const vf = visibleFiles();
+  const vfIds = new Set(vf.map(f=>f.id));
+  const visibleCount = vf.length;
+
+  // Update theme sub in commands
+  COMMANDS.forEach(c => { if(c.id==='theme') c.sub = THEMES[state.themeIndex]; });
+
+  let html = '';
+
+  /* ── Toolbar ── */
+  if (!state.isFullscreen) {
+    html += `<div class="toolbar-w"><div class="toolbar">
+      <div class="brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 22h20L12 2z" stroke="var(--tx3)" stroke-width="1.5"/>
+          <path d="M7.5 15C7.5 15 9 12 12 12C15 12 16.5 15 16.5 15C16.5 15 15 18 12 18C9 18 7.5 15 7.5 15Z" stroke="var(--tx3)" stroke-width="1.2"/>
+          <circle class="eye-iris" cx="12" cy="15" r="1.5" fill="var(--ac)"/>
+          <rect class="eye-lid" x="7" y="11.5" width="10" height="7" rx="5" fill="var(--bg2)"/>
+        </svg>
+        <span class="brand-name">Codorum</span>
+      </div>
+      <div class="sep"></div>
+      <span class="file-count">${visibleCount} file${visibleCount!==1?'s':''}</span>
+      <div class="toolbar-r">
+        <button class="btn-pill" onclick="openCmd()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="kbd">⌘K</span>
+        </button>
+        <button class="btn-ghost" onclick="cycleTheme()">${THEMES[state.themeIndex]}</button>
+      </div>
+    </div></div>`;
+  }
+
+  html += `<div class="main">`;
+
+  /* ── Sidebar ── */
+  if (!state.isFullscreen) {
+    html += `<div class="sidebar">
+      <div class="sb-head">
+        <span>Explorer</span>
+        <button class="btn-icon" onclick="addToast('New file created','untitled.md','var(--ac3)')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5v14"/></svg>
+        </button>
+      </div>
+      <div class="sb-search">
+        <div class="sb-search-in">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search" value="${state.searchQuery}" oninput="setSearch(this.value)">
+          <div class="filter-pills">
+            <button class="fpill ${state.searchMode==='name'?'on':''}" onclick="setSearchMode('name')">Name</button>
+            <button class="fpill ${state.searchMode==='body'?'on':''}" onclick="setSearchMode('body')">Body</button>
+          </div>
+        </div>
+      </div>
+      <div class="sb-sort">
+        <button class="sort-b ${state.sortMode==='name'?'on':''}" onclick="setSort('name')">Name</button>
+        <button class="sort-b ${state.sortMode==='modified'?'on':''}" onclick="setSort('modified')">Modified</button>
+        <button class="sort-b ${state.sortMode==='changes'?'on':''}" onclick="setSort('changes')">Changes</button>
+      </div>
+      <div class="sb-div"></div>
+      <div class="tree">`;
+
+    for (const g of state.groups) {
+      const gFiles = sortFiles(g.fileIds).filter(f => vfIds.has(f.id));
+      if (gFiles.length === 0 && state.searchQuery) continue;
+      const isOpen = state.openDrawers.has(g.id);
+      const totalAdd = gFiles.reduce((s,f)=>s+(f.added||0),0);
+      const totalDel = gFiles.reduce((s,f)=>s+(f.removed||0),0);
+
+      html += `<div class="drawer">
+        <button class="dw-btn" onclick="toggleDrawer('${g.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="${isOpen?'open':''}"><path d="m9 18 6-6-6-6"/></svg>
+          <span class="dw-name">${g.name}</span>
+          <span class="dw-meta">
+            ${totalAdd||totalDel?`<span class="diff">${totalAdd?`<span class="d-add">+${totalAdd}</span>`:''}${totalDel?`<span class="d-del">−${totalDel}</span>`:''}</span>`:''}
+            <span class="badge">${gFiles.length}</span>
+          </span>
+        </button>
+        ${g.ejectable?`<button class="dw-eject" onclick="event.stopPropagation();ejectGroup('${g.id}')" title="Eject group"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`:''}
+        <div class="dw-files ${isOpen?'':'closed'}">`;
+
+      for (const f of gFiles) {
+        const isActive = f.id === state.activeFileId;
+        const isSel = state.selectedIds.has(f.id);
+        let cls = 'fi';
+        if (isActive) cls += ' active';
+        else if (isSel) cls += ' selected';
+        html += `<button class="${cls}" onclick="handleFileClick(event,'${f.id}')">
+          <span class="dot" style="background:${extColor(f.ext)}"></span>
+          <span class="fl">${f.name}<span class="ext">.${f.ext}</span></span>
+          ${f.deleted?`<span class="del-badge">DEL</span>`:''}
+          ${(f.added||f.removed)?`<span class="diff"><span class="d-add">+${f.added||0}</span><span class="d-del">−${f.removed||0}</span></span>`:''}
+        </button>`;
+      }
+      html += `</div></div>`;
+    }
+    html += `</div></div>`; // tree + sidebar
+  }
+
+  /* ── Content Pane ── */
+  html += `<div class="content${state.isFullscreen?' fullscreen':''}">
+    <div class="c-head">
+      <h1>Files</h1>
+      <span class="sub">${visibleCount} visible</span>
+      <div class="acts">
+        <button class="btn-round" onclick="toggleFullscreen()" title="${state.isFullscreen?'Exit fullscreen':'Fullscreen'}">
+          ${state.isFullscreen
+            ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>`
+            : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`}
+        </button>
+      </div>
+    </div>`;
+
+  if (visibleCount === 0) {
+    html += `<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">No files match your search</div><div class="empty-sub">Try a different query or drop files here</div></div>`;
+  } else {
+    for (const g of state.groups) {
+      const gFiles = sortFiles(g.fileIds).filter(f => vfIds.has(f.id));
+      if (gFiles.length === 0) continue;
+
+      html += `<div class="sec"><div class="sec-h"><span class="lbl">${g.name}</span><span class="ln"></span></div>`;
+
+      for (const f of gFiles) {
+        const isActive = f.id === state.activeFileId;
+        const isCollapsed = state.collapsedCards.has(f.id);
+        const isSel = state.selectedIds.has(f.id);
+        let cls = 'fc';
+        if (isActive) cls += ' active';
+        if (isSel) cls += ' selected';
+
+        html += `<div class="${cls}" id="card-${f.id}">
+          <div class="fc-h" onclick="handleCardClick(event,'${f.id}')">
+            <button class="chev ${isCollapsed?'':'open'}" onclick="event.stopPropagation();toggleCollapse('${f.id}')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <span class="cdot" style="background:${extColor(f.ext)}"></span>
+            <span class="ftitle">${f.name}<span class="ext">.${f.ext}</span></span>
+            <div class="fmeta">
+              ${f.pinned?`<span class="pin" title="Pinned"></span>`:''}
+              ${f.deleted?`<span class="del-badge">deleted</span>`:''}
+              <span class="ts">${timeAgo(f.modified)}</span>
+              ${(f.added||f.removed)?`<span class="diff"><span class="d-add">+${f.added||0}</span><span class="d-del">−${f.removed||0}</span></span>`:''}
+            </div>
+          </div>
+          <div class="fc-body ${isCollapsed?'closed':'open'}" style="max-height:${isCollapsed?'0':'600'}px">
+            <div class="${isMd(f.ext)?'md-body':'code-body'}">${f.content}</div>
+          </div>
+        </div>`;
+      }
+      html += `</div>`; // sec
+    }
+  }
+
+  html += `<div style="padding:40px 0;text-align:center;color:var(--tx3);font-size:13px">Drop files or folders here</div>`;
+  html += `</div>`; // content
+  html += `</div>`; // main
+
+  document.getElementById('app').innerHTML = html;
+
+  // Eject bar
+  renderEjectBar();
+}
+
+function renderEjectBar() {
+  let bar = document.getElementById('ejBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'ejBar';
+    document.body.appendChild(bar);
+  }
+  if (state.selectedIds.size === 0) {
+    bar.className = 'ej-bar hidden';
+    bar.innerHTML = '';
+    return;
+  }
+  const names = [...state.selectedIds].map(id => { const f=getFile(id); return f?f.name+'.'+f.ext:''; }).filter(Boolean);
+  const label = names.length <= 2 ? names.join(', ') : `${names.length} files`;
+  bar.className = 'ej-bar';
+  bar.innerHTML = `<span class="ej-label"><strong>${label}</strong> selected</span>
+    <button class="btn-danger" onclick="ejectSelected()">Eject</button>
+    <button class="btn-cancel" onclick="clearSelection()">Cancel</button>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIONS
+   ═══════════════════════════════════════════════════════════ */
+function cycleTheme() {
+  state.themeIndex = (state.themeIndex + 1) % THEMES.length;
+  const t = THEMES[state.themeIndex];
+  document.documentElement.setAttribute('data-theme', t === 'n01z' ? 'n01z' : t);
+  // n01z is default (:root), remove attribute for it
+  if (t === 'n01z') document.documentElement.removeAttribute('data-theme');
+  addToast('Theme', t, 'var(--ac)');
+  render();
+}
+
+function activateFile(id) {
+  state.activeFileId = id;
+  state.collapsedCards.delete(id);
+  render();
+  setTimeout(()=>{
+    const el = document.getElementById('card-'+id);
+    if (el) el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }, 50);
+}
+
+function handleFileClick(e, id) {
+  if (e.metaKey || e.ctrlKey) {
+    toggleSelect(id);
+  } else if (e.shiftKey && state.activeFileId) {
+    // Range select
+    const allIds = state.files.map(f=>f.id);
+    const a = allIds.indexOf(state.activeFileId);
+    const b = allIds.indexOf(id);
+    const [lo,hi] = a<b ? [a,b] : [b,a];
+    for (let i=lo; i<=hi; i++) state.selectedIds.add(allIds[i]);
+    render();
+  } else {
+    state.selectedIds.clear();
+    activateFile(id);
+  }
+}
+
+function handleCardClick(e, id) {
+  if (e.metaKey || e.ctrlKey) {
+    toggleSelect(id);
+  } else {
+    activateFile(id);
+  }
+}
+
+function toggleSelect(id) {
+  if (state.selectedIds.has(id)) state.selectedIds.delete(id);
+  else state.selectedIds.add(id);
+  render();
+}
+
+function clearSelection() {
+  state.selectedIds.clear();
+  render();
+}
+
+function selectAll() {
+  state.files.forEach(f => state.selectedIds.add(f.id));
+  render();
+}
+
+function ejectSelected() {
+  const count = state.selectedIds.size;
+  state.files = state.files.filter(f => !state.selectedIds.has(f.id));
+  state.groups.forEach(g => { g.fileIds = g.fileIds.filter(id => !state.selectedIds.has(id)); });
+  if (state.selectedIds.has(state.activeFileId)) {
+    state.activeFileId = state.files.length ? state.files[0].id : null;
+  }
+  state.selectedIds.clear();
+  addToast('Ejected', `${count} file${count>1?'s':''}`, 'var(--danger)');
+  render();
+}
+
+function ejectGroup(gid) {
+  const g = state.groups.find(g=>g.id===gid);
+  if (!g) return;
+  const ids = new Set(g.fileIds);
+  state.files = state.files.filter(f => !ids.has(f.id));
+  g.fileIds = [];
+  if (ids.has(state.activeFileId)) {
+    state.activeFileId = state.files.length ? state.files[0].id : null;
+  }
+  state.selectedIds = new Set([...state.selectedIds].filter(id => !ids.has(id)));
+  addToast('Group ejected', g.name, 'var(--danger)');
+  render();
+}
+
+function toggleDrawer(gid) {
+  if (state.openDrawers.has(gid)) state.openDrawers.delete(gid);
+  else state.openDrawers.add(gid);
+  render();
+}
+
+function toggleCollapse(fid) {
+  if (state.collapsedCards.has(fid)) state.collapsedCards.delete(fid);
+  else state.collapsedCards.add(fid);
+  render();
+}
+
+function toggleFullscreen() {
+  state.isFullscreen = !state.isFullscreen;
+  render();
+}
+
+function setSearch(q) {
+  state.searchQuery = q;
+  render();
+}
+
+function setSearchMode(mode) {
+  state.searchMode = mode;
+  render();
+}
+
+function setSort(mode) {
+  state.sortMode = mode;
+  render();
+}
+
+/* ═══ Command Palette ═══ */
+function openCmd() {
+  state.isCmdOpen = true;
+  state.cmdQuery = '';
+  state.cmdIndex = 0;
+  document.getElementById('cmdOverlay').classList.remove('hidden');
+  renderCmd();
+  setTimeout(()=>document.getElementById('cmdInput').focus(), 50);
+}
+
+function closeCmd() {
+  state.isCmdOpen = false;
+  document.getElementById('cmdOverlay').classList.add('hidden');
+}
+
+function renderCmd() {
+  const q = state.cmdQuery.toLowerCase();
+  const items = COMMANDS.filter(c => {
+    if (c.type === 'sep') return true;
+    return c.label.toLowerCase().includes(q);
+  });
+  // Remove orphan separators
+  const cleaned = [];
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type === 'sep') {
+      // check if next non-sep exists
+      let hasChild = false;
+      for (let j = i+1; j < items.length; j++) {
+        if (items[j].type === 'cmd') { hasChild = true; break; }
+        if (items[j].type === 'sep') break;
+      }
+      if (hasChild) cleaned.push(items[i]);
+    } else {
+      cleaned.push(items[i]);
+    }
+  }
+
+  const cmdItems = cleaned.filter(c => c.type === 'cmd');
+  if (state.cmdIndex >= cmdItems.length) state.cmdIndex = Math.max(0, cmdItems.length - 1);
+
+  let cmdIdx = 0;
+  let html = '';
+  for (const c of cleaned) {
+    if (c.type === 'sep') {
+      html += `<div class="cmd-sep">${c.label}</div>`;
+    } else {
+      const hi = cmdIdx === state.cmdIndex ? ' hi' : '';
+      html += `<button class="cmd-item${hi}" onclick="execCmd('${c.id}')" onmouseenter="state.cmdIndex=${cmdIdx};renderCmd()">
+        <span class="cmd-icon">${c.icon||''}</span>
+        <span>${c.label}</span>
+        ${c.kbd?`<span class="kbd">${c.kbd}</span>`:''}
+        ${c.sub!==undefined?`<span class="cmd-sub">${c.sub}</span>`:''}
+      </button>`;
+      cmdIdx++;
+    }
+  }
+  if (cmdItems.length === 0) {
+    html += `<div style="padding:24px;text-align:center;color:var(--tx3);font-size:13px">No matching commands</div>`;
+  }
+  document.getElementById('cmdList').innerHTML = html;
+}
+
+function execCmd(id) {
+  closeCmd();
+  if (id === 'theme') cycleTheme();
+  else if (id === 'add-folder') addToast('Folder dialog', 'opened', 'var(--ac)');
+  else if (id === 'add-file') addToast('File dialog', 'opened', 'var(--ac)');
+  else if (id === 'create-tab') addToast('Tab created', '', 'var(--ac3)');
+  else if (id === 'new-src') addToast('New file', 'in src', 'var(--ac3)');
+}
+
+document.getElementById('cmdInput').addEventListener('input', function(e) {
+  state.cmdQuery = e.target.value;
+  state.cmdIndex = 0;
+  renderCmd();
+});
+
+document.getElementById('cmdOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeCmd();
+});
+
+document.getElementById('cmdBox').addEventListener('keydown', function(e) {
+  const items = COMMANDS.filter(c => c.type==='cmd' && c.label.toLowerCase().includes(state.cmdQuery.toLowerCase()));
+  if (e.key === 'ArrowDown') { e.preventDefault(); state.cmdIndex = Math.min(state.cmdIndex+1, items.length-1); renderCmd(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); state.cmdIndex = Math.max(state.cmdIndex-1, 0); renderCmd(); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (items[state.cmdIndex]) execCmd(items[state.cmdIndex].id); }
+  else if (e.key === 'Escape') { e.preventDefault(); closeCmd(); }
+});
+
+/* ═══ Drop Zone ═══ */
+let dzCounter = 0;
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('dragenter', e => {
+  dzCounter++;
+  document.getElementById('dzOverlay').classList.remove('hidden');
+});
+document.addEventListener('dragleave', e => {
+  dzCounter--;
+  if (dzCounter <= 0) { dzCounter = 0; document.getElementById('dzOverlay').classList.add('hidden'); }
+});
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  dzCounter = 0;
+  document.getElementById('dzOverlay').classList.add('hidden');
+  const count = e.dataTransfer?.files?.length || 0;
+  if (count) addToast('Dropped', `${count} file${count>1?'s':''}`, 'var(--ac3)');
+});
+
+/* ═══ Keyboard Shortcuts ═══ */
+document.addEventListener('keydown', e => {
+  const meta = e.metaKey || e.ctrlKey;
+
+  if (meta && e.key === 'k') { e.preventDefault(); state.isCmdOpen ? closeCmd() : openCmd(); }
+  else if (meta && e.key === 't') { e.preventDefault(); cycleTheme(); }
+  else if (meta && e.key === 'a' && !state.isCmdOpen) { e.preventDefault(); selectAll(); }
+  else if (e.key === 'Escape' && !state.isCmdOpen) { clearSelection(); }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedIds.size > 0 && !state.isCmdOpen) {
+    e.preventDefault(); ejectSelected();
+  }
+});
+
+/* ═══ Right-click → Command Palette ═══ */
+document.addEventListener('contextmenu', e => {
+  // Only on main UI area, not inputs
+  if (e.target.tagName === 'INPUT') return;
+  e.preventDefault();
+  openCmd();
+});
+
+/* ═══ Initial Render ═══ */
+render();
+</script>
+</body>
+</html>

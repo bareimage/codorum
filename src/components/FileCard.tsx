@@ -8,6 +8,7 @@ import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ExtDot } from "./ExtDot";
 import { ResizeHandle } from "./ResizeHandle";
+import { MicroTimeline } from "./MicroTimeline";
 import type { WatchedFile } from "../types/files";
 
 const MARKUP_EXTS = new Set(["md", "markdown", "mdx"]);
@@ -61,6 +62,7 @@ export function FileCard({
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mode = detectMode(file.extension);
   const extColor = ExtDot.getColor(file.extension);
+  const activeSnapshotTs = useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
 
   // Sync content synchronously during render when file changes externally.
   if (file.content !== trackedContent) {
@@ -116,6 +118,15 @@ export function FileCard({
     const match = content.match(/^#{1,2}\s+(.+)$/m);
     return match ? match[1].trim() : null;
   })();
+
+  // Historical Timeline Injection
+  const historicalSnap = activeSnapshotTs 
+    ? (file.history || []).find((s) => s.timestamp === activeSnapshotTs) 
+    : null;
+    
+  // If scrubbing, show the historical content. Otherwise show the live state variable.
+  const displayContent = historicalSnap ? historicalSnap.content : content;
+  const isReadOnly = !isActive || file.deleted || historicalSnap !== null;
 
   return (
     <div
@@ -179,6 +190,9 @@ export function FileCard({
             </span>
           ) : null}
         </div>
+        <div style={{ width: "100%", paddingLeft: 16 }}>
+          <MicroTimeline history={file.history} active={isActive} />
+        </div>
       </div>
 
       {/* Collapsed subtitle */}
@@ -208,33 +222,33 @@ export function FileCard({
       >
         {!isCollapsed && (
           <ErrorBoundary>
-            {mode === "markdown" && typeof content === "string" && (
+            {mode === "markdown" && typeof displayContent === "string" && (
               <TiptapEditor
-                key={`tiptap-${file.id}-${file._rev ?? 0}`}
-                content={content}
+                key={`tiptap-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
+                content={displayContent}
                 onChange={handleMarkdownChange}
                 fileId={file.id}
-                editable={isActive && !file.deleted}
+                editable={!isReadOnly}
               />
             )}
-            {mode === "code" && typeof content === "string" && (
+            {mode === "code" && typeof displayContent === "string" && (
               <CodeEditor
-                key={`code-${file.id}-${file._rev ?? 0}`}
-                content={content}
+                key={`code-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
+                content={displayContent}
                 language={file.extension}
                 onChange={handleTextChange}
                 fileId={file.id}
-                editable={isActive && !file.deleted}
+                editable={!isReadOnly}
               />
             )}
-            {mode === "text" && typeof content === "string" && (
+            {mode === "text" && typeof displayContent === "string" && (
               <textarea
-                key={`text-${file.id}-${file._rev ?? 0}`}
+                key={`text-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
                 ref={textareaRef}
                 className="source-editor"
-                value={content}
+                value={displayContent}
                 onChange={(e) => handleTextChange(e.target.value)}
-                readOnly={!isActive || file.deleted}
+                readOnly={isReadOnly}
                 spellCheck={false}
               />
             )}

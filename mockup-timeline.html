@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="n01z">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codorum — Timeline Mockup (Claude's Version: Theme-Integrated, ADHD-Friendly)</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & THEMES (verbatim from main app)
+   ═══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#000;--bg2:rgba(30,30,35,.65);--card:rgba(45,45,50,.65);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.6);
+  --tx3:rgba(255,255,255,.4);--ac:#0A84FF;--ac2:#5E5CE6;--ac3:#30D158;
+  --warn:#FF9F0A;--danger:#FF453A;--brd:rgba(255,255,255,.1);
+  --ring:rgba(10,132,255,.3);--input-bg:rgba(0,0,0,.2);
+  --cmd-bg:rgba(30,30,35,.85);--deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 20% 0%,rgba(94,92,230,.5) 0%,transparent 50%),radial-gradient(circle at 80% 100%,rgba(10,132,255,.5) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,69,58,.3) 0%,transparent 50%);
+  --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="paper"]{
+  --bg:#F5F5F7;--bg2:rgba(255,255,255,.65);--card:rgba(255,255,255,.8);
+  --hover:rgba(0,0,0,.05);--tx:#1D1D1F;--tx2:rgba(0,0,0,.6);
+  --tx3:rgba(0,0,0,.4);--ac:#007AFF;--ac2:#5856D6;--ac3:#34C759;
+  --warn:#FF9500;--danger:#FF3B30;--brd:rgba(0,0,0,.08);
+  --ring:rgba(0,122,255,.2);--input-bg:rgba(0,0,0,.04);
+  --cmd-bg:rgba(255,255,255,.85);--deleted:rgba(0,0,0,.3);
+  --bg-gradient:radial-gradient(circle at 0% 0%,rgba(88,86,214,.3) 0%,transparent 50%),radial-gradient(circle at 100% 100%,rgba(0,122,255,.3) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,59,48,.2) 0%,transparent 50%);
+}
+[data-theme="phosphor"]{
+  --bg:#00120a;--bg2:rgba(10,40,25,.5);--card:rgba(20,50,35,.5);
+  --hover:rgba(255,255,255,.15);--tx:#fff;--tx2:rgba(255,255,255,.7);
+  --tx3:rgba(255,255,255,.5);--ac:#34C759;--ac2:#32ADE6;--ac3:#A2845E;
+  --warn:#FFD60A;--danger:#FF453A;--brd:rgba(255,255,255,.15);
+  --ring:rgba(52,199,89,.3);--input-bg:rgba(0,0,0,.25);
+  --cmd-bg:rgba(10,40,25,.85);--deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 10% 20%,rgba(0,176,155,.5) 0%,transparent 60%),radial-gradient(circle at 90% 80%,rgba(150,201,61,.5) 0%,transparent 60%);
+}
+[data-theme="ember"]{
+  --bg:#1c0a00;--bg2:rgba(45,20,10,.6);--card:rgba(60,25,15,.6);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.7);
+  --tx3:rgba(255,255,255,.5);--ac:#FF9500;--ac2:#FF2D55;--ac3:#FFCC00;
+  --warn:#FFD60A;--danger:#FF3B30;--brd:rgba(255,255,255,.1);
+  --ring:rgba(255,149,0,.3);--input-bg:rgba(0,0,0,.2);
+  --cmd-bg:rgba(45,20,10,.85);--deleted:rgba(255,255,255,.3);
+  --bg-gradient:radial-gradient(circle at 80% 20%,rgba(255,78,80,.5) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(249,212,35,.5) 0%,transparent 60%);
+}
+
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:var(--font-sans);background:var(--bg);color:var(--tx);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
+  transition:background 200ms ease,color 200ms ease;
+  display:flex;flex-direction:column;padding:16px;gap:16px;
+  position:relative;
+}
+::selection{background:rgba(10,132,255,.25)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+@keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes eyeBlink{0%,42%,50%,100%{transform:scaleY(0)}44%,48%{transform:scaleY(1)}}
+@keyframes eyeLook{0%,40%,50%,100%{transform:translateX(0)}42%,48%{transform:translateX(2px)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 4px rgba(255,159,10,.3)}50%{box-shadow:0 0 10px rgba(255,159,10,.6)}}
+
+.bg-solid{position:fixed;inset:0;z-index:0;background:var(--bg)}
+.bg-grad{position:fixed;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
+
+.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%}
+
+/* ═══ Toolbar ═══ */
+.toolbar-w{display:flex;justify-content:center;width:100%;z-index:50}
+.toolbar{height:48px;display:flex;align-items:center;padding:0 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.1);flex-shrink:0;min-width:400px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.eye-lid{transform-origin:center;animation:eyeBlink 6s ease-in-out infinite}
+.eye-iris{animation:eyeLook 6s ease-in-out infinite}
+.sep{width:1px;height:16px;background:var(--brd);margin:0 16px}
+.file-count{font-size:13px;font-weight:500;color:var(--tx3)}
+.toolbar-r{margin-left:auto;display:flex;gap:8px;align-items:center;padding-left:24px}
+
+button{cursor:pointer;font-family:inherit}
+.btn-pill{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;background:var(--input-bg);border:1px solid var(--brd);border-radius:9999px;color:var(--tx2);font-size:13px}
+.btn-pill:hover{background:var(--hover);color:var(--tx)}
+.btn-ghost{height:32px;padding:0 16px;background:transparent;border:1px solid var(--brd);border-radius:9999px;font-size:13px;font-weight:500;color:var(--tx2)}
+.btn-ghost:hover{background:var(--hover);color:var(--tx)}
+.btn-icon{width:28px;height:28px;border-radius:9999px;color:var(--tx2);display:flex;align-items:center;justify-content:center;background:transparent;border:none}
+.btn-icon:hover{background:var(--hover);color:var(--tx)}
+.kbd{font-size:11px;font-weight:500;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--tx2)}
+
+.main{display:flex;flex:1;overflow:hidden;gap:16px}
+
+/* ═══ Sidebar ═══ */
+.sidebar{width:280px;flex-shrink:0;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);display:flex;flex-direction:column;border:1px solid var(--brd);border-radius:24px;overflow:hidden}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 12px}
+.sb-head span{font-size:13px;font-weight:600;color:var(--tx2);letter-spacing:-.02em}
+.tree{flex:1;overflow-y:auto;padding:8px 0 16px}
+.fi{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;background:transparent;border:none;text-align:left;margin-bottom:2px;color:var(--tx2);transition:background .1s;margin:0 12px;width:calc(100% - 24px)}
+.fi:hover{background:var(--hover)}
+.fi.active{background:var(--ac);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.fi .dot{width:10px;height:10px;border-radius:9999px;flex-shrink:0}
+.fi .fl{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}
+.fi .fl .ext{font-weight:400;color:var(--tx3)}
+.fi.active .fl .ext{color:rgba(255,255,255,.7)}
+.fi.active .dot{background:#fff!important}
+.diff{display:inline-flex;gap:4px;font-family:var(--font-mono);font-size:11px;font-weight:500}
+.d-add{color:var(--ac3)}.d-del{color:var(--danger)}
+.fi.active .d-add,.fi.active .d-del{color:#fff}
+
+/* ═══ Content Pane ═══ */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:24px}
+.c-head{display:flex;align-items:baseline;gap:12px;padding:24px 32px 0;margin-bottom:16px}
+.c-head h1{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.c-head .sub{font-size:14px;color:var(--tx3);font-weight:500}
+
+.fc{background:var(--card);border-radius:20px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.04)}
+.fc.active{border-color:transparent;box-shadow:0 0 0 2px rgba(10,132,255,.5),0 4px 24px rgba(0,0,0,.04)}
+.fc-h{display:flex;align-items:center;gap:12px;padding:16px 24px;cursor:pointer;transition:background .1s}
+.fc-h:hover{background:rgba(255,255,255,.03)}
+.fc-h .cdot{width:12px;height:12px;border-radius:9999px;flex-shrink:0}
+.fc-h .ftitle{font-size:16px;font-weight:600;letter-spacing:-.02em;flex:1}
+.fc-h .ftitle .ext{color:var(--tx3);font-weight:500}
+.fc-h .fmeta{margin-left:auto;display:flex;align-items:center;gap:16px}
+.fc-h .ts{font-size:13px;font-weight:500;color:var(--tx3)}
+.fc-body{padding:24px 32px;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:var(--tx2);max-height:200px;overflow-y:auto}
+
+/* ═══════════════════════════════════════════════════════════
+   PER-FILE TIMELINE — ADHD-friendly
+   Theme-aware colors: --ac3 (add), --danger (del), --ac2 (mix)
+   Big targets, hover scale, tooltips, legend
+   ═══════════════════════════════════════════════════════════ */
+.tl-file{padding:0 24px 16px;border-top:1px solid var(--brd)}
+.tl-file-head{display:flex;align-items:center;gap:8px;padding:12px 0 8px}
+.tl-file-head .tl-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)}
+.tl-file-head .tl-snap-count{font-size:11px;color:var(--tx3);margin-left:auto}
+
+/* Track: 40px tall for easy click/touch */
+.tl-track{position:relative;height:40px;background:var(--input-bg);border-radius:10px;overflow:visible;cursor:pointer;transition:background .2s ease}
+.tl-track:hover{background:var(--hover)}
+
+/* Blocks: 8px min-width, hover scales up gently */
+.tl-blocks{display:flex;height:100%;align-items:flex-end;gap:2px;padding:6px 4px}
+.tl-block{flex:1;min-width:8px;border-radius:4px 4px 0 0;transition:transform .2s ease,filter .2s ease;position:relative;cursor:pointer}
+.tl-block:hover{transform:scaleY(1.15) scaleX(1.1);filter:brightness(1.2);z-index:5}
+.tl-block.add{background:var(--ac3)}
+.tl-block.del{background:var(--danger)}
+.tl-block.mix{background:var(--ac2)}
+.tl-block.active{box-shadow:0 0 0 2px var(--ac),0 0 10px rgba(10,132,255,.5)}
+
+/* Hover tooltip */
+.tl-block::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) scale(.9);opacity:0;pointer-events:none;font-size:11px;font-weight:500;font-family:var(--font-mono);white-space:nowrap;padding:4px 10px;border-radius:8px;background:var(--cmd-bg);backdrop-filter:blur(12px);border:1px solid var(--brd);color:var(--tx);transition:opacity .15s ease,transform .15s ease;z-index:20}
+.tl-block:hover::after{opacity:1;transform:translateX(-50%) scale(1)}
+
+/* Playhead: 3px wide, 14px grab handle, glow on hover */
+.tl-playhead{position:absolute;top:-2px;width:3px;height:calc(100% + 4px);background:var(--ac);z-index:10;cursor:grab;border-radius:2px;transition:left .12s ease}
+.tl-playhead::before{content:"";position:absolute;top:-6px;left:-6px;width:14px;height:14px;border-radius:9999px;background:var(--ac);box-shadow:0 0 8px rgba(10,132,255,.5);transition:transform .15s ease,box-shadow .15s ease}
+.tl-playhead:hover::before{transform:scale(1.25);box-shadow:0 0 14px rgba(10,132,255,.7)}
+.tl-playhead:active{cursor:grabbing}
+.tl-playhead:active::before{transform:scale(1.35)}
+
+/* Time labels */
+.tl-times{display:flex;justify-content:space-between;padding:6px 0 0;font-size:10px;color:var(--tx3);font-family:var(--font-mono)}
+
+/* Legend: always visible, zero guessing */
+.tl-legend{display:flex;gap:16px;padding:8px 0 0;font-size:10px;color:var(--tx3)}
+.tl-legend-item{display:flex;align-items:center;gap:5px}
+.tl-legend-dot{width:8px;height:8px;border-radius:3px}
+.tl-legend-dot.lg-add{background:var(--ac3)}
+.tl-legend-dot.lg-del{background:var(--danger)}
+.tl-legend-dot.lg-mix{background:var(--ac2)}
+
+/* History banner */
+.tl-history-banner{display:none;align-items:center;gap:10px;padding:10px 24px;background:rgba(255,159,10,.1);border-top:1px solid rgba(255,159,10,.25);animation:fadeIn .2s ease}
+.tl-history-banner .tl-banner-dot{width:8px;height:8px;border-radius:9999px;background:var(--warn);animation:pulseGlow 2s ease infinite}
+.tl-history-banner .tl-banner-text{font-size:13px;font-weight:600;color:var(--warn)}
+.tl-history-banner .tl-banner-btn{margin-left:auto;font-size:12px;font-weight:600;color:var(--ac);background:rgba(10,132,255,.1);border:1px solid var(--ac);padding:6px 14px;border-radius:9999px;transition:background .15s ease}
+.tl-history-banner .tl-banner-btn:hover{background:rgba(10,132,255,.25)}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL TIMELINE — multi-lane, taller rows
+   ═══════════════════════════════════════════════════════════ */
+.tl-global-w{flex-shrink:0;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:16px;overflow:hidden}
+.tl-global-head{display:flex;align-items:center;gap:12px;padding:12px 20px 0}
+.tl-global-head .tl-title{font-size:13px;font-weight:600;letter-spacing:-.02em}
+.tl-global-head .tl-title-sub{font-size:12px;color:var(--tx3)}
+.tl-global-head .tl-controls{margin-left:auto;display:flex;gap:6px;align-items:center}
+.tl-global-head .tl-time-display{font-size:12px;font-family:var(--font-mono);color:var(--ac);font-weight:600;padding:3px 10px;background:var(--input-bg);border-radius:8px}
+
+.tl-lanes{padding:10px 20px 12px;display:flex;flex-direction:column;gap:6px}
+.tl-lane{display:flex;align-items:center;gap:12px;height:28px;border-radius:8px;padding:0 4px;transition:background .15s ease;cursor:pointer}
+.tl-lane:hover{background:var(--hover)}
+.tl-lane-label{width:110px;font-size:12px;font-weight:500;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.tl-lane-label .ext{color:var(--tx3);font-weight:400}
+.tl-lane-track{flex:1;height:20px;background:var(--input-bg);border-radius:6px;position:relative;overflow:hidden}
+.tl-lane-blocks{display:flex;height:100%;align-items:flex-end;gap:2px;padding:3px 2px}
+.tl-lane-block{flex-shrink:0;width:10px;border-radius:3px 3px 0 0;transition:transform .2s ease,filter .2s ease;cursor:pointer}
+.tl-lane-block:hover{transform:scaleY(1.15);filter:brightness(1.2)}
+.tl-lane-block.add{background:var(--ac3)}
+.tl-lane-block.del{background:var(--danger)}
+.tl-lane-block.mix{background:var(--ac2)}
+
+.tl-global-playhead{position:absolute;top:0;width:2px;height:100%;background:var(--ac);z-index:10;opacity:.7;border-radius:1px}
+
+.tl-ruler{display:flex;justify-content:space-between;padding:0 20px 10px;margin-left:122px;font-size:10px;font-family:var(--font-mono);color:var(--tx3)}
+
+.content-scroll{flex:1;overflow-y:auto;padding-bottom:16px}
+
+/* Version label */
+.approach-label{position:fixed;top:12px;right:16px;z-index:100;font-size:11px;font-weight:600;padding:6px 14px;border-radius:9999px;background:var(--ac);color:#fff;letter-spacing:.02em;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+
+<div class="approach-label">Claude: Theme-Integrated Colors</div>
+<div class="bg-solid"></div>
+<div class="bg-grad"></div>
+
+<div class="ui">
+
+  <!-- Toolbar -->
+  <div class="toolbar-w">
+    <div class="toolbar">
+      <div class="brand">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 22h20L12 2z" stroke="var(--tx3)" stroke-width="1.5" fill="none"/>
+          <path d="M7.5 15C7.5 15 9 12 12 12C15 12 16.5 15 16.5 15C16.5 15 15 18 12 18C9 18 7.5 15 7.5 15Z" stroke="var(--tx3)" stroke-width="1.2" fill="none"/>
+          <circle cx="12" cy="15" r="1.5" fill="var(--ac)" class="eye-iris"/>
+          <rect class="eye-lid" x="7" y="11.5" width="10" height="7" rx="5" fill="var(--bg2)"/>
+        </svg>
+        <span class="brand-name">Codorum</span>
+      </div>
+      <div class="sep"></div>
+      <span class="file-count">5 files</span>
+      <div class="toolbar-r">
+        <button class="btn-icon" title="Fullscreen">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+        <button class="btn-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="kbd">&#8984;K</span>
+        </button>
+        <button class="btn-ghost" id="themeBtn">n01z</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-head"><span>Watched</span></div>
+      <div class="tree">
+        <button class="fi active">
+          <span class="dot" style="background:#0A84FF"></span>
+          <span class="fl">App<span class="ext">.tsx</span></span>
+          <span class="diff"><span class="d-add">+12</span><span class="d-del">-3</span></span>
+        </button>
+        <button class="fi">
+          <span class="dot" style="background:#FF9500"></span>
+          <span class="fl">watcher<span class="ext">.rs</span></span>
+          <span class="diff"><span class="d-add">+45</span><span class="d-del">-8</span></span>
+        </button>
+        <button class="fi">
+          <span class="dot" style="background:#5E5CE6"></span>
+          <span class="fl">app-store<span class="ext">.ts</span></span>
+          <span class="diff"><span class="d-add">+7</span></span>
+        </button>
+        <button class="fi">
+          <span class="dot" style="background:#30D158"></span>
+          <span class="fl">Sidebar<span class="ext">.tsx</span></span>
+        </button>
+        <button class="fi">
+          <span class="dot" style="background:#FF453A"></span>
+          <span class="fl">old-utils<span class="ext">.ts</span></span>
+          <span class="diff"><span class="d-del">-22</span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="c-head">
+        <h1>Files</h1>
+        <span class="sub">5 visible</span>
+      </div>
+
+      <div class="content-scroll">
+
+        <!-- FILE CARD with TIMELINE -->
+        <div class="fc active">
+          <div class="fc-h">
+            <span class="cdot" style="background:#0A84FF"></span>
+            <span class="ftitle">App<span class="ext">.tsx</span></span>
+            <div class="fmeta">
+              <span class="diff"><span class="d-add">+12</span> <span class="d-del">-3</span></span>
+              <span class="ts">just now</span>
+            </div>
+          </div>
+
+          <div class="fc-body">
+<span style="color:#c678dd">import</span> { useEffect, useState } <span style="color:#c678dd">from</span> <span style="color:#98c379">"react"</span>;
+<span style="color:#c678dd">import</span> { invoke } <span style="color:#c678dd">from</span> <span style="color:#98c379">"@tauri-apps/api/core"</span>;
+<span style="color:#c678dd">import</span> { Toolbar } <span style="color:#c678dd">from</span> <span style="color:#98c379">"./components/Toolbar"</span>;
+<span style="color:#c678dd">import</span> { Sidebar } <span style="color:#c678dd">from</span> <span style="color:#98c379">"./components/Sidebar"</span>;
+<span style="color:#c678dd">export default function</span> <span style="color:#61afef">App</span>() {
+  <span style="color:#c678dd">const</span> { addFiles } = <span style="color:#61afef">useAppStore</span>();
+  <span style="color:var(--tx3);font-style:italic">// ...</span>
+          </div>
+
+          <!-- PER-FILE TIMELINE -->
+          <div class="tl-file">
+            <div class="tl-file-head">
+              <span class="tl-label">Timeline</span>
+              <span class="tl-snap-count">14 snapshots</span>
+            </div>
+            <div class="tl-track" id="fileTrack">
+              <div class="tl-blocks">
+                <div class="tl-block add" style="height:30%" data-tip="+4 lines · 2:15 PM"></div>
+                <div class="tl-block add" style="height:15%" data-tip="+2 lines · 2:18 PM"></div>
+                <div class="tl-block mix" style="height:60%" data-tip="+8 -3 lines · 2:22 PM"></div>
+                <div class="tl-block add" style="height:45%" data-tip="+6 lines · 2:27 PM"></div>
+                <div class="tl-block del" style="height:20%" data-tip="-4 lines · 2:31 PM"></div>
+                <div class="tl-block add" style="height:70%" data-tip="+12 lines · 2:36 PM"></div>
+                <div class="tl-block mix" style="height:50%" data-tip="+5 -2 lines · 2:40 PM"></div>
+                <div class="tl-block add" style="height:25%" data-tip="+3 lines · 2:43 PM"></div>
+                <div class="tl-block add" style="height:35%" data-tip="+5 lines · 2:47 PM"></div>
+                <div class="tl-block del" style="height:40%" data-tip="-7 lines · 2:50 PM"></div>
+                <div class="tl-block add" style="height:55%" data-tip="+9 lines · 2:53 PM"></div>
+                <div class="tl-block mix active" style="height:80%" data-tip="+14 -2 lines · 2:58 PM"></div>
+                <div class="tl-block add" style="height:40%" data-tip="+6 lines · 3:02 PM"></div>
+                <div class="tl-block add" style="height:60%" data-tip="+10 lines · 3:07 PM"></div>
+              </div>
+              <div class="tl-playhead" id="playhead" style="left:82%"></div>
+            </div>
+            <div class="tl-times">
+              <span>2:15 PM</span>
+              <span>2:28 PM</span>
+              <span>2:41 PM</span>
+              <span>2:54 PM</span>
+              <span>3:07 PM</span>
+            </div>
+            <div class="tl-legend">
+              <span class="tl-legend-item"><span class="tl-legend-dot lg-add"></span>Added</span>
+              <span class="tl-legend-item"><span class="tl-legend-dot lg-del"></span>Deleted</span>
+              <span class="tl-legend-item"><span class="tl-legend-dot lg-mix"></span>Mixed</span>
+            </div>
+          </div>
+
+          <!-- History banner -->
+          <div class="tl-history-banner" id="historyBanner">
+            <span class="tl-banner-dot"></span>
+            <span class="tl-banner-text" id="bannerTime">Viewing snapshot from 2:58 PM</span>
+            <button class="tl-banner-btn" id="liveBtn">Return to Live</button>
+          </div>
+        </div>
+
+        <!-- Other cards -->
+        <div class="fc">
+          <div class="fc-h">
+            <span class="cdot" style="background:#FF9500"></span>
+            <span class="ftitle">watcher<span class="ext">.rs</span></span>
+            <div class="fmeta">
+              <span class="diff"><span class="d-add">+45</span> <span class="d-del">-8</span></span>
+              <span class="ts">2m ago</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fc">
+          <div class="fc-h">
+            <span class="cdot" style="background:#5E5CE6"></span>
+            <span class="ftitle">app-store<span class="ext">.ts</span></span>
+            <div class="fmeta">
+              <span class="diff"><span class="d-add">+7</span></span>
+              <span class="ts">5m ago</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GLOBAL TIMELINE -->
+  <div class="tl-global-w">
+    <div class="tl-global-head">
+      <span class="tl-title">All Changes</span>
+      <span class="tl-title-sub">last 60 min</span>
+      <div class="tl-controls">
+        <button class="btn-icon" title="Zoom out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="btn-icon" title="Zoom in">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <span class="tl-time-display">3:07 PM</span>
+      </div>
+    </div>
+
+    <div class="tl-lanes">
+      <div class="tl-lane">
+        <span class="tl-lane-label">App<span class="ext">.tsx</span></span>
+        <div class="tl-lane-track">
+          <div class="tl-lane-blocks">
+            <div class="tl-lane-block add" style="height:40%"></div>
+            <div class="tl-lane-block add" style="height:20%"></div>
+            <div class="tl-lane-block mix" style="height:70%"></div>
+            <div class="tl-lane-block" style="width:24px"></div>
+            <div class="tl-lane-block add" style="height:50%"></div>
+            <div class="tl-lane-block del" style="height:30%"></div>
+            <div class="tl-lane-block" style="width:16px"></div>
+            <div class="tl-lane-block add" style="height:80%"></div>
+            <div class="tl-lane-block mix" style="height:60%"></div>
+            <div class="tl-lane-block" style="width:40px"></div>
+            <div class="tl-lane-block add" style="height:45%"></div>
+            <div class="tl-lane-block add" style="height:90%"></div>
+            <div class="tl-lane-block del" style="height:35%"></div>
+            <div class="tl-lane-block add" style="height:55%"></div>
+          </div>
+          <div class="tl-global-playhead" style="left:85%"></div>
+        </div>
+      </div>
+
+      <div class="tl-lane">
+        <span class="tl-lane-label">watcher<span class="ext">.rs</span></span>
+        <div class="tl-lane-track">
+          <div class="tl-lane-blocks">
+            <div class="tl-lane-block" style="width:48px"></div>
+            <div class="tl-lane-block add" style="height:90%"></div>
+            <div class="tl-lane-block add" style="height:70%"></div>
+            <div class="tl-lane-block mix" style="height:100%"></div>
+            <div class="tl-lane-block del" style="height:40%"></div>
+            <div class="tl-lane-block" style="width:64px"></div>
+            <div class="tl-lane-block add" style="height:60%"></div>
+            <div class="tl-lane-block add" style="height:30%"></div>
+          </div>
+          <div class="tl-global-playhead" style="left:85%"></div>
+        </div>
+      </div>
+
+      <div class="tl-lane">
+        <span class="tl-lane-label">app-store<span class="ext">.ts</span></span>
+        <div class="tl-lane-track">
+          <div class="tl-lane-blocks">
+            <div class="tl-lane-block" style="width:80px"></div>
+            <div class="tl-lane-block add" style="height:50%"></div>
+            <div class="tl-lane-block add" style="height:30%"></div>
+            <div class="tl-lane-block" style="width:100px"></div>
+            <div class="tl-lane-block add" style="height:40%"></div>
+          </div>
+          <div class="tl-global-playhead" style="left:85%"></div>
+        </div>
+      </div>
+
+      <div class="tl-lane">
+        <span class="tl-lane-label">Sidebar<span class="ext">.tsx</span></span>
+        <div class="tl-lane-track">
+          <div class="tl-lane-blocks">
+            <div class="tl-lane-block" style="width:120px"></div>
+            <div class="tl-lane-block add" style="height:25%"></div>
+            <div class="tl-lane-block" style="width:150px"></div>
+          </div>
+          <div class="tl-global-playhead" style="left:85%"></div>
+        </div>
+      </div>
+
+      <div class="tl-lane">
+        <span class="tl-lane-label">old-utils<span class="ext">.ts</span></span>
+        <div class="tl-lane-track">
+          <div class="tl-lane-blocks">
+            <div class="tl-lane-block" style="width:200px"></div>
+            <div class="tl-lane-block del" style="height:100%"></div>
+            <div class="tl-lane-block del" style="height:60%"></div>
+          </div>
+          <div class="tl-global-playhead" style="left:85%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-ruler">
+      <span>2:07</span><span>2:15</span><span>2:22</span><span>2:30</span><span>2:37</span><span>2:45</span><span>2:52</span><span>3:00</span><span>3:07</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Theme cycling
+const themes = ["n01z", "paper", "phosphor", "ember"];
+let ti = 0;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  ti = (ti + 1) % themes.length;
+  document.documentElement.setAttribute("data-theme", themes[ti]);
+  document.getElementById("themeBtn").textContent = themes[ti];
+});
+
+// Playhead interaction
+const track = document.getElementById("fileTrack");
+const playhead = document.getElementById("playhead");
+const banner = document.getElementById("historyBanner");
+const bannerTime = document.getElementById("bannerTime");
+const liveBtn = document.getElementById("liveBtn");
+
+function updatePlayhead(pct) {
+  playhead.style.left = pct + "%";
+  if (pct < 95) {
+    banner.style.display = "flex";
+    const fakeMin = Math.round((100 - pct) * 0.5);
+    const t = new Date(Date.now() - fakeMin * 60000);
+    bannerTime.textContent = "Viewing snapshot from " + t.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+  } else {
+    banner.style.display = "none";
+  }
+}
+
+// Click to move
+track.addEventListener("click", (e) => {
+  if (e.target === playhead || e.target === playhead.firstChild) return;
+  const rect = track.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+  playhead.style.transition = "left .12s ease";
+  updatePlayhead(pct);
+});
+
+// Drag
+let dragging = false;
+playhead.addEventListener("mousedown", (e) => { dragging = true; playhead.style.transition = "none"; e.preventDefault(); });
+window.addEventListener("mousemove", (e) => {
+  if (!dragging) return;
+  const rect = track.getBoundingClientRect();
+  updatePlayhead(Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)));
+});
+window.addEventListener("mouseup", () => { if (dragging) { dragging = false; playhead.style.transition = "left .12s ease"; } });
+
+// Return to Live
+liveBtn.addEventListener("click", () => { playhead.style.transition = "left .2s ease"; updatePlayhead(98); });
+
+// Arrow keys + L
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    const cur = parseFloat(playhead.style.left) || 82;
+    playhead.style.transition = "left .1s ease";
+    updatePlayhead(Math.max(0, Math.min(100, cur + (e.key === "ArrowLeft" ? -5 : 5))));
+  }
+  if (e.key === "l" || e.key === "L") { playhead.style.transition = "left .2s ease"; updatePlayhead(98); }
+});
+
+// Global lane click highlight
+document.querySelectorAll(".tl-lane").forEach(lane => {
+  lane.addEventListener("click", () => {
+    document.querySelectorAll(".tl-lane").forEach(l => l.style.background = "");
+    lane.style.background = "var(--hover)";
+  });
+});
+</script>
+
+</body>
+</html>

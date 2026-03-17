@@ -1,11 +1,11 @@
-import { Search } from "lucide-react";
+import { Search, Maximize2, Minimize2 } from "lucide-react";
 import { useAppStore } from "../stores/app-store";
 import { useCommandStore } from "../stores/command-store";
 
 const THEMES = ["n01z", "paper", "phosphor", "ember"] as const;
 
 export function Toolbar() {
-  const { files, theme, setTheme } = useAppStore();
+  const { files, theme, setTheme, isFullscreen, toggleFullscreen } = useAppStore();
   const openCmd = useCommandStore((s) => s.toggle);
 
   const cycleTheme = () => {
@@ -28,6 +28,9 @@ export function Toolbar() {
         <div className="sep" />
         <span className="file-count">{files.length} files</span>
         <div className="toolbar-r">
+          <button className="btn-icon" onClick={toggleFullscreen} title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
           <button className="btn-pill" onClick={openCmd}>
             <Search size={14} /> <span className="kbd">⌘K</span>
           </button>
