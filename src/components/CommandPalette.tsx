@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { Search, File, FolderOpen, Plus, Sparkles, Palette } from "lucide-react";
+import { animate } from "animejs";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { useCommandStore } from "../stores/command-store";
@@ -35,6 +36,8 @@ export function CommandPalette() {
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const cmdRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -45,7 +48,29 @@ export function CommandPalette() {
     }
   }, [open]);
 
-  // ⌘K shortcut
+  // Entrance animation
+  useEffect(() => {
+    if (open) {
+      if (overlayRef.current) {
+        animate(overlayRef.current, {
+          opacity: [0, 1],
+          duration: 120,
+          ease: "outCubic",
+        });
+      }
+      if (cmdRef.current) {
+        animate(cmdRef.current, {
+          translateY: [-6, 0],
+          scale: [0.98, 1],
+          opacity: [0, 1],
+          duration: 150,
+          ease: "outCubic",
+        });
+      }
+    }
+  }, [open]);
+
+  // Cmd+K shortcut
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -259,8 +284,8 @@ export function CommandPalette() {
   let selectableIdx = -1;
 
   return (
-    <div className="cmd-overlay" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
-      <div className="cmd">
+    <div ref={overlayRef} className="cmd-overlay" style={{ opacity: 0 }} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
+      <div ref={cmdRef} className="cmd" style={{ opacity: 0 }}>
         {/* Search row */}
         <div className="cmd-input">
           <Search size={16} />
