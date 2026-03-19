@@ -13,6 +13,7 @@ import type { WatchedFile } from "../types/files";
 interface DragState {
   fileId: string;
   fileName: string;
+  ext: string;
   startY: number;
   active: boolean; // becomes true after 4px movement threshold
 }
@@ -34,7 +35,7 @@ interface DrawerSectionProps {
   searchExcerpts?: Map<string, string>;
   // Drag props from parent
   dragOverId: string | null;
-  onFileDragStart: (fileId: string, fileName: string, y: number) => void;
+  onFileDragStart: (fileId: string, fileName: string, ext: string, y: number) => void;
 }
 
 function DrawerSection({
@@ -115,8 +116,8 @@ function DrawerSection({
       className="drawer"
       data-section-id={id}
       style={isDragOver ? {
-        borderLeft: "3px solid var(--ac)",
-        background: "color-mix(in srgb, var(--ac) 8%, transparent)",
+        borderLeft: "2px solid var(--tx3)",
+        background: "color-mix(in srgb, var(--tx3) 5%, transparent)",
         borderRadius: 8,
       } : undefined}
     >
@@ -192,7 +193,7 @@ function DrawerSection({
               key={file.id}
               className={`fi ${isActive ? "active" : ""} ${isSelected ? "selected" : ""}`}
               onMouseDown={(e) => {
-                if (e.button === 0) onFileDragStart(file.id, file.name, e.clientY);
+                if (e.button === 0) onFileDragStart(file.id, file.name, file.extension, e.clientY);
               }}
               onClick={(e) => handleFileClick(file.id, e)}
             >
@@ -261,11 +262,11 @@ export function Sidebar() {
   // ─── Mouse-based drag system ───
   const dragRef = useRef<DragState | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
-  const [draggingFile, setDraggingFile] = useState<{ name: string; x: number; y: number } | null>(null);
+  const [draggingFile, setDraggingFile] = useState<{ name: string; ext: string; x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
 
-  const handleFileDragStart = useCallback((fileId: string, fileName: string, y: number) => {
-    dragRef.current = { fileId, fileName, startY: y, active: false };
+  const handleFileDragStart = useCallback((fileId: string, fileName: string, ext: string, y: number) => {
+    dragRef.current = { fileId, fileName, ext, startY: y, active: false };
     suppressClick.current = false;
   }, []);
 
@@ -282,7 +283,7 @@ export function Sidebar() {
       }
 
       // Update ghost position
-      setDraggingFile({ name: drag.fileName, x: e.clientX, y: e.clientY });
+      setDraggingFile({ name: drag.fileName, ext: drag.ext, x: e.clientX, y: e.clientY });
 
       // Hit-test: which section is the cursor over?
       const els = document.elementsFromPoint(e.clientX, e.clientY);
@@ -521,23 +522,14 @@ export function Sidebar() {
       {/* Drag ghost */}
       {draggingFile && (
         <div
+          className="drag-ghost"
           style={{
-            position: "fixed",
-            left: draggingFile.x + 12,
-            top: draggingFile.y - 10,
-            padding: "3px 10px",
-            background: "var(--card)",
-            border: "1px solid var(--ac)",
-            borderRadius: 6,
-            fontSize: 12,
-            color: "var(--tx)",
-            pointerEvents: "none",
-            zIndex: 999,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-            whiteSpace: "nowrap",
+            left: draggingFile.x + 8,
+            top: draggingFile.y + 2,
           }}
         >
-          {draggingFile.name}
+          <span className="dg-dot" style={{ background: ExtDot.getColor(draggingFile.ext) }} />
+          <span className="dg-name">{draggingFile.name}</span>
         </div>
       )}
 

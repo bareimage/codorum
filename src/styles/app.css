@@ -220,8 +220,8 @@ button{cursor:pointer;font-family:inherit}
 
 /* Section */
 .sec{margin-bottom:40px}
-.sec-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.sec-h .lbl{font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--tx3);text-transform:uppercase;flex-shrink:0}
+.sec-h{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:0 32px}
+.sec-h .lbl{font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--tx3);flex-shrink:0}
 .sec-h .ln{flex:1;height:1px;background:var(--brd);opacity:.5}
 
 /* File Card */
@@ -293,6 +293,11 @@ button{cursor:pointer;font-family:inherit}
 .btn-danger:hover{filter:brightness(1.15)}
 .btn-cancel{height:32px;padding:0 16px;background:transparent;border:1px solid var(--brd);border-radius:9999px;color:var(--tx2);font-size:13px;font-weight:500;font-family:inherit}
 .btn-cancel:hover{background:var(--hover);color:var(--tx)}
+
+/* ═══ Drag Ghost ═══ */
+.drag-ghost{position:fixed;z-index:999;pointer-events:none;display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--card);border:1px solid var(--brd);border-radius:8px;font-size:12px;font-weight:600;color:var(--tx);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);backdrop-filter:blur(12px)}
+.dg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dg-name{max-width:160px;overflow:hidden;text-overflow:ellipsis}
 
 /* ═══ Drop Zone ═══ */
 .dz-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;animation:fadeIn .12s ease}
