@@ -5,6 +5,7 @@ use crate::snapshot::random_placeholder;
 use crate::AppState;
 use std::collections::HashSet;
 use std::path::PathBuf;
+use std::process::Command;
 use tauri::State;
 
 #[tauri::command]
@@ -273,6 +274,16 @@ pub fn drop_paths(
         directories,
         loose_files,
     })
+}
+
+#[tauri::command]
+pub fn reveal_in_finder(path: String) -> Result<(), CodorumError> {
+    Command::new("open")
+        .arg("-R")
+        .arg(&path)
+        .spawn()
+        .map_err(CodorumError::Io)?;
+    Ok(())
 }
 
 #[tauri::command]
