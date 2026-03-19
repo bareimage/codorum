@@ -103,11 +103,6 @@ body{
 /* ═══ Animations ═══ */
 @keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes barIn{from{opacity:0;transform:translateX(-50%) translateY(6px) scale(.98)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
-@keyframes toastIn{from{opacity:0;transform:translateX(16px) scale(.96)}to{opacity:1;transform:translateX(0) scale(1)}}
-@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(24px)}}
-@keyframes cmdIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes eyeBlink{0%,42%,50%,100%{transform:scaleY(0)}44%,48%{transform:scaleY(1)}}
 @keyframes eyeLook{0%,40%,50%,100%{transform:translateX(0)}42%,48%{transform:translateX(2px)}}
 
@@ -192,7 +187,7 @@ button{cursor:pointer;font-family:inherit}
 .dw-files.closed{display:none}
 
 /* File item */
-.fi{display:flex;flex-direction:row;align-items:center;gap:10px;padding:5px 12px 4px;border-radius:10px;text-align:left;color:var(--tx2);transition:background .15s ease,border-color .15s ease;margin:0 12px 5px;cursor:pointer;border:1px solid transparent;width:calc(100% - 24px);box-sizing:border-box}
+.fi{display:flex;flex-direction:row;align-items:center;gap:10px;padding:5px 12px 4px;border-radius:10px;text-align:left;color:var(--tx2);transition:background .15s ease,border-color .15s ease,opacity .15s ease;margin:0 12px 5px;cursor:pointer;border:1px solid transparent;width:calc(100% - 24px);box-sizing:border-box;background:none;outline:none;font-family:inherit;user-select:none;-webkit-user-select:none}
 .fi:hover{background:var(--hover)}
 .fi.active{background:color-mix(in srgb, var(--ac) 6%, transparent);color:var(--tx);border-color:color-mix(in srgb, var(--ac) 35%, transparent);animation:fi-pulse 3s ease-in-out infinite}
 .fi.selected{background:color-mix(in srgb, var(--ac) 5%, transparent);color:var(--tx);border-color:color-mix(in srgb, var(--ac) 15%, transparent)}
@@ -225,7 +220,7 @@ button{cursor:pointer;font-family:inherit}
 .sec-h .ln{flex:1;height:1px;background:var(--brd);opacity:.5}
 
 /* File Card */
-.fc{background:var(--card);border-radius:12px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);animation:slideUp .2s ease}
+.fc{background:var(--card);border-radius:12px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
 .fc.active{border-color:color-mix(in srgb, var(--ac) 25%, transparent);box-shadow:0 4px 16px rgba(0,0,0,0.06)}
 .fc.selected{box-shadow:0 0 0 2px rgba(10,132,255,.25)}
 .fc-h{display:flex;align-items:center;padding:16px 24px;cursor:pointer;transition:background .1s}
@@ -267,9 +262,9 @@ button{cursor:pointer;font-family:inherit}
 .kw{color:#c678dd}.str{color:#98c379}.cmt{color:var(--tx3);font-style:italic}.num{color:var(--warn)}.fn{color:#61afef}.type{color:#e06c75}.attr{color:var(--ac2)}
 
 /* ═══ Command Palette ═══ */
-.cmd-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;animation:fadeIn .12s ease}
+.cmd-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:15vh}
 .cmd-overlay.hidden{display:none}
-.cmd{width:480px;background:var(--cmd-bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:16px;box-shadow:var(--cmd-shadow);overflow:hidden;animation:cmdIn .15s ease}
+.cmd{width:480px;background:var(--cmd-bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:16px;box-shadow:var(--cmd-shadow);overflow:hidden}
 .cmd-input{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--brd)}
 .cmd-input svg{color:var(--tx3);flex-shrink:0}
 .cmd-input input{flex:1;background:transparent;border:none;outline:none;font-size:15px;color:var(--tx);font-family:inherit}
@@ -285,7 +280,7 @@ button{cursor:pointer;font-family:inherit}
 .cmd-foot span{display:flex;align-items:center;gap:4px}
 
 /* ═══ Eject Bar ═══ */
-.ej-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.2);animation:barIn .2s ease;white-space:nowrap}
+.ej-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.2);white-space:nowrap}
 .ej-bar.hidden{display:none}
 .ej-bar .ej-label{font-size:13px;font-weight:500;color:var(--tx2)}
 .ej-bar .ej-label strong{color:var(--tx);font-weight:600}
@@ -295,12 +290,40 @@ button{cursor:pointer;font-family:inherit}
 .btn-cancel:hover{background:var(--hover);color:var(--tx)}
 
 /* ═══ Drag Ghost ═══ */
-.drag-ghost{position:fixed;z-index:999;pointer-events:none;display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--card);border:1px solid var(--brd);border-radius:8px;font-size:12px;font-weight:600;color:var(--tx);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);backdrop-filter:blur(12px)}
-.dg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dg-name{max-width:160px;overflow:hidden;text-overflow:ellipsis}
+/* Drag source — dimmed with dashed outline */
+.fi.is-dragging{opacity:.3;border:1px dashed var(--tx3);border-radius:6px}
+
+/* Droppable section — glowing highlight when drag hovers */
+.drawer{transition:border-color .15s ease,background .15s ease,box-shadow .15s ease;border-left:2px solid transparent;border-radius:8px}
+.drawer.drop-target{
+  border-left-color:var(--ac);
+  background:color-mix(in srgb, var(--ac) 6%, transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--ac) 15%, transparent),0 0 12px color-mix(in srgb, var(--ac) 10%, transparent);
+}
+.drawer.drop-target .dw-btn{color:var(--ac)}
+
+/* Drag overlay ghost — elevated, glowing card */
+.drag-ghost-overlay{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;
+  background:var(--card);
+  border:1px solid color-mix(in srgb, var(--ac) 40%, var(--brd));
+  border-radius:10px;
+  font-size:13px;font-weight:600;color:var(--tx);
+  white-space:nowrap;
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.25),
+    0 4px 12px rgba(0,0,0,.12),
+    0 0 0 1px color-mix(in srgb, var(--ac) 20%, transparent);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  pointer-events:none;
+}
+.drag-ghost-overlay .dg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px currentColor}
+.drag-ghost-overlay .dg-name{max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.drag-ghost-overlay .dg-ext{color:var(--tx3);font-weight:400}
 
 /* ═══ Drop Zone ═══ */
-.dz-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;animation:fadeIn .12s ease}
+.dz-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
 .dz-overlay.hidden{display:none}
 .dz-box{width:400px;padding:64px;border:2px dashed var(--ac);border-radius:24px;text-align:center;background:var(--cmd-bg);backdrop-filter:blur(40px)}
 .dz-box .dz-icon{font-size:48px;margin-bottom:16px;opacity:.6}
@@ -310,8 +333,6 @@ button{cursor:pointer;font-family:inherit}
 /* ═══ Toasts ═══ */
 .toasts{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column-reverse;gap:8px}
 .toast{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:320px}
-.toast.entering{animation:toastIn .2s ease}
-.toast.exiting{animation:toastOut 140ms ease-in forwards}
 .toast-dot{width:8px;height:8px;border-radius:9999px;flex-shrink:0}
 .toast-text{font-size:13px;font-weight:500}
 .toast-detail{font-size:12px;color:var(--tx3);margin-left:4px}

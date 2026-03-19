@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ChevronRight } from "lucide-react";
+import { animate } from "animejs";
 import { useAppStore, editorContentMap } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { MarkdownEditor, type MarkdownEditorHandle } from "./MarkdownEditor";
@@ -22,7 +23,6 @@ function DiffView({ snap, content }: { snap: FileSnapshot; content?: string | nu
         cls: a.type === "add" ? "diff-add" : a.type === "del" ? "diff-del" : "diff-ctx",
       }));
     }
-    // Fallback: raw patch lines
     return (snap.patch || "").split("\n").map((line) => {
       let cls = "diff-ctx";
       if (line.startsWith("+") && !line.startsWith("+++")) cls = "diff-add";
@@ -93,11 +93,24 @@ export function FileCard({
   const mdEditorRef = useRef<MarkdownEditorHandle>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mode = detectMode(file.extension);
   const extColor = ExtDot.getColor(file.extension);
   const activeSnapshotTs = useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
   const setActiveSnapshot = useAppStore((s) => s.setActiveSnapshot);
+
+  // Entrance animation
+  useEffect(() => {
+    if (cardRef.current) {
+      animate(cardRef.current, {
+        translateY: [6, 0],
+        opacity: [0, 1],
+        duration: 200,
+        ease: "outCubic",
+      });
+    }
+  }, []);
 
   // Sync content synchronously during render when file changes externally.
   if (file.content !== trackedContent) {
@@ -110,7 +123,6 @@ export function FileCard({
   useEffect(() => {
     if (!isActive) return;
     const handler = () => {
-      // Read directly from editor ref/map — bypasses async React state
       let latest: string;
       if (mode === "markdown" && mdEditorRef.current) {
         latest = mdEditorRef.current.getMarkdown();
@@ -157,14 +169,12 @@ export function FileCard({
     }
   }, [file.id, file.content, setCardDirty]);
 
-  // Extract first heading for collapsed subtitle
   const subtitle = (() => {
     if (!content) return null;
     const match = content.match(/^#{1,2}\s+(.+)$/m);
     return match ? match[1].trim() : null;
   })();
 
-  // Historical Timeline Injection
   const historicalSnap = activeSnapshotTs
     ? (file.history || []).find((s) => s.timestamp === activeSnapshotTs)
     : null;
@@ -180,7 +190,6 @@ export function FileCard({
 
   const isReadOnly = !isActive || file.deleted;
 
-  // Auto-size textarea to content
   useEffect(() => {
     const el = textareaRef.current;
     if (el) {
@@ -191,6 +200,7 @@ export function FileCard({
 
   return (
     <div
+      ref={cardRef}
       id={file.id}
       className={`fc${isActive ? " active" : ""}${isSelected ? " selected" : ""}`}
       onMouseEnter={() => {
@@ -294,7 +304,7 @@ export function FileCard({
         ref={bodyRef}
         className={`fc-body ${isCollapsed ? "closed" : "open"}`}
         onClick={(e) => e.stopPropagation()}
-        style={!isCollapsed && cardHeight ? { maxHeight: cardHeight, overflowY: "auto" } : isCollapsed ? undefined : undefined}
+        style={!isCollapsed && cardHeight ? { maxHeight: cardHeight, overflowY: "auto" } : undefined}
       >
         {!isCollapsed && (
           <ErrorBoundary>

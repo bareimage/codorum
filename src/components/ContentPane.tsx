@@ -3,6 +3,7 @@ import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { sortFiles } from "../utils/sortFiles";
 import { FileCard } from "./FileCard";
 import { DockTimeline } from "./DockTimeline";
+import { useStaggerIn } from "../hooks/useAnime";
 import type { WatchedFile } from "../types/files";
 
 export function ContentPane() {
@@ -69,6 +70,14 @@ export function ContentPane() {
   const totalVisible = sections.reduce((sum, s) => sum + s.files.length, 0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Stagger file cards on load
+  useStaggerIn(
+    scrollRef,
+    ".fc",
+    { translateY: [6, 0], opacity: [0, 1], duration: 200, delay: 40, ease: "outCubic" },
+    [sections.length],
+  );
+
   const allFileIds = useMemo(
     () => sections.flatMap((s) => s.files.map((f) => f.id)),
     [sections],
@@ -80,7 +89,6 @@ export function ContentPane() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Don't switch active file while user is editing
         const { cardDirty } = useAppStore.getState();
         if (Object.values(cardDirty).some(Boolean)) return;
         let best: { id: string; top: number } | null = null;

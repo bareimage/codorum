@@ -1,5 +1,12 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import {
+  DragDropProvider,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+} from "@dnd-kit/react";
+import { PointerSensor, PointerActivationConstraints } from "@dnd-kit/dom";
 import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
@@ -7,21 +14,76 @@ import { sortFiles } from "../utils/sortFiles";
 import { ExtDot } from "./ExtDot";
 import { StatusBar } from "./StatusBar";
 import { MicroTimeline } from "./MicroTimeline";
+import { useStaggerIn } from "../hooks/useAnime";
 import type { WatchedFile } from "../types/files";
 
-// ─── Mouse-based drag state (shared across all sections) ───
-interface DragState {
-  fileId: string;
-  fileName: string;
-  ext: string;
-  startY: number;
-  active: boolean; // becomes true after 4px movement threshold
+// ─── Draggable file item ───────────────────────────
+function DraggableFileItem({
+  file,
+  isActive,
+  isSelected,
+  excerpt,
+  onClick,
+}: {
+  file: WatchedFile;
+  isActive: boolean;
+  isSelected: boolean;
+  excerpt?: string;
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  const { ref, isDragging } = useDraggable({
+    id: file.id,
+    data: { file },
+  });
+
+  return (
+    <div
+      ref={ref}
+      role="button"
+      tabIndex={0}
+      className={`fi ${isActive ? "active" : ""} ${isSelected ? "selected" : ""} ${isDragging ? "is-dragging" : ""}`}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(e as unknown as React.MouseEvent); }}
+    >
+      <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
+      <div className="fi-main">
+        <div className="fi-top">
+          <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
+            {file.name}
+            <span className="ext">.{file.extension}</span>
+          </span>
+          {(file.linesAdded || file.linesRemoved) ? (
+            <span className="diff">
+              {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
+              {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
+            </span>
+          ) : null}
+          {file.deleted && <span className="del-badge">deleted</span>}
+        </div>
+        <MicroTimeline history={file.history} />
+        {excerpt && (
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--tx3)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              width: "100%",
+              lineHeight: 1.4,
+            }}
+            dangerouslySetInnerHTML={{ __html: excerpt }}
+          />
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Drawer Section ───────────────────────────────
 
 interface DrawerSectionProps {
-  id: string; // group id or "pinned" | "loose"
+  id: string;
   title: string;
   files: WatchedFile[];
   allFileIds: string[];
@@ -33,9 +95,6 @@ interface DrawerSectionProps {
   onStartRename?: () => void;
   onFinishRename?: (name: string) => void;
   searchExcerpts?: Map<string, string>;
-  // Drag props from parent
-  dragOverId: string | null;
-  onFileDragStart: (fileId: string, fileName: string, ext: string, y: number) => void;
 }
 
 function DrawerSection({
@@ -51,18 +110,26 @@ function DrawerSection({
   onStartRename,
   onFinishRename,
   searchExcerpts,
-  dragOverId,
-  onFileDragStart,
 }: DrawerSectionProps) {
   const { activeFileId, selectedIds, openFile, toggleSelectFile, selectRange, clearSelection, sortBy } =
     useAppStore();
   const sorted = sortFiles(files, sortBy);
   const renameRef = useRef<HTMLInputElement>(null);
   const [renameValue, setRenameValue] = useState(title);
-  const isDragOver = dragOverId === id;
+  const filesRef = useRef<HTMLDivElement>(null);
+
+  const { ref: dropRef, isDropTarget } = useDroppable({ id });
 
   const totalAdded = files.reduce((s, f) => s + (f.linesAdded || 0), 0);
   const totalRemoved = files.reduce((s, f) => s + (f.linesRemoved || 0), 0);
+
+  // Stagger file items when drawer opens
+  useStaggerIn(
+    filesRef,
+    ".fi",
+    { translateY: [6, 0], opacity: [0, 1], duration: 200, delay: 25, ease: "outCubic" },
+    [isOpen, sorted.length],
+  );
 
   // Focus rename input when entering rename mode
   useEffect(() => {
@@ -107,19 +174,20 @@ function DrawerSection({
     if (trimmed && trimmed !== title) {
       onFinishRename?.(trimmed);
     } else {
-      onFinishRename?.(title); // cancel — keep old name
+      onFinishRename?.(title);
     }
   };
 
+  // Combine drop ref with our files ref
+  const setRefs = useCallback((el: HTMLDivElement | null) => {
+    dropRef(el);
+    (filesRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+  }, [dropRef]);
+
   return (
     <div
-      className="drawer"
+      className={`drawer ${isDropTarget && id !== "pinned" ? "drop-target" : ""}`}
       data-section-id={id}
-      style={isDragOver ? {
-        borderLeft: "2px solid var(--tx3)",
-        background: "color-mix(in srgb, var(--tx3) 5%, transparent)",
-        borderRadius: 8,
-      } : undefined}
     >
       <button
         className="dw-btn"
@@ -183,52 +251,18 @@ function DrawerSection({
         </span>
       </button>
 
-      <div className={`dw-files ${isOpen ? "" : "closed"}`}>
+      <div ref={setRefs} className={`dw-files ${isOpen ? "" : "closed"}`}>
         {sorted.map((file) => {
-          const isActive = activeFileId === file.id;
-          const isSelected = selectedIds.has(file.id);
           const excerpt = searchExcerpts?.get(file.id);
           return (
-            <button
+            <DraggableFileItem
               key={file.id}
-              className={`fi ${isActive ? "active" : ""} ${isSelected ? "selected" : ""}`}
-              onMouseDown={(e) => {
-                if (e.button === 0) onFileDragStart(file.id, file.name, file.extension, e.clientY);
-              }}
+              file={file}
+              isActive={activeFileId === file.id}
+              isSelected={selectedIds.has(file.id)}
+              excerpt={excerpt}
               onClick={(e) => handleFileClick(file.id, e)}
-            >
-              <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
-              <div className="fi-main">
-                <div className="fi-top">
-                  <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
-                    {file.name}
-                    <span className="ext">.{file.extension}</span>
-                  </span>
-                  {(file.linesAdded || file.linesRemoved) ? (
-                    <span className="diff">
-                      {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
-                      {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
-                    </span>
-                  ) : null}
-                  {file.deleted && <span className="del-badge">deleted</span>}
-                </div>
-                <MicroTimeline history={file.history} />
-                {excerpt && (
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "var(--tx3)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      width: "100%",
-                      lineHeight: 1.4,
-                    }}
-                    dangerouslySetInnerHTML={{ __html: excerpt }}
-                  />
-                )}
-              </div>
-            </button>
+            />
           );
         })}
       </div>
@@ -259,81 +293,27 @@ export function Sidebar() {
   const addToast = useToastStore((s) => s.add);
   const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
 
-  // ─── Mouse-based drag system ───
-  const dragRef = useRef<DragState | null>(null);
-  const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
-  const [draggingFile, setDraggingFile] = useState<{ name: string; ext: string; x: number; y: number } | null>(null);
-  const suppressClick = useRef(false);
+  const handleDragEnd = useCallback((event: { operation: { source?: { id: string | number } | null; target?: { id: string | number } | null } }) => {
+    const { source, target } = event.operation;
+    if (!source || !target) return;
 
-  const handleFileDragStart = useCallback((fileId: string, fileName: string, ext: string, y: number) => {
-    dragRef.current = { fileId, fileName, ext, startY: y, active: false };
-    suppressClick.current = false;
-  }, []);
+    const fileId = String(source.id);
+    const targetId = String(target.id);
 
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (!dragRef.current) return;
-      const drag = dragRef.current;
+    if (targetId === "pinned") return;
 
-      // Activate after 4px movement threshold
-      if (!drag.active) {
-        if (Math.abs(e.clientY - drag.startY) < 4) return;
-        drag.active = true;
-        suppressClick.current = true;
-      }
-
-      // Update ghost position
-      setDraggingFile({ name: drag.fileName, ext: drag.ext, x: e.clientX, y: e.clientY });
-
-      // Hit-test: which section is the cursor over?
-      const els = document.elementsFromPoint(e.clientX, e.clientY);
-      let hitSection: string | null = null;
-      for (const el of els) {
-        const sec = (el as HTMLElement).closest?.("[data-section-id]");
-        if (sec) {
-          hitSection = sec.getAttribute("data-section-id");
+    if (targetId === "loose") {
+      const store = useAppStore.getState();
+      for (const g of store.groups) {
+        if (g.fileIds.includes(fileId)) {
+          store.removeFileFromGroup(fileId, g.id);
           break;
         }
       }
-      setDragOverSectionId(hitSection === "pinned" ? null : hitSection);
-    };
-
-    const onMouseUp = () => {
-      if (!dragRef.current) return;
-      const drag = dragRef.current;
-
-      if (drag.active && dragOverSectionId) {
-        const fileId = drag.fileId;
-        if (dragOverSectionId === "loose") {
-          const store = useAppStore.getState();
-          for (const g of store.groups) {
-            if (g.fileIds.includes(fileId)) {
-              store.removeFileFromGroup(fileId, g.id);
-              break;
-            }
-          }
-        } else {
-          moveFileToGroup(fileId, dragOverSectionId);
-        }
-      }
-
-      // If drag was active, suppress the next click
-      if (drag.active) {
-        setTimeout(() => { suppressClick.current = false; }, 50);
-      }
-
-      dragRef.current = null;
-      setDragOverSectionId(null);
-      setDraggingFile(null);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [dragOverSectionId, moveFileToGroup]);
+    } else {
+      moveFileToGroup(fileId, targetId);
+    }
+  }, [moveFileToGroup]);
 
   // Listen for rename-tab events from CommandPalette
   useEffect(() => {
@@ -350,20 +330,17 @@ export function Sidebar() {
 
   const q = search.toLowerCase().trim();
 
-  // Build content search excerpts (only in content mode)
   const searchExcerpts = useMemo(() => {
     if (!q || searchMode !== "content") return undefined;
     const map = new Map<string, string>();
     for (const f of files) {
       const idx = f.content.toLowerCase().indexOf(q);
       if (idx !== -1) {
-        // Extract ~60 chars around match
         const start = Math.max(0, idx - 20);
         const end = Math.min(f.content.length, idx + q.length + 40);
         let snippet = f.content.substring(start, end).replace(/\n/g, " ");
         if (start > 0) snippet = "\u2026" + snippet;
         if (end < f.content.length) snippet += "\u2026";
-        // Highlight the match
         const matchStart = idx - start + (start > 0 ? 1 : 0);
         const before = escapeHtml(snippet.substring(0, matchStart));
         const match = escapeHtml(snippet.substring(matchStart, matchStart + q.length));
@@ -440,98 +417,95 @@ export function Sidebar() {
       <div className="sb-div" />
 
       {/* Tree */}
-      <div className="tree">
-        {(!q || filteredPinned.length > 0) && pinnedFiles.length > 0 && (
-          <DrawerSection
-            id="pinned"
-            title="Pinned"
-            files={q ? filteredPinned : pinnedFiles}
-            allFileIds={allFileIds}
-            isOpen={drawerOpen["pinned"] ?? true}
-            onToggle={() => toggleDrawer("pinned")}
-            searchExcerpts={searchExcerpts}
-            dragOverId={dragOverSectionId}
-            onFileDragStart={handleFileDragStart}
-          />
-        )}
-
-        {groups.map((group) => {
-          const groupFiles = group.fileIds
-            .map((id) => files.find((f) => f.id === id))
-            .filter(Boolean) as WatchedFile[];
-          const filtered = filterFiles(groupFiles);
-          if (q && filtered.length === 0) return null;
-          const isFolderBacked = !!group.sourcePath;
-          return (
+      <DragDropProvider
+        sensors={[PointerSensor.configure({ activationConstraints: [new PointerActivationConstraints.Distance({ value: 5 })] })]}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="tree">
+          {(!q || filteredPinned.length > 0) && pinnedFiles.length > 0 && (
             <DrawerSection
-              key={group.id}
-              id={group.id}
-              title={group.name}
-              files={q ? filtered : groupFiles}
+              id="pinned"
+              title="Pinned"
+              files={q ? filteredPinned : pinnedFiles}
               allFileIds={allFileIds}
-              isOpen={drawerOpen[group.id] ?? true}
-              onToggle={() => toggleDrawer(group.id)}
-              renamable
-              renaming={renamingGroupId === group.id}
-              onStartRename={() => setRenamingGroupId(group.id)}
-              onFinishRename={(name) => {
-                renameGroup(group.id, name);
-                setRenamingGroupId(null);
-              }}
-              onEject={() => {
-                if (isFolderBacked) {
-                  // Folder-backed: eject files from app
-                  const ids = group.fileIds;
-                  removeGroupAndFiles(group.id);
-                  invoke("remove_files", { ids });
-                  addToast(group.name, "ejected", "amber");
-                } else {
-                  // User tab: dissolve tab, files go to Loose
-                  removeGroup(group.id);
-                  addToast(group.name, "tab removed", "amber");
-                }
-              }}
+              isOpen={drawerOpen["pinned"] ?? true}
+              onToggle={() => toggleDrawer("pinned")}
               searchExcerpts={searchExcerpts}
-              dragOverId={dragOverSectionId}
-              onFileDragStart={handleFileDragStart}
             />
-          );
-        })}
+          )}
 
-        {(!q || filteredUngrouped.length > 0) && ungrouped.length > 0 && (
-          <DrawerSection
-            id="loose"
-            title="Loose"
-            files={q ? filteredUngrouped : ungrouped}
-            allFileIds={allFileIds}
-            isOpen={drawerOpen["loose"] ?? true}
-            onToggle={() => toggleDrawer("loose")}
-            searchExcerpts={searchExcerpts}
-            dragOverId={dragOverSectionId}
-            onFileDragStart={handleFileDragStart}
-          />
-        )}
+          {groups.map((group) => {
+            const groupFiles = group.fileIds
+              .map((id) => files.find((f) => f.id === id))
+              .filter(Boolean) as WatchedFile[];
+            const filtered = filterFiles(groupFiles);
+            if (q && filtered.length === 0) return null;
+            const isFolderBacked = !!group.sourcePath;
+            return (
+              <DrawerSection
+                key={group.id}
+                id={group.id}
+                title={group.name}
+                files={q ? filtered : groupFiles}
+                allFileIds={allFileIds}
+                isOpen={drawerOpen[group.id] ?? true}
+                onToggle={() => toggleDrawer(group.id)}
+                renamable
+                renaming={renamingGroupId === group.id}
+                onStartRename={() => setRenamingGroupId(group.id)}
+                onFinishRename={(name) => {
+                  renameGroup(group.id, name);
+                  setRenamingGroupId(null);
+                }}
+                onEject={() => {
+                  if (isFolderBacked) {
+                    const ids = group.fileIds;
+                    removeGroupAndFiles(group.id);
+                    invoke("remove_files", { ids });
+                    addToast(group.name, "ejected", "amber");
+                  } else {
+                    removeGroup(group.id);
+                    addToast(group.name, "tab removed", "amber");
+                  }
+                }}
+                searchExcerpts={searchExcerpts}
+              />
+            );
+          })}
 
-        {files.length === 0 && (
-          <div className="empty">
-            <div className="empty-text">drop files or folders</div>
-          </div>
-        )}
-      </div>
+          {(!q || filteredUngrouped.length > 0) && ungrouped.length > 0 && (
+            <DrawerSection
+              id="loose"
+              title="Loose"
+              files={q ? filteredUngrouped : ungrouped}
+              allFileIds={allFileIds}
+              isOpen={drawerOpen["loose"] ?? true}
+              onToggle={() => toggleDrawer("loose")}
+              searchExcerpts={searchExcerpts}
+            />
+          )}
 
-      {/* Drag ghost */}
-      {draggingFile && (
-        <div
-          className="drag-ghost"
-          style={{
-            left: draggingFile.x + 8,
-            top: draggingFile.y + 2,
-          }}
-        >
-          <span className="dg-dot" style={{ background: ExtDot.getColor(draggingFile.ext) }} />
-          <span className="dg-name">{draggingFile.name}</span>
+          {files.length === 0 && (
+            <div className="empty">
+              <div className="empty-text">drop files or folders</div>
+            </div>
+          )}
         </div>
-      )}
+
+        <DragOverlay>
+          {(source) => {
+            if (!source) return null;
+            const file = source.data?.file as WatchedFile | undefined;
+            if (!file) return null;
+            return (
+              <div className="drag-ghost-overlay">
+                <span className="dg-dot" style={{ background: ExtDot.getColor(file.extension) }} />
+                <span className="dg-name">{file.name}<span className="dg-ext">.{file.extension}</span></span>
+              </div>
+            );
+          }}
+        </DragOverlay>
+      </DragDropProvider>
 
       <StatusBar />
     </div>
