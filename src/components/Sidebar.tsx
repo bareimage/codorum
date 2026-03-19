@@ -11,7 +11,7 @@ import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
 import { sortFiles } from "../utils/sortFiles";
-import { ExtDot } from "./ExtDot";
+import { FileIcon } from "./FileIcon";
 import { StatusBar } from "./StatusBar";
 import { MicroTimeline } from "./MicroTimeline";
 import { useStaggerIn } from "../hooks/useAnime";
@@ -45,7 +45,7 @@ function DraggableFileItem({
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(e as unknown as React.MouseEvent); }}
     >
-      <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
+      <FileIcon extension={file.extension} />
       <div className="fi-main">
         <div className="fi-top">
           <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
@@ -499,7 +499,7 @@ export function Sidebar() {
             if (!file) return null;
             return (
               <div className="drag-ghost-overlay">
-                <span className="dg-dot" style={{ background: ExtDot.getColor(file.extension) }} />
+                <FileIcon extension={file.extension} />
                 <span className="dg-name">{file.name}<span className="dg-ext">.{file.extension}</span></span>
               </div>
             );
