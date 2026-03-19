@@ -28,10 +28,8 @@ export function DockTimeline({ file }: DockTimelineProps) {
 
   const history = file.history || [];
   const trackRef = useRef<HTMLDivElement>(null);
-  const [playheadPct, setPlayheadPct] = useState(98);
+  const [playheadPct, setPlayheadPct] = useState(100);
   const [isDragging, setIsDragging] = useState(false);
-  const [bouncing, setBouncing] = useState(false);
-  const prevFileId = useRef(file.id);
 
   const firstTs = history.length > 0 ? history[0].timestamp : 0;
   const lastTs = history.length > 0 ? history[history.length - 1].timestamp : 0;
@@ -60,22 +58,20 @@ export function DockTimeline({ file }: DockTimelineProps) {
     [history, firstTs, timeSpan],
   );
 
-  // Bounce animation on file switch
+  // Reset on file switch
+  const prevFileId = useRef(file.id);
   useEffect(() => {
     if (prevFileId.current !== file.id) {
       prevFileId.current = file.id;
-      setPlayheadPct(98);
+      setPlayheadPct(100);
       setActiveSnapshot(file.id, null);
-      setBouncing(true);
-      const t = setTimeout(() => setBouncing(false), 400);
-      return () => clearTimeout(t);
     }
   }, [file.id, setActiveSnapshot]);
 
   // Keep playhead synced when activeSnapshot changes externally
   useEffect(() => {
     if (activeSnapshotTs === null) {
-      setPlayheadPct(98);
+      setPlayheadPct(100);
     } else {
       setPlayheadPct(tsToPct(activeSnapshotTs));
     }
@@ -154,7 +150,30 @@ export function DockTimeline({ file }: DockTimelineProps) {
   }, [history, activeSnapshotTs, file.id, setActiveSnapshot]);
 
   // Early return AFTER all hooks
-  if (selectedIds.size > 0 || history.length === 0) return null;
+  if (selectedIds.size > 0) return null;
+
+  if (history.length === 0) {
+    const extColor = ExtDot.getColor(file.extension);
+    return (
+      <div className="dock-w">
+        <div className="dock-left">
+          <div className="dock-title">
+            <span className="dot" style={{ background: extColor }} />
+            <span>
+              {file.name}
+              {file.extension && (
+                <span style={{ color: "var(--tx3)", fontWeight: 500 }}>.{file.extension}</span>
+              )}
+            </span>
+          </div>
+          <span className="dock-meta" style={{ color: "var(--tx3)" }}>no history yet</span>
+        </div>
+        <div className="dock-track-container">
+          <div className="dock-axis" />
+        </div>
+      </div>
+    );
+  }
 
   const handleNodeClick = (snap: FileSnapshot) => {
     const pct = tsToPct(snap.timestamp);
@@ -181,25 +200,18 @@ export function DockTimeline({ file }: DockTimelineProps) {
   };
 
   const jumpToLive = () => {
-    setPlayheadPct(98);
+    setPlayheadPct(100);
     setActiveSnapshot(file.id, null);
   };
 
-  const bannerText = activeSnapshotTs
-    ? `Viewing ${formatTime(activeSnapshotTs)} snapshot`
-    : "";
   const extColor = ExtDot.getColor(file.extension);
+  const tipText = activeSnapshotTs
+    ? `${formatTime(activeSnapshotTs)} snapshot`
+    : "";
 
   return (
-    <div
-      className="dock-w"
-      style={bouncing ? { transform: "translateY(10px)" } : undefined}
-    >
-      <div className={`scrub-banner${activeSnapshotTs ? " visible" : ""}`}>
-        {bannerText}
-      </div>
-
-      <div className="dock-head">
+    <div className="dock-w">
+      <div className="dock-left">
         <div className="dock-title">
           <span className="dot" style={{ background: extColor }} />
           <span>
@@ -211,94 +223,65 @@ export function DockTimeline({ file }: DockTimelineProps) {
             )}
           </span>
         </div>
-        <span className="dock-meta">
-          {history.length} changes
-          {activeSnapshotTs !== null && (
-            <span
-              style={{ marginLeft: 8, cursor: "pointer", color: "var(--ac)" }}
-              onClick={jumpToLive}
-            >
-              ↩ Return to Live
-            </span>
-          )}
-        </span>
+        <span className="dock-meta">{history.length} changes</span>
       </div>
 
-      <div className="dock-track-row">
+      <div
+        className="dock-track-container"
+        ref={trackRef}
+        onClick={handleTrackClick}
+      >
+        <div className="dock-axis" />
+
+        <div className="dock-nodes">
+          {history.map((snap) => {
+            const pct = tsToPct(snap.timestamp);
+            const type = snapshotType(snap);
+            const isSelected = activeSnapshotTs === snap.timestamp;
+            return (
+              <div
+                key={snap.id}
+                className={`dn${isSelected ? " active" : ""}`}
+                style={{ left: `${pct}%` }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNodeClick(snap);
+                }}
+              >
+                <div className={`dn-circle ${type}`} />
+              </div>
+            );
+          })}
+        </div>
+
         <div
-          className="dock-track-w"
-          ref={trackRef}
-          onClick={handleTrackClick}
-          onMouseDown={(e) => {
-            if ((e.target as HTMLElement).closest(".dn")) return;
-            e.preventDefault();
-            setIsDragging(true);
+          className="playhead"
+          style={{
+            left: `${playheadPct}%`,
+            transition: isDragging ? "none" : "left 0.15s linear",
           }}
         >
-          <div className="dock-axis" />
-
-          <div className="dock-nodes">
-            {history.map((snap) => {
-              const pct = tsToPct(snap.timestamp);
-              const type = snapshotType(snap);
-              const isSelected = activeSnapshotTs === snap.timestamp;
-              return (
-                <div
-                  key={snap.id}
-                  className="dn"
-                  style={{ left: `${pct}%` }}
-                  onClick={() => handleNodeClick(snap)}
-                >
-                  <div
-                    className={`dn-circle ${type}`}
-                    style={
-                      isSelected
-                        ? {
-                            transform: "scale(1.3)",
-                            boxShadow: `0 0 0 2px var(--bg), 0 0 0 4px var(--ac)`,
-                          }
-                        : undefined
-                    }
-                  >
-                    {type === "add" && (
-                      <span
-                        style={{
-                          color: "#fff",
-                          fontSize: 12,
-                          fontWeight: 900,
-                          lineHeight: 1,
-                          fontFamily: "monospace",
-                          marginTop: -1,
-                        }}
-                      >
-                        +
-                      </span>
-                    )}
-                  </div>
-                  <div className="dn-time">{formatTime(snap.timestamp)}</div>
-                </div>
-              );
-            })}
+          <div className={`playhead-tip${activeSnapshotTs !== null ? " visible" : ""}`}>
+            {tipText}
           </div>
-
           <div
-            className="playhead"
-            style={{
-              left: `${playheadPct}%`,
-              transition: isDragging ? "none" : "left 0.1s linear",
+            className="playhead-handle"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDragging(true);
             }}
           />
         </div>
+      </div>
 
-        {/* Live indicator — outside track, anchored right */}
-        <div
-          className={`dock-live${activeSnapshotTs !== null ? " inactive" : ""}`}
+      <div className="dock-right">
+        <button
+          className={`btn-live${activeSnapshotTs === null ? " active" : ""}`}
           onClick={jumpToLive}
-          title="Return to Live"
         >
-          <span className="dock-live-dot" />
-          <span className="dock-live-text">LIVE</span>
-        </div>
+          <span className="live-dot" /> Live
+        </button>
       </div>
     </div>
   );

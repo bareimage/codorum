@@ -9,7 +9,6 @@ import { CommandPalette } from "./components/CommandPalette";
 import { Toasts } from "./components/Toasts";
 import { EjectBar } from "./components/EjectBar";
 import { DropZone } from "./components/DropZone";
-import { DockTimeline } from "./components/DockTimeline";
 import { useAppStore } from "./stores/app-store";
 import { useToastStore } from "./stores/toast-store";
 import { useCommandStore } from "./stores/command-store";
@@ -19,10 +18,6 @@ export default function App() {
   const { addFiles, addGroup } = useAppStore();
   const theme = useAppStore((s) => s.theme);
   const isFullscreen = useAppStore((s) => s.isFullscreen);
-  const activeFileId = useAppStore((s) => s.activeFileId);
-  const files = useAppStore((s) => s.files);
-  const activeFile = activeFileId ? files.find((f) => f.id === activeFileId) : undefined;
-  const showDock = !!(activeFile && activeFile.history && activeFile.history.length > 0);
   const addToast = useToastStore((s) => s.add);
   const [dropHovering, setDropHovering] = useState(false);
 
@@ -219,7 +214,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen select-none" style={{ padding: 16, gap: 16, position: 'relative', overflow: 'hidden' }}>
+    <div className="flex flex-col h-full select-none" style={{ padding: 16, gap: 16, position: 'relative', overflow: 'hidden' }}>
       <div className="bg-solid" />
       <div className="bg-grad" />
       <div className="ui">
@@ -228,7 +223,6 @@ export default function App() {
           {!isFullscreen && <Sidebar />}
           <ContentPane />
         </div>
-        {showDock && activeFile && <DockTimeline file={activeFile} />}
       </div>
       <CommandPalette />
       <EjectBar />

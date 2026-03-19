@@ -17,5 +17,10 @@ export default defineConfig(async () => ({
     hmr: host
       ? { protocol: "ws", host, port: 1421 }
       : undefined,
+    watch: {
+      // Ignore non-source files so that saving user content (e.g. chat.md)
+      // inside the project directory doesn't trigger a Vite page reload.
+      ignored: ["**/src-tauri/**", "**/*.md", "**/*.txt"],
+    },
   },
 }));

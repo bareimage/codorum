@@ -3,7 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { ChevronRight } from "lucide-react";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
-import { TiptapEditor } from "./TiptapEditor";
+import { MarkdownEditor } from "./MarkdownEditor";
+import { MarkdownDiffView } from "./MarkdownDiffView";
 import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ExtDot } from "./ExtDot";
@@ -24,11 +25,7 @@ function DiffView({ snap }: { snap: FileSnapshot }) {
             else if (line.startsWith("-") && !line.startsWith("---")) cls = "diff-del";
             else if (line.startsWith("@@")) cls = "diff-hunk";
           }
-          return (
-            <div key={i} className={cls}>
-              {line}
-            </div>
-          );
+          return <div key={i} className={cls}>{line}</div>;
         })}
       </code>
     </pre>
@@ -79,6 +76,7 @@ export function FileCard({
   const isSelected = selectedIds.has(file.id);
   const setCardHeight = useAppStore((s) => s.setCardHeight);
   const setCardDirty = useAppStore((s) => s.setCardDirty);
+  const patchFileMeta = useAppStore((s) => s.patchFileMeta);
   const [content, setContent] = useState(file.content);
   const [trackedContent, setTrackedContent] = useState(file.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -101,14 +99,23 @@ export function FileCard({
     if (!isActive || !dirty) return;
     const handler = (e: Event) => {
       e.preventDefault();
-      invoke("save_file", { id: file.id, content }).then(() => {
+      invoke<WatchedFile>("save_file", { id: file.id, content }).then((saved) => {
+        const latest = saved.history[saved.history.length - 1];
+        patchFileMeta(file.id, {
+          content,
+          history: saved.history,
+          linesAdded: (latest as any)?.linesAdded ?? latest?.lines_added ?? 0,
+          linesRemoved: (latest as any)?.linesRemoved ?? latest?.lines_removed ?? 0,
+          modified: saved.modified,
+        });
+        setTrackedContent(content);
         setCardDirty(file.id, false);
         addToast("Saved", file.name, "cyan");
       });
     };
     window.addEventListener("codorum:save", handler);
     return () => window.removeEventListener("codorum:save", handler);
-  }, [isActive, dirty, file.id, file.name, content, addToast]);
+  }, [isActive, dirty, file.id, file.name, content, addToast, patchFileMeta]);
 
   const handleMarkdownChange = useCallback((md: string) => {
     setContent(md);
@@ -263,13 +270,20 @@ export function FileCard({
         {!isCollapsed && (
           <ErrorBoundary>
             {mode === "markdown" && typeof displayContent === "string" && (
-              <TiptapEditor
-                key={`tiptap-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
-                content={displayContent}
-                onChange={handleMarkdownChange}
-                fileId={file.id}
-                editable={!isReadOnly}
-              />
+              historicalSnap ? (
+                <MarkdownDiffView
+                  key={`diff-${file.id}-${historicalSnap.timestamp}`}
+                  snap={historicalSnap}
+                />
+              ) : (
+                <MarkdownEditor
+                  key={`md-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
+                  content={displayContent}
+                  onChange={handleMarkdownChange}
+                  fileId={file.id}
+                  editable={!isReadOnly}
+                />
+              )
             )}
             {mode === "code" && typeof displayContent === "string" && (
               <CodeEditor

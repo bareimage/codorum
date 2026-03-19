@@ -84,7 +84,20 @@ function DrawerSection({
       openFile(fileId);
     }
     setTimeout(() => {
-      document.getElementById(fileId)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const el = document.getElementById(fileId);
+      const container = el?.closest?.(".content-scroll") as HTMLElement | null;
+      if (el && container) {
+        const cRect = container.getBoundingClientRect();
+        const eRect = el.getBoundingClientRect();
+        const relTop = eRect.top - cRect.top + container.scrollTop;
+        const relBottom = relTop + eRect.height;
+        const visBottom = container.scrollTop + cRect.height;
+        if (relTop < container.scrollTop) {
+          container.scrollTo({ top: relTop - 16, behavior: "smooth" });
+        } else if (relBottom > visBottom) {
+          container.scrollTo({ top: relBottom - cRect.height + 16, behavior: "smooth" });
+        }
+      }
     }, 50);
   };
 
@@ -182,40 +195,38 @@ function DrawerSection({
                 if (e.button === 0) onFileDragStart(file.id, file.name, e.clientY);
               }}
               onClick={(e) => handleFileClick(file.id, e)}
-              style={{ flexDirection: "column", alignItems: "flex-start", gap: 2, paddingBottom: file.history?.length ? 8 : undefined }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%" }}>
-                <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
-                <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
-                  {file.name}
-                  <span className="ext">.{file.extension}</span>
-                </span>
-                {(file.linesAdded || file.linesRemoved) ? (
-                  <span className="diff">
-                    {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
-                    {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
+              <span className="dot" style={{ background: ExtDot.getColor(file.extension) }} />
+              <div className="fi-main">
+                <div className="fi-top">
+                  <span className="fl" style={file.deleted ? { textDecoration: "line-through", color: "var(--deleted)" } : undefined}>
+                    {file.name}
+                    <span className="ext">.{file.extension}</span>
                   </span>
-                ) : null}
-                {file.deleted && <span className="del-badge">deleted</span>}
-              </div>
-              <div style={{ width: "100%", marginLeft: 2, boxSizing: "border-box" }}>
+                  {(file.linesAdded || file.linesRemoved) ? (
+                    <span className="diff">
+                      {(file.linesAdded ?? 0) > 0 && <span className="d-add">+{file.linesAdded}</span>}
+                      {(file.linesRemoved ?? 0) > 0 && <span className="d-del">{"\u2212"}{file.linesRemoved}</span>}
+                    </span>
+                  ) : null}
+                  {file.deleted && <span className="del-badge">deleted</span>}
+                </div>
                 <MicroTimeline history={file.history} />
+                {excerpt && (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--tx3)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      width: "100%",
+                      lineHeight: 1.4,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: excerpt }}
+                  />
+                )}
               </div>
-              {excerpt && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "var(--tx3)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    width: "100%",
-                    paddingLeft: 22,
-                    lineHeight: 1.4,
-                  }}
-                  dangerouslySetInnerHTML={{ __html: excerpt }}
-                />
-              )}
             </button>
           );
         })}

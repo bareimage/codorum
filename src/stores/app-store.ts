@@ -66,6 +66,7 @@ interface AppState {
   setFiles: (files: WatchedFile[]) => void;
   addFiles: (files: WatchedFile[]) => void;
   updateFile: (id: string, updates: Partial<WatchedFile>) => void;
+  patchFileMeta: (id: string, updates: Partial<WatchedFile>) => void;
   removeFile: (id: string) => void;
   removeFiles: (ids: string[]) => void;
   openFile: (id: string) => void;
@@ -191,6 +192,16 @@ export const useAppStore = create<AppState>()(
           return needsSync
             ? { files, savedFilePaths: toSavedPaths(files) }
             : { files };
+        }),
+
+      // Like updateFile but does NOT bump _rev — used for internal saves
+      // so editors (keyed on editorRev) stay mounted.
+      patchFileMeta: (id, updates) =>
+        set((s) => {
+          const files = s.files.map((f) =>
+            f.id === id ? { ...f, ...updates } : f,
+          );
+          return { files };
         }),
 
       removeFile: (id) =>
