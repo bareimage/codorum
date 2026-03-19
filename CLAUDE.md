@@ -18,22 +18,28 @@ No test suite exists yet — verify changes manually via `npm run dev`.
 Codorum is a **Tauri v2 desktop app** (Rust backend + React 19 frontend) that watches text/markdown files for changes. Think "security camera for your codebase."
 
 ### Backend (Rust) — `src-tauri/src/`
-- **lib.rs**: Tauri commands (`save_file`, `drop_paths`, `add_files`, `remove_files`, `refresh_file`, `toggle_pin`, `restore_files`). Manages a mutex-protected `Vec<WatchedFile>` as the file registry.
-- **watcher.rs**: `FileWatcherManager` wraps the `notify` crate, debounces events (250ms), and handles macOS FSEvents quirks (spurious rename events). Emits Tauri events: `file-changed`, `file-renamed`, `file-removed`.
+- **lib.rs**: Module declarations, `AppState` struct, `run()` entry point with watcher setup (~60 lines).
+- **models.rs**: All serializable data structs (`WatchedFile`, `FileSnapshot`, `DropBatchResult`, etc.).
+- **registry.rs**: `FileRegistry` — `RwLock<HashMap>` keyed by path with O(1) lookup, suppression set for save-then-watch race elimination. All state operations.
+- **commands.rs**: 12 thin `#[tauri::command]` wrappers delegating to the registry.
+- **snapshot.rs**: `create_snapshot()`, `initial_snapshot()`, `push_snapshot()` — deduplicated diff logic. `FileSnapshot` stores only patch (no full content).
+- **error.rs**: `CodorumError` enum (`FileNotFound`, `AlreadyExists`, `Io`, `Lock`) — no panics on lock failure.
+- **watcher.rs**: `FileWatcherManager` wraps the `notify` crate, debounces events (250ms), handles macOS FSEvents quirks. Unchanged.
 
 ### Frontend (React/TypeScript) — `src/`
 - **State**: Zustand with persist middleware. Three stores:
-  - `app-store.ts` — files, groups, selection, theme, layout (persisted to localStorage as `codorum-state`)
+  - `app-store.ts` — files, groups, selection, theme, layout, `fileHistory` (persisted to localStorage as `codorum-state`). `editorContentMap` (non-reactive Map) tracks current editor content. `saveActiveFile()` handles Cmd+S saves.
   - `command-store.ts` — palette open/close
   - `toast-store.ts` — notification queue
 - **Editors**: Tiptap (markdown/mdx), CodeMirror (190+ languages), plain textarea (fallback). Selection logic in `FileCard.tsx` via `detectMode(extension)`.
-- **IPC pattern**: `invoke()` for request/response commands, `listen()` for backend→frontend event streams. Cross-component signals use `window.dispatchEvent(new CustomEvent("codorum:save"))` etc.
+- **IPC pattern**: `invoke()` for request/response commands, `listen()` for backend→frontend event streams. Cmd+S calls `saveActiveFile()` directly (no DOM events).
 
 ### Key data flow
 1. Files enter via drag-drop → `drop_paths` command → backend reads content, starts watcher
-2. External changes → watcher thread → debounce → Tauri event → `updateFile()` in store → React re-render
-3. User edits → local `content` state in FileCard → Cmd+S → `save_file` command → disk write
+2. External changes → watcher thread → debounce → suppression check → Tauri event → `updateFile()` in store → React re-render
+3. User edits → `editorContentMap.set()` + dirty flag → Cmd+S → `saveActiveFile()` → `save_file` command → suppress path → disk write → snapshot
 4. `updateFile()` bumps `file._rev` which is part of editor component keys, causing editor remount on external changes
+5. History persists across restarts via `fileHistory` in Zustand (keyed by file path), merged back on restore
 
 ## Critical CSS Rule
 

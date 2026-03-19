@@ -35,6 +35,14 @@ export default function App() {
       (restored) => {
         if (restored.length > 0) {
           setFiles(restored);
+          // Merge persisted history back into restored files
+          const { fileHistory, patchFileMeta } = useAppStore.getState();
+          for (const file of restored) {
+            const persisted = fileHistory[file.path];
+            if (persisted && persisted.length > 0) {
+              patchFileMeta(file.id, { history: persisted });
+            }
+          }
           addToast(`${restored.length} file(s)`, "restored", "cyan");
         }
       },

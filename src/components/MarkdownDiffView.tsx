@@ -5,7 +5,7 @@ import type { FileSnapshot } from "../types/files";
 
 export function MarkdownDiffView({ snap }: { snap: FileSnapshot }) {
   const blocks = useMemo(() => {
-    const lines = buildAnnotatedLines(snap.content, snap.patch ?? null);
+    const lines = buildAnnotatedLines(null, snap.patch ?? null);
     const groups: { type: "ctx" | "add" | "del"; text: string }[] = [];
     for (const line of lines) {
       const last = groups[groups.length - 1];
