@@ -206,7 +206,7 @@ fn select_file(id: String, state: State<AppState>) -> Option<WatchedFile> {
 }
 
 #[tauri::command]
-fn save_file(id: String, content: String, state: State<AppState>) -> Result<(), String> {
+fn save_file(id: String, content: String, state: State<AppState>) -> Result<WatchedFile, String> {
     let mut files = state.files.lock().expect("mutex poisoned");
     let file = files.iter_mut().find(|f| f.id == id).ok_or("File not found")?;
     std::fs::write(&file.path, &content).map_err(|e| e.to_string())?;
@@ -248,7 +248,7 @@ fn save_file(id: String, content: String, state: State<AppState>) -> Result<(), 
             }
         }
     }
-    Ok(())
+    Ok(file.clone())
 }
 
 #[tauri::command]

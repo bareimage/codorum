@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="n01z">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codorum — Tahoe Timeline UI</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & THEMES
+   ═══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#000;--bg2:rgba(30,30,35,.65);--card:rgba(45,45,50,.65);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.6);
+  --tx3:rgba(255,255,255,.4);--ac:#0A84FF;--ac2:#5E5CE6;--ac3:#30D158;
+  --warn:#FF9F0A;--danger:#FF453A;--brd:rgba(255,255,255,.1);
+  --input-bg:rgba(255,255,255,.08);--cmd-bg:rgba(30,30,35,.85);
+  --diff-add-bg: rgba(48, 209, 88, 0.15); --diff-add-tx: #30D158;
+  --diff-del-bg: rgba(255, 69, 58, 0.15); --diff-del-tx: #FF453A;
+  --bg-gradient:radial-gradient(circle at 20% 0%,rgba(94,92,230,.5) 0%,transparent 50%),radial-gradient(circle at 80% 100%,rgba(10,132,255,.5) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,69,58,.3) 0%,transparent 50%);
+  --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="paper"]{
+  --bg:#F5F5F7;--bg2:rgba(255,255,255,.65);--card:rgba(255,255,255,.8);
+  --hover:rgba(0,0,0,.05);--tx:#1D1D1F;--tx2:rgba(0,0,0,.6);--tx3:rgba(0,0,0,.4);
+  --ac:#007AFF;--ac2:#5856D6;--ac3:#34C759;--warn:#FF9500;--danger:#FF3B30;--brd:rgba(0,0,0,.08);
+  --input-bg:rgba(0,0,0,.06);--cmd-bg:rgba(255,255,255,.85);
+  --diff-add-bg: rgba(52, 199, 89, 0.15); --diff-add-tx: #1E823C;
+  --diff-del-bg: rgba(255, 59, 48, 0.15); --diff-del-tx: #D11A10;
+  --bg-gradient:radial-gradient(circle at 0% 0%,rgba(88,86,214,.3) 0%,transparent 50%),radial-gradient(circle at 100% 100%,rgba(0,122,255,.3) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(255,59,48,.2) 0%,transparent 50%);
+}
+[data-theme="phosphor"]{
+  --bg:#00120a;--bg2:rgba(10,40,25,.5);--card:rgba(20,50,35,.5);
+  --hover:rgba(255,255,255,.15);--tx:#fff;--tx2:rgba(255,255,255,.7);--tx3:rgba(255,255,255,.5);
+  --ac:#34C759;--ac2:#32ADE6;--ac3:#A2845E;--warn:#FFD60A;--danger:#FF453A;--brd:rgba(255,255,255,.15);
+  --input-bg:rgba(255,255,255,.12);--cmd-bg:rgba(10,40,25,.85);
+  --diff-add-bg: rgba(162, 132, 94, 0.2); --diff-add-tx: #D5B487;
+  --diff-del-bg: rgba(255, 69, 58, 0.2); --diff-del-tx: #FF665C;
+  --bg-gradient:radial-gradient(circle at 10% 20%,rgba(0,176,155,.5) 0%,transparent 60%),radial-gradient(circle at 90% 80%,rgba(150,201,61,.5) 0%,transparent 60%);
+}
+[data-theme="ember"]{
+  --bg:#1c0a00;--bg2:rgba(45,20,10,.6);--card:rgba(60,25,15,.6);
+  --hover:rgba(255,255,255,.1);--tx:#fff;--tx2:rgba(255,255,255,.7);--tx3:rgba(255,255,255,.5);
+  --ac:#FF9500;--ac2:#FF2D55;--ac3:#FFCC00;--warn:#FFD60A;--danger:#FF3B30;--brd:rgba(255,255,255,.1);
+  --input-bg:rgba(255,255,255,.1);--cmd-bg:rgba(45,20,10,.85);
+  --diff-add-bg: rgba(255, 204, 0, 0.15); --diff-add-tx: #FFDE4D;
+  --diff-del-bg: rgba(255, 59, 48, 0.2); --diff-del-tx: #FF665C;
+  --bg-gradient:radial-gradient(circle at 80% 20%,rgba(255,78,80,.5) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(249,212,35,.5) 0%,transparent 60%);
+}
+
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:var(--font-sans);background:var(--bg);color:var(--tx);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
+  transition:background 200ms ease,color 200ms ease;
+  display:flex;flex-direction:column;padding:16px;gap:16px;position:relative;
+}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+
+@keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.bg-solid{position:fixed;inset:0;z-index:0;background:var(--bg)}
+.bg-grad{position:fixed;inset:0;z-index:0;opacity:1;filter:blur(80px) saturate(1.5);background-image:var(--bg-gradient);background-size:200% 200%;animation:gradientBG 15s ease infinite;transition:background-image .6s ease}
+.ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%;gap:16px;width:100%}
+
+/* Toolbar */
+.toolbar-w{display:flex;justify-content:center;width:100%;z-index:50}
+.toolbar{height:48px;display:flex;align-items:center;padding:0 20px;background:var(--bg2);backdrop-filter:saturate(180%) blur(40px);-webkit-backdrop-filter:saturate(180%) blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.1);min-width:400px}
+.brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;letter-spacing:-.02em}
+.sep{width:1px;height:16px;background:var(--brd);margin:0 16px}
+.toolbar-r{margin-left:auto;display:flex;gap:8px;align-items:center;}
+button{cursor:pointer;font-family:inherit;background:transparent;border:none}
+.btn-ghost{height:32px;padding:0 16px;border:1px solid var(--brd);border-radius:9999px;font-size:13px;font-weight:500;color:var(--tx2);transition:all .2s}
+.btn-ghost:hover{background:var(--hover);color:var(--tx)}
+
+/* Main */
+.main{display:flex;flex:1;overflow:hidden;gap:16px;}
+
+/* Sidebar */
+.sidebar{width:280px;flex-shrink:0;background:var(--bg2);backdrop-filter:saturate(180%) blur(40px);-webkit-backdrop-filter:saturate(180%) blur(40px);display:flex;flex-direction:column;border:1px solid var(--brd);border-radius:16px;overflow:hidden}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 12px;font-size:13px;font-weight:600;color:var(--tx2);letter-spacing:-.02em}
+.tree{flex:1;overflow-y:auto;padding:8px 0 16px}
+.fi{display:flex;flex-direction:column;padding:8px 12px 6px;border-radius:10px;text-align:left;color:var(--tx2);transition:all .15s ease;margin:0 12px 2px;cursor:pointer;}
+.fi:hover{background:var(--hover)}
+.fi.active{background:var(--ac);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.fi-top{display:flex;align-items:center;gap:10px;width:100%}
+.fi .dot{width:10px;height:10px;border-radius:9999px;flex-shrink:0}
+.fi .fl{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}
+.fi .fl .ext{font-weight:400;color:var(--tx3)}
+.fi.active .fl .ext{color:rgba(255,255,255,.7)}
+.fi.active .dot{background:#fff!important;box-shadow:0 0 8px rgba(255,255,255,0.8)}
+
+/* MICRO TIMELINE (Sidebar & Cards) */
+.micro-tl{display:flex;align-items:center;height:6px;margin-top:6px;padding-left:20px;position:relative;width:100%;gap:2px;opacity:0.6;transition:opacity .2s}
+.fi:hover .micro-tl, .fi.active .micro-tl { opacity: 1; }
+.micro-node{width:5px;height:5px;border-radius:2.5px;z-index:2;position:relative}
+.micro-node.add{background:var(--ac3)}
+.micro-node.del{background:var(--danger)}
+.micro-node.mix{background:var(--warn)}
+.micro-node.edit{background:var(--ac)}
+.fi.active .micro-node{box-shadow:0 0 1px rgba(0,0,0,0.5)}
+
+/* Content */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);backdrop-filter:saturate(180%) blur(40px);-webkit-backdrop-filter:saturate(180%) blur(40px);border:1px solid var(--brd);border-radius:16px}
+.c-head{display:flex;align-items:baseline;gap:12px;padding:24px 32px 16px; border-bottom:1px solid var(--brd); margin-bottom:16px}
+.c-head h1{font-size:24px;font-weight:600;letter-spacing:-.02em}
+
+.content-scroll{flex:1;overflow-y:auto;}
+
+/* File Card */
+.fc{background:var(--card);border-radius:12px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.05);}
+.fc.active{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac), 0 8px 24px rgba(0,0,0,0.1)}
+.fc-h{display:flex;align-items:center;padding:16px 24px;cursor:pointer;transition:background .1s;}
+.fc-h:hover{background:rgba(255,255,255,.03)}
+.fc-h-main{display:flex;align-items:center;gap:12px; flex:1;}
+.fc-h .cdot{width:12px;height:12px;border-radius:9999px;flex-shrink:0}
+.fc-h .ftitle{font-size:16px;font-weight:600;letter-spacing:-.02em;}
+.fc-h .ftitle .ext{color:var(--tx3);font-weight:500}
+.fc-h .micro-tl{width:auto; margin-top:0; padding-left:0; margin-left:16px;}
+.fc-body{padding:0 24px 20px 24px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--tx2);overflow-x:auto; background:var(--card); }
+
+/* Inline Diff styling */
+pre.diff-view { margin:0; padding:16px; border-radius:10px; background:var(--input-bg); border:1px solid var(--brd); }
+.diff-line { display:flex; gap:16px; padding:2px 8px; border-radius:6px; margin-bottom:2px; }
+.diff-line:hover { background: rgba(255,255,255,0.05); }
+.diff-line .ln { color:var(--tx3); min-width:30px; text-align:right; user-select:none; }
+.diff-line.add { background: var(--diff-add-bg); color: var(--diff-add-tx); }
+.diff-line.del { background: var(--diff-del-bg); color: var(--diff-del-tx); text-decoration: line-through; opacity:0.8; }
+.diff-line.add .ln, .diff-line.del .ln { color: inherit; opacity:0.7; }
+
+/* ═══════════════════════════════════════════════════════════
+   INTEGRATED PROFESSIONAL DOCK (XCODE/LOGIC PRO STYLE)
+   ═══════════════════════════════════════════════════════════ */
+.dock-w {
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.15); /* Subtly darker base for the track area */
+  border-top: 1px solid var(--brd);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 48px;
+  padding: 0 24px;
+  gap: 24px;
+  z-index: 100;
+}
+
+.dock-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 140px;
+}
+.dock-title { font-size: 13px; font-weight: 600; color: var(--tx); display: flex; align-items: center; gap: 8px; letter-spacing: -0.01em;}
+.dock-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ac); }
+.dock-meta { font-size: 12px; color: var(--tx3); font-weight: 500; font-family: var(--font-mono); }
+
+/* Ultra-clean Scrubber Track */
+.dock-track-container {
+  flex: 1;
+  position: relative;
+  height: 32px; /* Touch area */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Razor-thin axis */
+.dock-axis {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  transform: translateY(-50%);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--brd);
+  transition: background 0.2s;
+}
+
+.dock-track-container:hover .dock-axis {
+  background: rgba(255,255,255,0.2);
+}
+
+.dock-nodes {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 0;
+}
+
+/* Minimalist Nodes */
+@keyframes nodePop { from { transform: translate(-50%, -50%) scale(0); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+.dn {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 10;
+  padding: 8px;
+}
+.dn-circle {
+  width: 4px;
+  height: 8px; /* Slight pill shape for nodes */
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.dn:hover .dn-circle, .dn.active .dn-circle {
+  transform: scaleY(1.5) scaleX(1.2);
+  box-shadow: 0 0 8px currentColor;
+}
+.dn-circle.add { background: var(--ac3); color: var(--ac3); }
+.dn-circle.del { background: var(--danger); color: var(--danger); }
+.dn-circle.mix { background: var(--warn); color: var(--warn); }
+.dn-circle.edit { background: var(--ac); color: var(--ac); }
+
+/* Professional Playhead */
+.playhead {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 25;
+  pointer-events: none;
+  transition: left 0.1s linear; /* Snappier, less bouncy */
+}
+
+.playhead-handle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 24px;
+  background: #fff;
+  border-radius: 2px;
+  pointer-events: auto;
+  cursor: grab;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 0.1s, height 0.1s;
+}
+
+.playhead-handle:hover {
+  height: 28px;
+}
+
+.playhead-handle:active {
+  cursor: grabbing;
+  height: 20px;
+  background: var(--ac);
+}
+
+/* Crisp Tooltip */
+.playhead-tip {
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  transform: translateX(-50%) translateY(2px);
+  background: var(--cmd-bg);
+  border: 1px solid var(--brd);
+  color: var(--tx);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.15s;
+}
+
+.playhead-tip.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.playhead-tip::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 4px solid transparent; border-top-color: var(--brd);
+}
+
+/* Sleek LIVE Toggle */
+.dock-right {
+  display: flex;
+  align-items: center;
+}
+.btn-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--brd);
+  color: var(--tx2);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.btn-live:hover {
+  background: var(--hover);
+  color: var(--tx);
+}
+.btn-live.active {
+  background: rgba(255, 69, 58, 0.15);
+  border-color: rgba(255, 69, 58, 0.3);
+  color: var(--danger);
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5;
+}
+.btn-live.active .live-dot {
+  opacity: 1;
+  box-shadow: 0 0 6px currentColor;
+}
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+.approach-label{position:fixed;top:12px;right:16px;z-index:100;font-size:11px;font-weight:600;padding:6px 14px;border-radius:6px;background:var(--ac);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+
+<div class="approach-label">Integrated Professional Dock</div>
+<div class="bg-solid"></div>
+<div class="bg-grad"></div>
+
+<div class="ui">
+
+  <div class="toolbar-w">
+    <div class="toolbar">
+      <div class="brand">Codorum</div>
+      <div class="sep"></div>
+      <div class="toolbar-r">
+        <button class="btn-ghost" id="themeBtn">n01z</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-head"><span>Workspace</span></div>
+      <div class="tree" id="sidebarTree">
+        <!-- JS -->
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="c-head">
+        <h1 id="activeFileTitle">App.tsx</h1>
+      </div>
+      <div class="content-scroll" id="cardContainer">
+         <!-- JS -->
+      </div>
+
+      <!-- INTEGRATED PROFESSIONAL DOCK -->
+      <div class="dock-w" id="dock">
+
+        <div class="dock-left">
+          <div class="dock-title">
+            <span class="dot" style="background:#0A84FF" id="dockCol"></span>
+            <span id="dockTitle">App.tsx</span>
+          </div>
+          <span class="dock-meta" id="dockMeta"></span>
+        </div>
+
+        <div class="dock-track-container" id="track">
+          <div class="dock-axis"></div>
+
+          <div class="dock-nodes" id="dockNodes">
+            <!-- Injected via JS -->
+          </div>
+
+          <!-- Playhead & Integrated Tooltip -->
+          <div class="playhead" id="playhead" style="left:100%">
+            <div class="playhead-tip" id="playheadTip">Viewing 2:22 PM Variant</div>
+            <div class="playhead-handle" id="handle"></div>
+          </div>
+        </div>
+
+        <div class="dock-right">
+          <button class="btn-live active" id="btnLive">
+            <span class="live-dot"></span> Live
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div> <!-- /main -->
+
+</div>
+
+<script>
+// Theme cycling
+const themes = ["n01z", "paper", "phosphor", "ember"];
+let ti = 0;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  ti = (ti + 1) % themes.length;
+  document.documentElement.setAttribute("data-theme", themes[ti]);
+  document.getElementById("themeBtn").textContent = themes[ti];
+});
+
+// App data
+const files = [
+  { name:'App', ext:'.tsx', color:'#0A84FF',
+    liveCode: 'import { useEffect } from "react";\n\nfunction App() {\n  return (\n    <div className="app">\n      <Toolbar />\n      <Sidebar />\n      <ContentPane />\n      <DockTimeline />\n    </div>\n  );\n}\n\nexport default App;\n',
+    nodes: [
+      { pct: 10, type: 'add', time: '2:15 PM', tip: '+ imports', diffHTML: '<div class="diff-line"><span class="ln">1</span><span class="tx">import { useState } from "react";</span></div><div class="diff-line add"><span class="ln">2</span><span class="tx">import { useEffect } from "react";</span></div>' },
+      { pct: 30, type: 'mix', time: '2:22 PM', tip: '+ Toolbar, - OldHeader', diffHTML: '<div class="diff-line"><span class="ln">4</span><span class="tx">    <div className="app"></span></div><div class="diff-line del"><span class="ln">5</span><span class="tx">      <OldHeader /></span></div><div class="diff-line add"><span class="ln">6</span><span class="tx">      <Toolbar /></span></div><div class="diff-line"><span class="ln">7</span><span class="tx">      <Sidebar /></span></div>' },
+      { pct: 60, type: 'del', time: '2:31 PM', tip: '- ConsoleLog', diffHTML: '<div class="diff-line"><span class="ln">8</span><span class="tx">      <ContentPane /></span></div><div class="diff-line del"><span class="ln">9</span><span class="tx">      {console.log("rendered")}</span></div><div class="diff-line"><span class="ln">10</span><span class="tx">    </div></span></div>' },
+      { pct: 90, type: 'add', time: '2:50 PM', tip: '+ DockTimeline', diffHTML: '<div class="diff-line"><span class="ln">8</span><span class="tx">      <ContentPane /></span></div><div class="diff-line add"><span class="ln">9</span><span class="tx">      <DockTimeline /></span></div><div class="diff-line"><span class="ln">10</span><span class="tx">    </div></span></div>' },
+    ]
+  },
+  { name:'watcher', ext:'.rs', color:'#FF9500',
+    liveCode: 'use notify::{Watcher, RecursiveMode, Result};\n\npub fn watch() -> Result<()> {\n    println!("Watching for changes...");\n    Ok(())\n}\n',
+    nodes: [
+      { pct: 30, type: 'add', time: '1:00 PM', tip: '+ watcher init', diffHTML: '<div class="diff-line add"><span class="ln">1</span><span class="tx">use notify::{Watcher, RecursiveMode, Result};</span></div>' },
+      { pct: 80, type: 'edit', time: '1:45 PM', tip: 'cleanup', diffHTML: '<div class="diff-line del"><span class="ln">3</span><span class="tx">    println!("Starting");</span></div><div class="diff-line add"><span class="ln">4</span><span class="tx">    println!("Watching for changes...");</span></div>' },
+    ]
+  }
+];
+
+let activeIdx = 0;
+let isLive = true;
+
+const tree = document.getElementById('sidebarTree');
+const cards = document.getElementById('cardContainer');
+const dockTitle = document.getElementById("dockTitle");
+const dockCol = document.getElementById("dockCol");
+const dockNodes = document.getElementById("dockNodes");
+const activeFileTitle = document.getElementById("activeFileTitle");
+const dockMeta = document.getElementById("dockMeta");
+const playhead = document.getElementById("playhead");
+const playheadTip = document.getElementById("playheadTip");
+const dock = document.getElementById("dock");
+const track = document.getElementById('track');
+const handle = document.getElementById('handle');
+const btnLive = document.getElementById("btnLive");
+
+function renderSidebarAndCards() {
+  tree.innerHTML = '';
+  cards.innerHTML = '';
+
+  files.forEach((f, i) => {
+    // Sidebar item
+    const el = document.createElement('div');
+    el.className = 'fi' + (i === activeIdx ? ' active' : '');
+    el.onclick = () => activate(i);
+
+    let microHTML = '<div class="micro-tl">';
+    f.nodes.forEach(n => {
+      microHTML += `<div class="micro-node ${n.type}"></div>`;
+    });
+    microHTML += '</div>';
+
+    el.innerHTML = `
+      <div class="fi-top">
+        <span class="dot" style="background:${f.color}"></span>
+        <span class="fl">${f.name}<span class="ext">${f.ext}</span></span>
+      </div>
+      ${microHTML}
+    `;
+    tree.appendChild(el);
+
+    // Card item
+    const cel = document.createElement('div');
+    cel.className = 'fc' + (i === activeIdx ? ' active' : '');
+
+    let cmicroHTML = '<div class="micro-tl" style="gap:2px">';
+    f.nodes.forEach(n => {
+      cmicroHTML += `<div class="micro-node ${n.type}" style="width:4px; height:4px"></div>`;
+    });
+    cmicroHTML += '</div>';
+
+    cel.innerHTML = `
+      <div class="fc-h" onclick="activate(${i})">
+         <div class="fc-h-main">
+            <span class="cdot" style="background:${f.color}"></span>
+            <span class="ftitle">${f.name}<span class="ext">${f.ext}</span></span>
+            ${cmicroHTML}
+         </div>
+         <span class="ts" style="color:var(--tx3); font-size:12px;">${f.nodes.length ? f.nodes[f.nodes.length-1].time : ''}</span>
+      </div>
+      <div class="fc-body" id="fc-body-${i}">
+<pre style="margin:0; opacity:0.8">${f.liveCode}</pre>
+      </div>
+    `;
+    cards.appendChild(cel);
+  });
+}
+
+function renderDockNodes() {
+  const f = files[activeIdx];
+  if(!f) return;
+
+  dockTitle.textContent = f.name + f.ext;
+  activeFileTitle.textContent = f.name + f.ext;
+  dockCol.style.background = f.color;
+  dockMeta.textContent = f.nodes.length + " Changes";
+
+  // Subtle pulse on content switch
+  dock.style.opacity = "0.7";
+  setTimeout(() => dock.style.opacity = "1", 150);
+
+  dockNodes.innerHTML = '';
+  f.nodes.forEach((n, i) => {
+    const el = document.createElement('div');
+    el.className = 'dn';
+    el.style.left = n.pct + '%';
+    el.style.animation = `nodePop .3s cubic-bezier(0.34, 1.56, 0.64, 1) ${i * 0.05}s backwards`;
+
+    el.innerHTML = `<div class="dn-circle ${n.type}"></div>`;
+
+    // Hover effects directly trigger the playhead tooltip logic
+    el.addEventListener('mouseenter', () => {
+       if(!isDragging) {
+         playheadTip.textContent = `${n.time} · ${n.tip}`;
+         playheadTip.classList.add('visible');
+         // Position playhead tip temporarily over node
+         playheadTip.style.left = `calc(${n.pct}% - ${playhead.style.left})`;
+       }
+    });
+    el.addEventListener('mouseleave', () => {
+       if(!isDragging && isLive) {
+         playheadTip.classList.remove('visible');
+       }
+       playheadTip.style.left = '0'; // reset
+    });
+
+    el.addEventListener('click', (e) => {
+       e.stopPropagation();
+       snapTo(n);
+    });
+
+    dockNodes.appendChild(el);
+  });
+
+  setLive();
+}
+
+function setLive() {
+   isLive = true;
+   playhead.style.transition = 'left 0.15s linear';
+   playhead.style.left = '100%';
+   playheadTip.classList.remove('visible');
+   btnLive.classList.add('active');
+   track.classList.remove('scrubbing');
+
+   document.querySelectorAll('.dn').forEach(el => el.classList.remove('active'));
+   updateFileBody(null);
+}
+
+function snapTo(n) {
+   isLive = false;
+   playhead.style.transition = 'left 0.15s linear';
+   playhead.style.left = n.pct + '%';
+
+   playheadTip.style.left = '0';
+   playheadTip.classList.add('visible');
+   playheadTip.textContent = `${n.time} · ${n.tip}`;
+
+   btnLive.classList.remove('active');
+
+   document.querySelectorAll('.dn').forEach(el => {
+       el.classList.toggle('active', el.style.left === n.pct + '%');
+   });
+
+   updateFileBody(n);
+}
+
+function updateFileBody(node) {
+   const f = files[activeIdx];
+   const body = document.getElementById(`fc-body-${activeIdx}`);
+   if (!body) return;
+
+   if (!node || isLive) {
+       body.innerHTML = `<pre style="margin:0; opacity:0.8">${f.liveCode}</pre>`;
+   } else {
+       body.innerHTML = `<pre class="diff-view">${node.diffHTML}</pre>`;
+   }
+}
+
+window.activate = function(idx) {
+  activeIdx = idx;
+  renderSidebarAndCards();
+  renderDockNodes();
+}
+
+// Fluid Drag Logic
+let isDragging = false;
+
+handle.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  playhead.style.transition = 'none';
+  track.classList.add('scrubbing');
+  playheadTip.style.left = '0';
+  e.preventDefault();
+});
+
+track.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.dn') || e.target.closest('.playhead-handle')) return;
+  const rect = track.getBoundingClientRect();
+  let pct = ((e.clientX - rect.left) / rect.width) * 100;
+  pct = Math.max(0, Math.min(100, pct));
+
+  const f = files[activeIdx];
+  let nearest = null;
+  let minDist = Infinity;
+  f.nodes.forEach(n => {
+    if (Math.abs(n.pct - pct) < minDist && Math.abs(n.pct - pct) < 6) {
+      minDist = Math.abs(n.pct - pct);
+      nearest = n;
+    }
+  });
+
+  if (nearest) {
+      snapTo(nearest);
+  } else {
+      isLive = false;
+      btnLive.classList.remove('active');
+      playhead.style.transition = 'left 0.1s linear';
+      playhead.style.left = pct + '%';
+
+      playheadTip.classList.add('visible');
+      playheadTip.textContent = "Scrubbing history...";
+      document.querySelectorAll('.dn').forEach(el => el.classList.remove('active'));
+  }
+});
+
+window.addEventListener('mousemove', (e) => {
+  if(!isDragging) return;
+  const rect = track.getBoundingClientRect();
+  let pct = ((e.clientX - rect.left) / rect.width) * 100;
+  pct = Math.max(0, Math.min(100, pct));
+  playhead.style.left = pct + '%';
+
+  if(pct > 98) {
+      if(!isLive) setLive();
+  } else {
+      isLive = false;
+      btnLive.classList.remove('active');
+      playheadTip.classList.add('visible');
+
+      // Look for overlaps to dynamically update tooltip text while dragging
+      const f = files[activeIdx];
+      let hoveredNode = null;
+      f.nodes.forEach(n => {
+         if (Math.abs(n.pct - pct) < 3) hoveredNode = n;
+      });
+
+      if(hoveredNode) {
+          playheadTip.textContent = `${hoveredNode.time} · ${hoveredNode.tip}`;
+      } else {
+          playheadTip.textContent = "Scrubbing history...";
+      }
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if(isDragging) {
+    isDragging = false;
+    track.classList.remove('scrubbing');
+    playhead.style.transition = 'left 0.15s linear';
+
+    const pct = parseFloat(playhead.style.left);
+    if (pct < 98) {
+        const f = files[activeIdx];
+        let nearest = f.nodes[0];
+        let minDist = Infinity;
+        f.nodes.forEach(n => {
+            if (Math.abs(n.pct - pct) < minDist) {
+                minDist = Math.abs(n.pct - pct);
+                nearest = n;
+            }
+        });
+        if (minDist < 6) snapTo(nearest);
+    }
+  }
+});
+
+btnLive.addEventListener('click', () => {
+    setLive();
+});
+
+// Init
+renderSidebarAndCards();
+renderDockNodes();
+
+</script>
+
+</body>
+</html>

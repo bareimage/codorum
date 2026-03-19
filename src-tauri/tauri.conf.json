@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "CODORUM",
-        "width": 1200,
-        "height": 800,
+        "width": 1440,
+        "height": 960,
         "minWidth": 900,
         "minHeight": 600,
         "resizable": true,

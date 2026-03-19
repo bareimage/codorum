@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef, useCallback } from "react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { sortFiles } from "../utils/sortFiles";
 import { FileCard } from "./FileCard";
+import { DockTimeline } from "./DockTimeline";
 import type { WatchedFile } from "../types/files";
 
 export function ContentPane() {
@@ -67,7 +68,6 @@ export function ContentPane() {
 
   const totalVisible = sections.reduce((sum, s) => sum + s.files.length, 0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const programmaticScroll = useRef(false);
 
   const allFileIds = useMemo(
     () => sections.flatMap((s) => s.files.map((f) => f.id)),
@@ -80,7 +80,9 @@ export function ContentPane() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (programmaticScroll.current) return;
+        // Don't switch active file while user is editing
+        const { cardDirty } = useAppStore.getState();
+        if (Object.values(cardDirty).some(Boolean)) return;
         let best: { id: string; top: number } | null = null;
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
@@ -105,70 +107,53 @@ export function ContentPane() {
 
   const handleActivate = useCallback(
     (id: string) => {
-      programmaticScroll.current = true;
       openFile(id);
-      setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        const container = scrollRef.current;
-        if (container) {
-          const onScrollEnd = () => {
-            programmaticScroll.current = false;
-            container.removeEventListener("scrollend", onScrollEnd);
-          };
-          container.addEventListener("scrollend", onScrollEnd, { once: true });
-          // Fallback for browsers without scrollend
-          setTimeout(() => {
-            programmaticScroll.current = false;
-            container.removeEventListener("scrollend", onScrollEnd);
-          }, 800);
-        } else {
-          programmaticScroll.current = false;
-        }
-      }, 10);
     },
     [openFile],
   );
 
+  const activeFile = activeFileId ? files.find((f) => f.id === activeFileId) : undefined;
+  const showDock = !!activeFile;
+
   return (
-    <div
-      ref={scrollRef}
-      className={`content ${isFullscreen ? "fullscreen" : ""}`}
-    >
+    <div className={`content ${isFullscreen ? "fullscreen" : ""}`}>
       <div className="c-head">
         <h1>Files</h1>
         <span className="sub">{totalVisible} visible</span>
       </div>
 
-      {sections.length === 0 && (
-        <div className="empty">
-          <div className="empty-text">
-            {search ? "no matches" : "drop files or folders"}
+      <div ref={scrollRef} className="content-scroll">
+        {sections.length === 0 && (
+          <div className="empty">
+            <div className="empty-text">
+              {search ? "no matches" : "drop files or folders"}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {sections.map((section) => (
-        <div key={section.key} className="sec">
-          <div className="sec-h">
-            <span className="lbl">{section.title}</span>
-            <span className="ln" />
+        {sections.map((section) => (
+          <div key={section.key} className="sec">
+            <div className="sec-h">
+              <span className="lbl">{section.title}</span>
+              <span className="ln" />
+            </div>
+
+            {section.files.map((file) => (
+              <FileCard
+                key={file.id}
+                file={file}
+                isActive={activeFileId === file.id}
+                isCollapsed={cardCollapsed[file.id] ?? false}
+                onToggleCollapse={() => toggleCardCollapse(file.id)}
+                onActivate={() => handleActivate(file.id)}
+              />
+            ))}
           </div>
+        ))}
 
-          {section.files.map((file) => (
-            <FileCard
-              key={file.id}
-              file={file}
-              isActive={activeFileId === file.id}
-              isCollapsed={cardCollapsed[file.id] ?? false}
-              onToggleCollapse={() => toggleCardCollapse(file.id)}
-              onActivate={() => handleActivate(file.id)}
-            />
-          ))}
-        </div>
-      ))}
+      </div>
 
-      <div style={{ height: 80 }} />
-      
+      {showDock && activeFile && <DockTimeline file={activeFile} />}
     </div>
   );
 }
