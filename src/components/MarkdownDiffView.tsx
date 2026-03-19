@@ -3,9 +3,9 @@ import { marked } from "marked";
 import { buildAnnotatedLines } from "../utils/diffUtils";
 import type { FileSnapshot } from "../types/files";
 
-export function MarkdownDiffView({ snap }: { snap: FileSnapshot }) {
+export function MarkdownDiffView({ snap, content }: { snap: FileSnapshot; content?: string | null }) {
   const blocks = useMemo(() => {
-    const lines = buildAnnotatedLines(null, snap.patch ?? null);
+    const lines = buildAnnotatedLines(content ?? null, snap.patch ?? null);
     const groups: { type: "ctx" | "add" | "del"; text: string }[] = [];
     for (const line of lines) {
       const last = groups[groups.length - 1];

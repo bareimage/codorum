@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { editorContentMap } from "../stores/app-store";
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, rectangularSelection } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
@@ -149,6 +150,8 @@ export function CodeEditor({ content, language, onChange, fileId, editable = tru
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const fileIdRef = useRef(fileId);
+  fileIdRef.current = fileId;
   const suppressUpdate = useRef(false);
   const loadedFile = useRef("");
   const editableComp = useRef(new Compartment());
@@ -184,7 +187,9 @@ export function CodeEditor({ content, language, onChange, fileId, editable = tru
       ]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged && !suppressUpdate.current) {
-          onChangeRef.current(update.state.doc.toString());
+          const doc = update.state.doc.toString();
+          editorContentMap.set(fileIdRef.current, doc);
+          onChangeRef.current(doc);
         }
       }),
     ];

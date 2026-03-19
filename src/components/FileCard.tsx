@@ -1,32 +1,43 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ChevronRight } from "lucide-react";
-import { useAppStore } from "../stores/app-store";
+import { useAppStore, editorContentMap } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
-import { MarkdownEditor } from "./MarkdownEditor";
+import { MarkdownEditor, type MarkdownEditorHandle } from "./MarkdownEditor";
 import { MarkdownDiffView } from "./MarkdownDiffView";
 import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ExtDot } from "./ExtDot";
 import { ResizeHandle } from "./ResizeHandle";
 import { MicroTimeline } from "./MicroTimeline";
+import { reconstructAtSnapshot } from "../utils/reconstructContent";
+import { buildAnnotatedLines } from "../utils/diffUtils";
 import type { WatchedFile, FileSnapshot } from "../types/files";
 
-function DiffView({ snap }: { snap: FileSnapshot }) {
-  const lines = (snap.patch || "").split("\n");
-  const hasPatch = !!snap.patch;
+function DiffView({ snap, content }: { snap: FileSnapshot; content?: string | null }) {
+  const lines = useMemo(() => {
+    if (content) {
+      return buildAnnotatedLines(content, snap.patch ?? null).map((a) => ({
+        text: a.text,
+        cls: a.type === "add" ? "diff-add" : a.type === "del" ? "diff-del" : "diff-ctx",
+      }));
+    }
+    // Fallback: raw patch lines
+    return (snap.patch || "").split("\n").map((line) => {
+      let cls = "diff-ctx";
+      if (line.startsWith("+") && !line.startsWith("+++")) cls = "diff-add";
+      else if (line.startsWith("-") && !line.startsWith("---")) cls = "diff-del";
+      else if (line.startsWith("@@")) cls = "diff-hunk";
+      return { text: line, cls };
+    });
+  }, [snap.timestamp, snap.patch, content]);
+
   return (
     <pre className="diff-view">
       <code>
-        {lines.map((line, i) => {
-          let cls = "diff-ctx";
-          if (hasPatch) {
-            if (line.startsWith("+") && !line.startsWith("+++")) cls = "diff-add";
-            else if (line.startsWith("-") && !line.startsWith("---")) cls = "diff-del";
-            else if (line.startsWith("@@")) cls = "diff-hunk";
-          }
-          return <div key={i} className={cls}>{line}</div>;
-        })}
+        {lines.map((line, i) => (
+          <div key={i} className={line.cls}>{line.text}</div>
+        ))}
       </code>
     </pre>
   );
@@ -79,6 +90,7 @@ export function FileCard({
   const patchFileMeta = useAppStore((s) => s.patchFileMeta);
   const [content, setContent] = useState(file.content);
   const [trackedContent, setTrackedContent] = useState(file.content);
+  const mdEditorRef = useRef<MarkdownEditorHandle>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -98,16 +110,25 @@ export function FileCard({
   useEffect(() => {
     if (!isActive) return;
     const handler = () => {
-      invoke<WatchedFile>("save_file", { id: file.id, content }).then((saved) => {
-        const latest = saved.history[saved.history.length - 1];
+      // Read directly from editor ref/map — bypasses async React state
+      let latest: string;
+      if (mode === "markdown" && mdEditorRef.current) {
+        latest = mdEditorRef.current.getMarkdown();
+      } else {
+        latest = editorContentMap.get(file.id) ?? content;
+      }
+
+      invoke<WatchedFile>("save_file", { id: file.id, content: latest }).then((saved) => {
+        const snap = saved.history[saved.history.length - 1];
         patchFileMeta(file.id, {
-          content,
+          content: latest,
           history: saved.history,
-          linesAdded: latest?.lines_added ?? 0,
-          linesRemoved: latest?.lines_removed ?? 0,
+          linesAdded: snap?.lines_added ?? 0,
+          linesRemoved: snap?.lines_removed ?? 0,
           modified: saved.modified,
         });
-        setTrackedContent(content);
+        setContent(latest);
+        setTrackedContent(latest);
         setCardDirty(file.id, false);
         addToast("Saved", file.name, "cyan");
       }).catch((err) => {
@@ -116,7 +137,7 @@ export function FileCard({
     };
     window.addEventListener("codorum:save", handler);
     return () => window.removeEventListener("codorum:save", handler);
-  }, [isActive, file.id, file.name, content, addToast, patchFileMeta, setCardDirty]);
+  }, [isActive, file.id, file.name, content, mode, addToast, patchFileMeta, setCardDirty]);
 
   const handleMarkdownChange = useCallback((md: string) => {
     setContent(md);
@@ -144,10 +165,19 @@ export function FileCard({
   })();
 
   // Historical Timeline Injection
-  const historicalSnap = activeSnapshotTs 
-    ? (file.history || []).find((s) => s.timestamp === activeSnapshotTs) 
+  const historicalSnap = activeSnapshotTs
+    ? (file.history || []).find((s) => s.timestamp === activeSnapshotTs)
     : null;
-    
+
+  const reconstructedContent = useMemo(() => {
+    if (!historicalSnap) return null;
+    const snapIdx = (file.history || []).findIndex(
+      (s) => s.timestamp === activeSnapshotTs,
+    );
+    if (snapIdx === -1) return null;
+    return reconstructAtSnapshot(file.content, file.history, snapIdx);
+  }, [historicalSnap, file.content, file.history, activeSnapshotTs]);
+
   const isReadOnly = !isActive || file.deleted;
 
   // Auto-size textarea to content
@@ -273,15 +303,17 @@ export function FileCard({
                 <MarkdownDiffView
                   key={`diff-${file.id}-${historicalSnap.timestamp}`}
                   snap={historicalSnap}
+                  content={reconstructedContent}
                 />
               ) : (
-                <DiffView snap={historicalSnap} />
+                <DiffView snap={historicalSnap} content={reconstructedContent} />
               )
             ) : (
               <>
                 {mode === "markdown" && (
                   <MarkdownEditor
                     key={`md-${file.id}-${file._rev ?? 0}`}
+                    ref={mdEditorRef}
                     content={content}
                     onChange={handleMarkdownChange}
                     fileId={file.id}
