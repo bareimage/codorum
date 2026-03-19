@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { WatchedFile, FileGroup } from "../types/files";
+import { invoke } from "@tauri-apps/api/core";
+import type { WatchedFile, FileGroup, FileSnapshot } from "../types/files";
+import { useToastStore } from "./toast-store";
+
+/** Non-reactive map of file id -> current editor content. Updated by FileCard onChange. */
+export const editorContentMap = new Map<string, string>();
 
 export interface SavedFileEntry {
   id: string;
@@ -62,6 +67,9 @@ interface AppState {
   clearSelection: () => void;
   ejectSelected: () => void;
 
+  // History persistence
+  fileHistory: Record<string, FileSnapshot[]>;
+
   // File actions
   setFiles: (files: WatchedFile[]) => void;
   addFiles: (files: WatchedFile[]) => void;
@@ -72,6 +80,7 @@ interface AppState {
   openFile: (id: string) => void;
   togglePin: (id: string) => void;
   setTheme: (theme: string) => void;
+  saveActiveFile: () => void;
 
   // Group / tab actions
   addGroup: (group: FileGroup) => void;
@@ -101,12 +110,13 @@ export function getUngroupedFiles(
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       files: [],
       activeFileId: null,
       savedFilePaths: [],
       groups: [],
       theme: "n01z",
+      fileHistory: {} as Record<string, FileSnapshot[]>,
       isFullscreen: false,
       toggleFullscreen: () => set((s) => ({ isFullscreen: !s.isFullscreen })),
       drawerOpen: { pinned: true, loose: true },
@@ -187,11 +197,18 @@ export const useAppStore = create<AppState>()(
           const files = s.files.map((f) =>
             f.id === id ? { ...f, ...updates, _rev: (f._rev ?? 0) + 1 } : f,
           );
-          // Only update savedFilePaths if path or pinned changed
           const needsSync = updates.path !== undefined || updates.pinned !== undefined;
-          return needsSync
+          const result: Record<string, unknown> = needsSync
             ? { files, savedFilePaths: toSavedPaths(files) }
             : { files };
+          // Auto-sync fileHistory when history is updated
+          if (updates.history) {
+            const file = files.find((f) => f.id === id);
+            if (file) {
+              result.fileHistory = { ...s.fileHistory, [file.path]: updates.history };
+            }
+          }
+          return result;
         }),
 
       // Like updateFile but does NOT bump _rev — used for internal saves
@@ -201,7 +218,14 @@ export const useAppStore = create<AppState>()(
           const files = s.files.map((f) =>
             f.id === id ? { ...f, ...updates } : f,
           );
-          return { files };
+          const result: Record<string, unknown> = { files };
+          if (updates.history) {
+            const file = files.find((f) => f.id === id);
+            if (file) {
+              result.fileHistory = { ...s.fileHistory, [file.path]: updates.history };
+            }
+          }
+          return result;
         }),
 
       removeFile: (id) =>
@@ -239,6 +263,41 @@ export const useAppStore = create<AppState>()(
         }),
 
       setTheme: (theme) => set({ theme }),
+
+      saveActiveFile: () => {
+        const { activeFileId, files } = get();
+        if (!activeFileId) return;
+        const file = files.find((f) => f.id === activeFileId);
+        if (!file) return;
+        const content = editorContentMap.get(activeFileId) ?? file.content;
+        if (content === file.content) return;
+
+        invoke<WatchedFile>("save_file", { id: activeFileId, content })
+          .then((saved) => {
+            const latest = saved.history[saved.history.length - 1];
+            set((s) => ({
+              files: s.files.map((f) =>
+                f.id === activeFileId
+                  ? {
+                      ...f,
+                      content,
+                      history: saved.history,
+                      linesAdded: latest?.lines_added ?? 0,
+                      linesRemoved: latest?.lines_removed ?? 0,
+                      modified: saved.modified,
+                    }
+                  : f,
+              ),
+              cardDirty: { ...s.cardDirty, [activeFileId]: false },
+              fileHistory: { ...s.fileHistory, [file.path]: saved.history },
+            }));
+            useToastStore.getState().add("Saved", file.name, "cyan");
+          })
+          .catch((err) => {
+            console.error("save_file failed:", err);
+            useToastStore.getState().add("Save failed", String(err), "rose");
+          });
+      },
 
       // ─── Drawer & stream actions ───
 
@@ -350,6 +409,7 @@ export const useAppStore = create<AppState>()(
         searchMode: state.searchMode,
         cardCollapsed: state.cardCollapsed,
         cardHeights: state.cardHeights,
+        fileHistory: state.fileHistory,
       }),
     },
   ),

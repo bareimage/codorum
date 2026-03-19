@@ -13,7 +13,7 @@ import { MicroTimeline } from "./MicroTimeline";
 import type { WatchedFile, FileSnapshot } from "../types/files";
 
 function DiffView({ snap }: { snap: FileSnapshot }) {
-  const lines = (snap.patch || snap.content).split("\n");
+  const lines = (snap.patch || "").split("\n");
   const hasPatch = !!snap.patch;
   return (
     <pre className="diff-view">
@@ -94,28 +94,29 @@ export function FileCard({
     setCardDirty(file.id, false);
   }
 
-  // Listen for global save event (⌘S)
+  // Listen for global save event (Cmd+S)
   useEffect(() => {
-    if (!isActive || !dirty) return;
-    const handler = (e: Event) => {
-      e.preventDefault();
+    if (!isActive) return;
+    const handler = () => {
       invoke<WatchedFile>("save_file", { id: file.id, content }).then((saved) => {
         const latest = saved.history[saved.history.length - 1];
         patchFileMeta(file.id, {
           content,
           history: saved.history,
-          linesAdded: (latest as any)?.linesAdded ?? latest?.lines_added ?? 0,
-          linesRemoved: (latest as any)?.linesRemoved ?? latest?.lines_removed ?? 0,
+          linesAdded: latest?.lines_added ?? 0,
+          linesRemoved: latest?.lines_removed ?? 0,
           modified: saved.modified,
         });
         setTrackedContent(content);
         setCardDirty(file.id, false);
         addToast("Saved", file.name, "cyan");
+      }).catch((err) => {
+        addToast("Save failed", String(err), "rose");
       });
     };
     window.addEventListener("codorum:save", handler);
     return () => window.removeEventListener("codorum:save", handler);
-  }, [isActive, dirty, file.id, file.name, content, addToast, patchFileMeta]);
+  }, [isActive, file.id, file.name, content, addToast, patchFileMeta, setCardDirty]);
 
   const handleMarkdownChange = useCallback((md: string) => {
     setContent(md);
@@ -147,9 +148,7 @@ export function FileCard({
     ? (file.history || []).find((s) => s.timestamp === activeSnapshotTs) 
     : null;
     
-  // If scrubbing, show the historical content. Otherwise show the live state variable.
-  const displayContent = historicalSnap ? historicalSnap.content : content;
-  const isReadOnly = !isActive || file.deleted || historicalSnap !== null;
+  const isReadOnly = !isActive || file.deleted;
 
   // Auto-size textarea to content
   useEffect(() => {
@@ -158,7 +157,7 @@ export function FileCard({
       el.style.height = "auto";
       el.style.height = el.scrollHeight + "px";
     }
-  }, [displayContent, activeSnapshotTs, file._rev]);
+  }, [content, activeSnapshotTs, file._rev]);
 
   return (
     <div
@@ -269,46 +268,48 @@ export function FileCard({
       >
         {!isCollapsed && (
           <ErrorBoundary>
-            {mode === "markdown" && typeof displayContent === "string" && (
-              historicalSnap ? (
+            {historicalSnap ? (
+              mode === "markdown" ? (
                 <MarkdownDiffView
                   key={`diff-${file.id}-${historicalSnap.timestamp}`}
                   snap={historicalSnap}
                 />
               ) : (
-                <MarkdownEditor
-                  key={`md-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
-                  content={displayContent}
-                  onChange={handleMarkdownChange}
-                  fileId={file.id}
-                  editable={!isReadOnly}
-                />
-              )
-            )}
-            {mode === "code" && typeof displayContent === "string" && (
-              <CodeEditor
-                key={`code-${file.id}-${file._rev ?? 0}-${activeSnapshotTs || 0}`}
-                content={displayContent}
-                language={file.extension}
-                onChange={handleTextChange}
-                fileId={file.id}
-                editable={!isReadOnly}
-              />
-            )}
-            {mode === "text" && typeof displayContent === "string" && (
-              historicalSnap ? (
                 <DiffView snap={historicalSnap} />
-              ) : (
-                <textarea
-                  key={`text-${file.id}-${file._rev ?? 0}`}
-                  ref={textareaRef}
-                  className="source-editor"
-                  value={displayContent}
-                  onChange={(e) => handleTextChange(e.target.value)}
-                  readOnly={isReadOnly}
-                  spellCheck={false}
-                />
               )
+            ) : (
+              <>
+                {mode === "markdown" && (
+                  <MarkdownEditor
+                    key={`md-${file.id}-${file._rev ?? 0}`}
+                    content={content}
+                    onChange={handleMarkdownChange}
+                    fileId={file.id}
+                    editable={!isReadOnly}
+                  />
+                )}
+                {mode === "code" && (
+                  <CodeEditor
+                    key={`code-${file.id}-${file._rev ?? 0}`}
+                    content={content}
+                    language={file.extension}
+                    onChange={handleTextChange}
+                    fileId={file.id}
+                    editable={!isReadOnly}
+                  />
+                )}
+                {mode === "text" && (
+                  <textarea
+                    key={`text-${file.id}-${file._rev ?? 0}`}
+                    ref={textareaRef}
+                    className="source-editor"
+                    value={content}
+                    onChange={(e) => handleTextChange(e.target.value)}
+                    readOnly={isReadOnly}
+                    spellCheck={false}
+                  />
+                )}
+              </>
             )}
           </ErrorBoundary>
         )}

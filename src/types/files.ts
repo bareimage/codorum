@@ -1,7 +1,6 @@
 export interface FileSnapshot {
   id: string;
   timestamp: number;
-  content: string;
   patch?: string;
   lines_added: number;
   lines_removed: number;
