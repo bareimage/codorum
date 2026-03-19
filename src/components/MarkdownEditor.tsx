@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import {
   MDXEditor,
   type MDXEditorMethods,
@@ -11,7 +11,11 @@ import {
   thematicBreakPlugin,
   markdownShortcutPlugin,
 } from "@mdxeditor/editor";
-// style.css is imported globally in main.tsx (before app.css) so overrides work
+import { editorContentMap } from "../stores/app-store";
+
+export interface MarkdownEditorHandle {
+  getMarkdown: () => string;
+}
 
 interface Props {
   content: string;
@@ -20,31 +24,43 @@ interface Props {
   editable?: boolean;
 }
 
-export function MarkdownEditor({ content, onChange, fileId, editable = true }: Props) {
-  const ref = useRef<MDXEditorMethods>(null);
+export const MarkdownEditor = forwardRef<MarkdownEditorHandle, Props>(
+  function MarkdownEditor({ content, onChange, fileId, editable = true }, fwdRef) {
+    const mdxRef = useRef<MDXEditorMethods>(null);
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
 
-  useEffect(() => {
-    ref.current?.setMarkdown(content);
-    // Only sync when switching files — external changes cause full remount via key prop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileId]);
+    useImperativeHandle(fwdRef, () => ({
+      getMarkdown: () => mdxRef.current?.getMarkdown() ?? content,
+    }), [content]);
 
-  return (
-    <MDXEditor
-      ref={ref}
-      markdown={content}
-      onChange={onChange}
-      readOnly={!editable}
-      plugins={[
-        headingsPlugin(),
-        listsPlugin(),
-        quotePlugin(),
-        tablePlugin(),
-        linkPlugin(),
-        codeBlockPlugin({ defaultCodeBlockLanguage: "txt" }),
-        thematicBreakPlugin(),
-        markdownShortcutPlugin(),
-      ]}
-    />
-  );
-}
+    useEffect(() => {
+      mdxRef.current?.setMarkdown(content);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fileId]);
+
+    const handleChange = (md: string) => {
+      editorContentMap.set(fileId, md);
+      onChangeRef.current(md);
+    };
+
+    return (
+      <MDXEditor
+        ref={mdxRef}
+        markdown={content}
+        onChange={handleChange}
+        readOnly={!editable}
+        plugins={[
+          headingsPlugin(),
+          listsPlugin(),
+          quotePlugin(),
+          tablePlugin(),
+          linkPlugin(),
+          codeBlockPlugin({ defaultCodeBlockLanguage: "txt" }),
+          thematicBreakPlugin(),
+          markdownShortcutPlugin(),
+        ]}
+      />
+    );
+  }
+);
