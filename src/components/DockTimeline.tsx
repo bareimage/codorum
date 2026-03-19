@@ -29,7 +29,6 @@ export function DockTimeline({ file }: DockTimelineProps) {
   const history = file.history || [];
   const trackRef = useRef<HTMLDivElement>(null);
   const [playheadPct, setPlayheadPct] = useState(100);
-  const [isDragging, setIsDragging] = useState(false);
 
   const firstTs = history.length > 0 ? history[0].timestamp : 0;
   const lastTs = history.length > 0 ? history[history.length - 1].timestamp : 0;
@@ -76,38 +75,6 @@ export function DockTimeline({ file }: DockTimelineProps) {
       setPlayheadPct(tsToPct(activeSnapshotTs));
     }
   }, [activeSnapshotTs, tsToPct]);
-
-  // Playhead drag handlers
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const onMove = (e: MouseEvent) => {
-      const track = trackRef.current;
-      if (!track) return;
-      const rect = track.getBoundingClientRect();
-      const pct = Math.max(
-        0,
-        Math.min(100, ((e.clientX - rect.left) / rect.width) * 100),
-      );
-      setPlayheadPct(pct);
-
-      if (pct > 95) {
-        setActiveSnapshot(file.id, null);
-      } else {
-        const snap = nearestSnap(pct);
-        if (snap) setActiveSnapshot(file.id, snap.timestamp);
-      }
-    };
-
-    const onUp = () => setIsDragging(false);
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [isDragging, file.id, setActiveSnapshot, nearestSnap]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -254,25 +221,19 @@ export function DockTimeline({ file }: DockTimelineProps) {
           })}
         </div>
 
-        <div
-          className="playhead"
-          style={{
-            left: `${playheadPct}%`,
-            transition: isDragging ? "none" : "left 0.15s linear",
-          }}
-        >
-          <div className={`playhead-tip${activeSnapshotTs !== null ? " visible" : ""}`}>
-            {tipText}
-          </div>
+        {activeSnapshotTs !== null && (
           <div
-            className="playhead-handle"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDragging(true);
+            className="playhead"
+            style={{
+              left: `${playheadPct}%`,
+              transition: "left 0.15s linear",
             }}
-          />
-        </div>
+          >
+            <div className="playhead-tip visible">
+              {tipText}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="dock-right">
