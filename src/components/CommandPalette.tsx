@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
-import { Search, File, FolderOpen, Plus, Sparkles, Palette } from "lucide-react";
+import { Search, File, FolderOpen, Plus, Sparkles, Palette, ExternalLink } from "lucide-react";
 import { animate } from "animejs";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
@@ -17,15 +17,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
   plus: Plus,
   sparkle: Sparkles,
   palette: Palette,
+  external: ExternalLink,
 };
 
 type PaletteItem =
-  | { type: "cmd"; id: string; label: string; icon: "search" | "file" | "folder" | "plus" | "sparkle" | "palette"; kbd?: string; sub?: string }
+  | { type: "cmd"; id: string; label: string; icon: "search" | "file" | "folder" | "plus" | "sparkle" | "palette" | "external"; kbd?: string; sub?: string }
   | { type: "sep"; label: string };
 
 export function CommandPalette() {
   const { open, close } = useCommandStore();
-  const { groups, openFile, setTheme, theme, addFiles, addGroup, createTab } = useAppStore();
+  const { files, groups, activeFileId, openFile, setTheme, theme, addFiles, addGroup, createTab } = useAppStore();
   const addToast = useToastStore((s) => s.add);
   const [query, setQuery] = useState("");
   const [idx, setIdx] = useState(0);
@@ -87,7 +88,12 @@ export function CommandPalette() {
     const q = query.toLowerCase();
     const all: PaletteItem[] = [];
 
+    const activeFile = activeFileId ? files.find((f) => f.id === activeFileId) : null;
+
     all.push({ type: "sep", label: "Actions" });
+    if (activeFile) {
+      all.push({ type: "cmd", id: "reveal-finder", label: "Reveal in Finder", icon: "external" });
+    }
     all.push({ type: "cmd", id: "add-folder", label: "Add Folder", icon: "folder" });
     all.push({ type: "cmd", id: "add-file", label: "Add Files", icon: "file" });
     all.push({ type: "cmd", id: "create-tab", label: "Create Tab", icon: "plus" });
@@ -116,7 +122,7 @@ export function CommandPalette() {
     return all.filter(
       (item) => item.type === "sep" || item.label.toLowerCase().includes(q),
     );
-  }, [query, groups, theme]);
+  }, [query, groups, theme, activeFileId, files]);
 
   const selectable = useMemo(() => items.filter((i) => i.type !== "sep"), [items]);
 
@@ -213,7 +219,15 @@ export function CommandPalette() {
   const handleActivateItem = useCallback(
     (item: PaletteItem) => {
       if (item.type === "sep") return;
-      if (item.id === "add-folder") {
+      if (item.id === "reveal-finder") {
+        const activeFile = useAppStore.getState().activeFileId
+          ? files.find((f) => f.id === useAppStore.getState().activeFileId)
+          : null;
+        if (activeFile) {
+          invoke("reveal_in_finder", { path: activeFile.path });
+        }
+        close();
+      } else if (item.id === "add-folder") {
         handleAddDir();
       } else if (item.id === "add-file") {
         handleAddFile();

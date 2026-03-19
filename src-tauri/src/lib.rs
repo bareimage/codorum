@@ -62,6 +62,7 @@ pub fn run() {
             commands::add_directory,
             commands::drop_paths,
             commands::restore_files,
+            commands::reveal_in_finder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running CODORUM");

@@ -46,8 +46,9 @@ export function buildAnnotatedLines(
           newLinePos++;
         } else if (pl.startsWith("-") && !pl.startsWith("---")) {
           result.push({ text: pl.slice(1), type: "del" });
-        } else if (pl.startsWith(" ")) {
-          result.push({ text: pl.slice(1), type: "ctx" });
+        } else if (pl.startsWith(" ") || pl === "") {
+          // Empty string handles diff tools that strip leading space from blank context lines
+          result.push({ text: pl.startsWith(" ") ? pl.slice(1) : "", type: "ctx" });
           newLinePos++;
         }
         i++;
