@@ -8,7 +8,7 @@ import { MarkdownEditor, type MarkdownEditorHandle } from "./MarkdownEditor";
 import { MarkdownDiffView } from "./MarkdownDiffView";
 import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
-import { ExtDot } from "./ExtDot";
+import { FileIcon } from "./FileIcon";
 import { ResizeHandle } from "./ResizeHandle";
 import { MicroTimeline } from "./MicroTimeline";
 import { reconstructAtSnapshot } from "../utils/reconstructContent";
@@ -96,7 +96,6 @@ export function FileCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mode = detectMode(file.extension);
-  const extColor = ExtDot.getColor(file.extension);
   const activeSnapshotTs = useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
   const setActiveSnapshot = useAppStore((s) => s.setActiveSnapshot);
 
@@ -230,7 +229,7 @@ export function FileCard({
         >
           <ChevronRight size={16} />
         </button>
-        <span className="cdot" style={{ background: extColor }} />
+        <FileIcon extension={file.extension} size={16} />
         <span
           className="ftitle"
           style={file.deleted ? { color: "var(--deleted)", textDecoration: "line-through" } : undefined}
