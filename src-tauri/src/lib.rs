@@ -1,10 +1,12 @@
 mod commands;
+mod db;
 mod error;
 mod models;
 mod registry;
 mod snapshot;
 mod watcher;
 
+use db::SnapshotDb;
 use registry::FileRegistry;
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, Manager};
@@ -13,12 +15,15 @@ use watcher::{FileEvent, FileWatcherManager};
 pub struct AppState {
     pub registry: Arc<FileRegistry>,
     pub watcher: Mutex<FileWatcherManager>,
+    pub db: Arc<SnapshotDb>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let db = Arc::new(SnapshotDb::open());
     let registry = Arc::new(FileRegistry::new());
     let reg_for_watcher = registry.clone();
+    let db_for_watcher = db.clone();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -28,7 +33,9 @@ pub fn run() {
 
             let watcher_mgr = FileWatcherManager::new(move |event| match event {
                 FileEvent::Changed(path) => {
-                    if let Ok(Some(file)) = reg_for_watcher.handle_file_changed(&path) {
+                    if let Ok(Some(file)) =
+                        reg_for_watcher.handle_file_changed(&path, &db_for_watcher)
+                    {
                         let _ = handle.emit("file-changed", file);
                     }
                 }
@@ -37,6 +44,7 @@ pub fn run() {
                 }
                 FileEvent::Renamed { old_path, new_path } => {
                     if let Some(payload) = reg_for_watcher.handle_renamed(&old_path, &new_path) {
+                        db_for_watcher.rename_path(&old_path, &new_path);
                         let _ = handle.emit("file-renamed", payload);
                     }
                 }
@@ -45,6 +53,7 @@ pub fn run() {
             app.manage(AppState {
                 registry: registry.clone(),
                 watcher: Mutex::new(watcher_mgr),
+                db: db.clone(),
             });
 
             Ok(())
@@ -63,6 +72,7 @@ pub fn run() {
             commands::drop_paths,
             commands::restore_files,
             commands::reveal_in_finder,
+            commands::get_snapshots,
         ])
         .run(tauri::generate_context!())
         .expect("error while running CODORUM");

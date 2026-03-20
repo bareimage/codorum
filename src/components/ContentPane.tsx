@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useCallback } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import { useAppStore, getUngroupedFiles } from "../stores/app-store";
 import { sortFiles } from "../utils/sortFiles";
 import { FileCard } from "./FileCard";
@@ -78,40 +78,7 @@ export function ContentPane() {
     [sections.length],
   );
 
-  const allFileIds = useMemo(
-    () => sections.flatMap((s) => s.files.map((f) => f.id)),
-    [sections],
-  );
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || allFileIds.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const { cardDirty } = useAppStore.getState();
-        if (Object.values(cardDirty).some(Boolean)) return;
-        let best: { id: string; top: number } | null = null;
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const top = entry.boundingClientRect.top;
-          if (!best || (top >= 0 && top < best.top)) {
-            best = { id: entry.target.id, top };
-          }
-        }
-        if (best && best.id !== useAppStore.getState().activeFileId) {
-          openFile(best.id);
-        }
-      },
-      { root: container, rootMargin: "-10% 0px -70% 0px", threshold: 0 },
-    );
-
-    for (const id of allFileIds) {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    }
-    return () => observer.disconnect();
-  }, [allFileIds, openFile]);
+  // File activation is click-only — no auto-switch on scroll
 
   const handleActivate = useCallback(
     (id: string) => {

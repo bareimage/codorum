@@ -1,7 +1,7 @@
 use crate::error::CodorumError;
 use crate::models::*;
 use crate::registry::read_file_info;
-use crate::snapshot::random_placeholder;
+use crate::snapshot::{initial_snapshot, random_placeholder};
 use crate::AppState;
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -32,7 +32,7 @@ pub fn save_file(
     content: String,
     state: State<AppState>,
 ) -> Result<WatchedFile, CodorumError> {
-    state.registry.save_file(&id, &content)
+    state.registry.save_file(&id, &content, &state.db)
 }
 
 #[tauri::command]
@@ -74,6 +74,9 @@ pub fn create_file(
     std::fs::write(&file_path, &initial)?;
     let info = read_file_info(&file_path)
         .ok_or_else(|| CodorumError::FileNotFound(file_path.to_string_lossy().to_string()))?;
+    // Write initial snapshot to DB
+    let snap = initial_snapshot(&info.content);
+    state.db.push_snapshot(&info.path, &snap);
     state.registry.insert(info.clone())?;
     {
         let mut watcher = state.watcher.lock().map_err(|_| CodorumError::Lock)?;
@@ -84,11 +87,21 @@ pub fn create_file(
 
 #[tauri::command]
 pub fn remove_file(id: String, state: State<AppState>) -> Result<(), CodorumError> {
+    // Get path before removing so we can clean up snapshots
+    if let Ok(Some(file)) = state.registry.get_by_id(&id) {
+        state.db.remove_snapshots(&file.path);
+    }
     state.registry.remove_by_id(&id)
 }
 
 #[tauri::command]
 pub fn remove_files(ids: Vec<String>, state: State<AppState>) -> Result<(), CodorumError> {
+    // Clean up snapshots for each file
+    for id in &ids {
+        if let Ok(Some(file)) = state.registry.get_by_id(id) {
+            state.db.remove_snapshots(&file.path);
+        }
+    }
     state.registry.remove_by_ids(&ids)
 }
 
@@ -130,6 +143,8 @@ pub async fn add_files(
             if let Some(parent) = path.parent() {
                 dirs_to_watch.insert(parent.to_string_lossy().to_string());
             }
+            let snap = initial_snapshot(&info.content);
+            state.db.push_snapshot(&info.path, &snap);
             state.registry.insert(info.clone())?;
             added.push(info);
         }
@@ -186,6 +201,8 @@ pub async fn add_directory(
                 continue;
             }
             if let Some(info) = read_file_info(&path) {
+                let snap = initial_snapshot(&info.content);
+                state.db.push_snapshot(&info.path, &snap);
                 state.registry.insert(info.clone())?;
                 added.push(info);
             }
@@ -234,6 +251,8 @@ pub fn drop_paths(
                         continue;
                     }
                     if let Some(info) = read_file_info(&ep) {
+                        let snap = initial_snapshot(&info.content);
+                        state.db.push_snapshot(&info.path, &snap);
                         state.registry.insert(info.clone())?;
                         dir_files.push(info);
                     }
@@ -257,6 +276,8 @@ pub fn drop_paths(
                 if let Some(parent) = path.parent() {
                     dirs_to_watch.insert(parent.to_string_lossy().to_string());
                 }
+                let snap = initial_snapshot(&info.content);
+                state.db.push_snapshot(&info.path, &snap);
                 state.registry.insert(info.clone())?;
                 loose_files.push(info);
             }
@@ -287,6 +308,11 @@ pub fn reveal_in_finder(path: String) -> Result<(), CodorumError> {
 }
 
 #[tauri::command]
+pub fn get_snapshots(file_path: String, state: State<AppState>) -> Vec<FileSnapshot> {
+    state.db.get_snapshots(&file_path)
+}
+
+#[tauri::command]
 pub fn restore_files(
     saved: Vec<SavedFileEntry>,
     state: State<AppState>,
@@ -303,9 +329,13 @@ pub fn restore_files(
             continue;
         }
         if let Some(mut info) = read_file_info(&path) {
-            // Reuse the saved ID so frontend card state maps correctly
             info.id = entry.id;
             info.pinned = entry.pinned;
+            // Restore latest diff stats from DB
+            if let Some(latest) = state.db.get_latest_snapshot(&info.path) {
+                info.lines_added = latest.lines_added;
+                info.lines_removed = latest.lines_removed;
+            }
             if let Some(parent) = path.parent() {
                 dirs_to_watch.insert(parent.to_string_lossy().to_string());
             }

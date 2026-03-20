@@ -18,7 +18,11 @@ pub struct WatchedFile {
     pub content: String,
     pub modified: u64,
     pub pinned: bool,
-    pub history: Vec<FileSnapshot>,
+    /// Latest snapshot diff stats (for sidebar badges). History lives in SQLite.
+    #[serde(default)]
+    pub lines_added: usize,
+    #[serde(default)]
+    pub lines_removed: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

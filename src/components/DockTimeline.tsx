@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useAppStore } from "../stores/app-store";
 import type { WatchedFile, FileSnapshot } from "../types/files";
 import { ExtDot } from "./ExtDot";
@@ -26,9 +27,14 @@ export function DockTimeline({ file }: DockTimelineProps) {
     useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
   const selectedIds = useAppStore((s) => s.selectedIds);
 
-  const history = file.history || [];
+  const [history, setHistory] = useState<FileSnapshot[]>([]);
   const trackRef = useRef<HTMLDivElement>(null);
   const [playheadPct, setPlayheadPct] = useState(100);
+
+  // Load snapshots from DB for active file
+  useEffect(() => {
+    invoke<FileSnapshot[]>("get_snapshots", { filePath: file.path }).then(setHistory);
+  }, [file.path, file.modified]);
 
   const firstTs = history.length > 0 ? history[0].timestamp : 0;
   const lastTs = history.length > 0 ? history[history.length - 1].timestamp : 0;

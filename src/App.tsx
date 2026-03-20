@@ -37,14 +37,6 @@ export default function App() {
       (restored) => {
         if (restored.length > 0) {
           setFiles(restored);
-          // Merge persisted history back into restored files
-          const { fileHistory, patchFileMeta } = useAppStore.getState();
-          for (const file of restored) {
-            const persisted = fileHistory[file.path];
-            if (persisted && persisted.length > 0) {
-              patchFileMeta(file.id, { history: persisted });
-            }
-          }
           addToast(`${restored.length} file(s)`, "restored", "cyan");
         }
       },
@@ -63,17 +55,11 @@ export default function App() {
       // Skip if content unchanged (e.g. our own save triggered the watcher)
       if (updated.content === file.content) return;
 
-      // Compute diff stats from the latest snapshot if available
-      const latestSnap = updated.history.length > 0
-        ? updated.history[updated.history.length - 1]
-        : null;
-
       updateFile(file.id, {
         content: updated.content,
         modified: updated.modified,
-        linesAdded: latestSnap?.lines_added ?? 0,
-        linesRemoved: latestSnap?.lines_removed ?? 0,
-        history: updated.history,
+        linesAdded: updated.lines_added ?? 0,
+        linesRemoved: updated.lines_removed ?? 0,
       });
       setCardDirty(file.id, false);
       addToast("Updated", file.name, "cyan");
