@@ -34,6 +34,8 @@ input { font-family: inherit; }
   --warn: #e0a644; --danger: #ef6b7a; --brd: #27272a;
   --ring: rgba(91,196,196,0.15); --input-bg: #1c1c20;
   --cmd-bg: #1c1c20; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
+  --shadow-heavy: rgba(0,0,0,0.4);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
   --deleted: #6b6b73;
 }
 [data-theme="paper"] {
@@ -43,6 +45,8 @@ input { font-family: inherit; }
   --warn: #ca8a04; --danger: #dc2626; --brd: #e4e4e7;
   --ring: rgba(42,114,114,0.1); --input-bg: #ffffff;
   --cmd-bg: #ffffff; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.12);
+  --shadow-heavy: rgba(0,0,0,0.1);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --deleted: #b0b0b8;
 }
 [data-theme="phosphor"] {
@@ -52,6 +56,8 @@ input { font-family: inherit; }
   --warn: #90cc40; --danger: #ee5530; --brd: #1a261a;
   --ring: rgba(0,200,152,0.12); --input-bg: #0e140e;
   --cmd-bg: #0e140e; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.6);
+  --shadow-heavy: rgba(0,0,0,0.5);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.12);
   --deleted: #3a5a3a;
 }
 [data-theme="ember"] {
@@ -61,6 +67,8 @@ input { font-family: inherit; }
   --warn: #eebb44; --danger: #ee4433; --brd: #302420;
   --ring: rgba(238,119,51,0.12); --input-bg: #1a1412;
   --cmd-bg: #1a1412; --cmd-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
+  --shadow-heavy: rgba(0,0,0,0.4);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1);
   --deleted: #6a5548;
 }
 
@@ -318,15 +326,20 @@ input { font-family: inherit; }
 }
 .card-body.markdown {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 15px; line-height: 1.8; color: var(--tx2);
+  font-size: 15px; line-height: 1.75; color: var(--tx2);
+  max-width: 72ch;
 }
 .card-body.markdown h1, .card-body.markdown h2, .card-body.markdown h3 {
   font-family: -apple-system, system-ui, sans-serif;
-  color: var(--tx); margin: 0.8em 0 0.4em;
+  color: var(--tx);
 }
-.card-body.markdown h1 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.02em; }
-.card-body.markdown h2 { font-size: 1.1em; font-weight: 700; }
+.card-body.markdown h1 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.02em; margin: 1.5em 0 0.6em; }
+.card-body.markdown h2 { font-size: 1.1em; font-weight: 700; margin: 1.3em 0 0.5em; }
+.card-body.markdown h3 { font-size: 0.95em; font-weight: 600; color: var(--tx2); margin: 1.2em 0 0.4em; }
+.card-body.markdown h4 { font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tx3); }
 .card-body.markdown p { margin: 0 0 0.75em; }
+.card-body.markdown a { color: var(--ac); text-decoration: underline; text-underline-offset: 2px; }
+.card-body.markdown a:hover { color: var(--ac3); }
 .card-body.markdown code {
   font-family: monospace; font-size: 0.85em; font-weight: 500;
   background: var(--hover); border: 1px solid var(--brd);
@@ -347,6 +360,32 @@ input { font-family: inherit; }
 }
 .card-body.markdown ul { padding-left: 1.5em; margin: 0.5em 0; }
 .card-body.markdown li { margin: 0.2em 0; }
+.card-body.markdown hr { border: none; border-top: 1px solid var(--brd); margin: 2em 0; }
+/* Task lists */
+.card-body.markdown ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.card-body.markdown ul[data-type="taskList"] li {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0.3em 0;
+}
+.task-check {
+  width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+  border: 2px solid var(--tx3); background: transparent; margin-top: 3px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 100ms;
+}
+.task-check.checked { background: var(--ac); border-color: var(--ac); }
+.task-check.checked::after { content: '✓'; font-size: 10px; color: var(--bg); font-weight: 700; }
+.task-text.checked { text-decoration: line-through; color: var(--tx3); }
+/* Tables */
+.card-body.markdown table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+.card-body.markdown th, .card-body.markdown td {
+  border: 1px solid var(--brd); padding: 8px 12px; font-size: 13px; text-align: left;
+}
+.card-body.markdown th { background: var(--hover); font-weight: 600; color: var(--tx); font-family: -apple-system, system-ui, sans-serif; }
+.card-body.markdown td { background: var(--card); }
+/* Mermaid blocks */
+.mermaid-block { border: 1px solid var(--brd); border-radius: 10px; overflow: hidden; margin: 1em 0; }
+.mermaid-render { padding: 1.5rem; background: var(--bg2); text-align: center; color: var(--tx2); font-size: 13px; font-family: monospace; }
+.mermaid-source summary { font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tx3); padding: 8px 12px; cursor: pointer; }
 .card-body.code {
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   font-size: 13px; line-height: 1.6; color: var(--tx);
@@ -622,125 +661,223 @@ let currentTheme = 0;
 
 const EXT_COLORS = {
   md: 'var(--ac)', markdown: 'var(--ac)', mdx: 'var(--ac)',
-  ts: 'var(--ac2)', tsx: 'var(--ac2)', rs: 'var(--danger)',
-  css: 'var(--ac3)', scss: 'var(--ac3)', js: 'var(--warn)',
-  jsx: 'var(--warn)', py: 'var(--ac3)', go: 'var(--ac)',
-  html: 'var(--danger)', json: 'var(--warn)', yaml: 'var(--ac3)',
-  yml: 'var(--ac3)', toml: 'var(--ac3)',
+  ts: 'var(--ac2)', tsx: 'var(--ac2)',
+  rs: 'var(--danger)',
+  css: 'var(--ac3)', scss: 'var(--ac3)', py: 'var(--ac3)',
+  yaml: 'var(--ac3)', yml: 'var(--ac3)',
+  js: 'var(--warn)', jsx: 'var(--warn)', json: 'var(--warn)',
+  go: 'var(--ac)', html: 'var(--danger)',
+  toml: 'var(--ac3)', sh: 'var(--ac3)', bash: 'var(--ac3)',
+  c: 'var(--ac2)', cpp: 'var(--ac2)', h: 'var(--ac2)',
+  java: 'var(--danger)', swift: 'var(--warn)', kt: 'var(--ac2)',
+  sql: 'var(--ac)', lua: 'var(--ac)', zig: 'var(--warn)',
 };
 
 const MOCK_FILES = [
   { id: 'f1', name: 'README', ext: 'md', pinned: true, modified: Date.now()/1000 - 120,
     added: 12, removed: 3, deleted: false,
     content: `<h1>Codorum</h1>
-<p>A desktop file watcher that monitors text and markdown files in real-time with diff visualization.</p>
-<blockquote><p>Transparency for your codebase</p></blockquote>
+<p>A desktop file watcher for developers who want to monitor text and markdown files in real-time — with live diff visualization, WYSIWYG editing, and 4 built-in themes.</p>
+<blockquote><p>Because you can't trust the machines.</p></blockquote>
 <h2>Quick Start</h2>
-<p>Install dependencies and run the dev server:</p>
 <pre><code>npm install
 npm run tauri dev</code></pre>
-<ul><li>Live file monitoring with drag-and-drop</li>
-<li>Real-time diff visualization</li>
-<li>WYSIWYG Markdown editor</li>
-<li>4 built-in themes</li></ul>` },
+<h3>Features</h3>
+<ul data-type="taskList">
+<li><span class="task-check checked"></span><span class="task-text checked">Live file monitoring with drag-and-drop</span></li>
+<li><span class="task-check checked"></span><span class="task-text checked">Real-time diff visualization (+/− badges)</span></li>
+<li><span class="task-check checked"></span><span class="task-text checked">Tiptap WYSIWYG Markdown editor</span></li>
+<li><span class="task-check checked"></span><span class="task-text checked">CodeMirror 6 syntax highlighting (190+ languages)</span></li>
+<li><span class="task-check"></span><span class="task-text">Mermaid diagram rendering</span></li>
+<li><span class="task-check"></span><span class="task-text">Collaborative editing</span></li>
+</ul>
+<h3>Stack</h3>
+<table><thead><tr><th>Layer</th><th>Tech</th></tr></thead>
+<tbody>
+<tr><td>Frontend</td><td>React 19 · TypeScript · Tailwind 4</td></tr>
+<tr><td>Editor</td><td>Tiptap 3 · CodeMirror 6</td></tr>
+<tr><td>Desktop</td><td>Tauri v2 · Rust</td></tr>
+<tr><td>State</td><td>Zustand 5 · localStorage</td></tr>
+</tbody></table>` },
   { id: 'f2', name: 'App', ext: 'tsx', group: 'src', modified: Date.now()/1000 - 300,
     added: 28, removed: 5, deleted: false,
-    content: `<span class="cmt">// Root application component</span>
-<span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">"react"</span>;
+    content: `<span class="cmt">// Root application component — handles Tauri events, drag-drop, keyboard shortcuts</span>
+<span class="kw">import</span> { useEffect, useCallback } <span class="kw">from</span> <span class="str">"react"</span>;
 <span class="kw">import</span> { invoke } <span class="kw">from</span> <span class="str">"@tauri-apps/api/core"</span>;
+<span class="kw">import</span> { listen } <span class="kw">from</span> <span class="str">"@tauri-apps/api/event"</span>;
+<span class="kw">import</span> { getCurrentWebviewWindow } <span class="kw">from</span> <span class="str">"@tauri-apps/api/webviewWindow"</span>;
+<span class="kw">import</span> { useAppStore } <span class="kw">from</span> <span class="str">"./stores/app-store"</span>;
 <span class="kw">import</span> { Toolbar } <span class="kw">from</span> <span class="str">"./components/Toolbar"</span>;
 <span class="kw">import</span> { Sidebar } <span class="kw">from</span> <span class="str">"./components/Sidebar"</span>;
+<span class="kw">import</span> { ContentPane } <span class="kw">from</span> <span class="str">"./components/ContentPane"</span>;
 
 <span class="kw">export default function</span> <span class="fn">App</span>() {
-  <span class="kw">const</span> { addFiles } = <span class="fn">useAppStore</span>();
-  <span class="kw">const</span> theme = <span class="fn">useAppStore</span>(s => s.theme);
+  <span class="kw">const</span> { files, addFiles, theme } = <span class="fn">useAppStore</span>();
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    document.documentElement.<span class="fn">setAttribute</span>(<span class="str">"data-theme"</span>, theme);
+  }, [theme]);
 
   <span class="kw">return</span> (
-    &lt;<span class="type">div</span> <span class="attr">className</span>=<span class="str">"flex flex-col h-screen"</span>&gt;
+    &lt;<span class="type">div</span> <span class="attr">style</span>={{ display: <span class="str">"flex"</span>, flexDirection: <span class="str">"column"</span>, height: <span class="str">"100vh"</span> }}&gt;
       &lt;<span class="type">Toolbar</span> /&gt;
-      &lt;<span class="type">Sidebar</span> /&gt;
-      &lt;<span class="type">ContentPane</span> /&gt;
+      &lt;<span class="type">div</span> <span class="attr">style</span>={{ display: <span class="str">"flex"</span>, flex: <span class="num">1</span>, overflow: <span class="str">"hidden"</span> }}&gt;
+        &lt;<span class="type">Sidebar</span> /&gt;
+        &lt;<span class="type">ContentPane</span> /&gt;
+      &lt;/<span class="type">div</span>&gt;
     &lt;/<span class="type">div</span>&gt;
   );
 }` },
-  { id: 'f3', name: 'main', ext: 'tsx', group: 'src', modified: Date.now()/1000 - 3600,
-    added: 0, removed: 0, deleted: false,
-    content: `<span class="kw">import</span> React <span class="kw">from</span> <span class="str">"react"</span>;
-<span class="kw">import</span> ReactDOM <span class="kw">from</span> <span class="str">"react-dom/client"</span>;
-<span class="kw">import</span> App <span class="kw">from</span> <span class="str">"./App"</span>;
-<span class="kw">import</span> <span class="str">"./styles/app.css"</span>;
+  { id: 'f3', name: 'lib', ext: 'rs', group: 'src-tauri', modified: Date.now()/1000 - 900,
+    added: 14, removed: 2, deleted: false,
+    content: `<span class="kw">use</span> serde::{Deserialize, Serialize};
+<span class="kw">use</span> std::sync::Mutex;
+<span class="kw">use</span> tauri::State;
+<span class="kw">use</span> uuid::Uuid;
 
-ReactDOM.<span class="fn">createRoot</span>(
-  document.<span class="fn">getElementById</span>(<span class="str">"root"</span>)!
-).<span class="fn">render</span>(
-  &lt;<span class="type">React.StrictMode</span>&gt;
-    &lt;<span class="type">App</span> /&gt;
-  &lt;/<span class="type">React.StrictMode</span>&gt;
-);` },
-  { id: 'f4', name: 'app', ext: 'css', group: 'src', modified: Date.now()/1000 - 7200,
+<span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]</span>
+<span class="kw">pub struct</span> <span class="type">WatchedFile</span> {
+    <span class="kw">pub</span> id: String,
+    <span class="kw">pub</span> path: String,
+    <span class="kw">pub</span> name: String,
+    <span class="kw">pub</span> extension: String,
+    <span class="kw">pub</span> content: String,
+    <span class="kw">pub</span> modified: <span class="type">u64</span>,
+    <span class="kw">pub</span> pinned: <span class="type">bool</span>,
+}
+
+<span class="attr">#[tauri::command]</span>
+<span class="kw">pub fn</span> <span class="fn">get_files</span>(state: State&lt;AppState&gt;) -&gt; Vec&lt;<span class="type">WatchedFile</span>&gt; {
+    state.files.<span class="fn">lock</span>().<span class="fn">unwrap</span>().<span class="fn">clone</span>()
+}
+
+<span class="attr">#[tauri::command]</span>
+<span class="kw">pub fn</span> <span class="fn">save_file</span>(id: String, content: String, state: State&lt;AppState&gt;) {
+    <span class="kw">let mut</span> files = state.files.<span class="fn">lock</span>().<span class="fn">unwrap</span>();
+    <span class="kw">if let</span> Some(f) = files.<span class="fn">iter_mut</span>().<span class="fn">find</span>(|f| f.id == id) {
+        f.content = content;
+    }
+}` },
+  { id: 'f4', name: 'watcher', ext: 'rs', group: 'src-tauri', modified: Date.now()/1000 - 1800,
+    added: 4, removed: 0, deleted: false,
+    content: `<span class="kw">use</span> notify::{RecommendedWatcher, RecursiveMode, Watcher};
+<span class="kw">use</span> std::collections::HashMap;
+<span class="kw">use</span> std::path::PathBuf;
+<span class="kw">use</span> std::sync::{Arc, Mutex};
+<span class="kw">use</span> std::time::Duration;
+
+<span class="kw">pub struct</span> <span class="type">FileWatcher</span> {
+    watcher: RecommendedWatcher,
+    watched_dirs: Arc&lt;Mutex&lt;HashMap&lt;PathBuf, <span class="type">usize</span>&gt;&gt;&gt;,
+}
+
+<span class="kw">impl</span> <span class="type">FileWatcher</span> {
+    <span class="kw">pub fn</span> <span class="fn">new</span>(handle: tauri::AppHandle) -&gt; Self {
+        <span class="cmt">// Debounce at 250ms to prevent rapid-fire updates</span>
+        <span class="kw">let</span> (tx, rx) = std::sync::mpsc::<span class="fn">channel</span>();
+        <span class="kw">let</span> watcher = notify::recommended_watcher(tx)
+            .<span class="fn">expect</span>(<span class="str">"Failed to create watcher"</span>);
+        <span class="cmt">// ...</span>
+        Self { watcher, watched_dirs: Arc::<span class="fn">new</span>(Mutex::<span class="fn">new</span>(HashMap::<span class="fn">new</span>())) }
+    }
+}` },
+  { id: 'f5', name: 'Sidebar', ext: 'tsx', group: 'src', modified: Date.now()/1000 - 600,
+    added: 8, removed: 0, deleted: false,
+    content: `<span class="kw">import</span> { useMemo, useState, useCallback } <span class="kw">from</span> <span class="str">"react"</span>;
+<span class="kw">import</span> { useAppStore } <span class="kw">from</span> <span class="str">"../stores/app-store"</span>;
+<span class="kw">import</span> { DiffBadge } <span class="kw">from</span> <span class="str">"./DiffBadge"</span>;
+<span class="kw">import</span> { ExtDot } <span class="kw">from</span> <span class="str">"./ExtDot"</span>;
+
+<span class="kw">export function</span> <span class="fn">Sidebar</span>() {
+  <span class="kw">const</span> { files, groups, search, searchMode,
+    sortBy, activeFileId, selectedIds, drawerOpen
+  } = <span class="fn">useAppStore</span>();
+
+  <span class="kw">const</span> sorted = <span class="fn">useMemo</span>(() =&gt; {
+    <span class="kw">const</span> arr = [...files];
+    <span class="kw">if</span> (sortBy === <span class="str">"modified"</span>) arr.<span class="fn">sort</span>((a, b) =&gt; b.modified - a.modified);
+    <span class="kw">if</span> (sortBy === <span class="str">"changes"</span>) arr.<span class="fn">sort</span>((a, b) =&gt;
+      ((b.linesAdded || <span class="num">0</span>) + (b.linesRemoved || <span class="num">0</span>))
+      - ((a.linesAdded || <span class="num">0</span>) + (a.linesRemoved || <span class="num">0</span>)));
+    <span class="kw">return</span> arr;
+  }, [files, sortBy]);
+
+  <span class="kw">return</span> (
+    &lt;<span class="type">div</span> <span class="attr">style</span>={{ width: <span class="num">240</span>, flexShrink: <span class="num">0</span>, background: <span class="str">"var(--bg2)"</span> }}&gt;
+      <span class="cmt">{/* Search, Sort, Drawers */}</span>
+    &lt;/<span class="type">div</span>&gt;
+  );
+}` },
+  { id: 'f6', name: 'app', ext: 'css', group: 'src', modified: Date.now()/1000 - 7200,
     added: 0, removed: 0, deleted: false,
     content: `<span class="cmt">/* ═══ THEMES ═══ */</span>
 <span class="fn">:root</span> {
-  <span class="attr">--bg</span>: <span class="str">#18181b</span>;
-  <span class="attr">--bg2</span>: <span class="str">#111113</span>;
-  <span class="attr">--card</span>: <span class="str">#1f1f23</span>;
-  <span class="attr">--ac</span>: <span class="str">#5bc4c4</span>;
-  <span class="attr">--ac2</span>: <span class="str">#a78bfa</span>;
+  <span class="attr">--bg</span>: <span class="str">#18181b</span>;  <span class="attr">--bg2</span>: <span class="str">#111113</span>;
+  <span class="attr">--card</span>: <span class="str">#1f1f23</span>; <span class="attr">--hover</span>: <span class="str">#27272c</span>;
+  <span class="attr">--tx</span>: <span class="str">#e4e4e7</span>;  <span class="attr">--tx2</span>: <span class="str">#a1a1aa</span>;
+  <span class="attr">--ac</span>: <span class="str">#5bc4c4</span>;  <span class="attr">--ac2</span>: <span class="str">#a78bfa</span>;
 }
 
+<span class="cmt">/* ═══ TIPTAP EDITOR ═══ */</span>
+<span class="fn">.tiptap-editor-content</span> {
+  <span class="attr">max-width</span>: <span class="num">72ch</span>;
+  <span class="attr">padding</span>: <span class="num">2rem</span> <span class="num">3rem</span>;
+  <span class="attr">font-size</span>: <span class="num">15px</span>;
+  <span class="attr">line-height</span>: <span class="num">1.75</span>;
+  <span class="attr">caret-color</span>: <span class="fn">var</span>(<span class="attr">--ac</span>);
+}
+
+<span class="cmt">/* ═══ FILE CARDS ═══ */</span>
 <span class="fn">.file-card</span> {
   <span class="attr">background</span>: <span class="fn">var</span>(<span class="attr">--card</span>);
   <span class="attr">border-radius</span>: <span class="num">12px</span>;
   <span class="attr">border</span>: <span class="num">1px</span> solid <span class="fn">var</span>(<span class="attr">--brd</span>);
   <span class="attr">transition</span>: all <span class="num">150ms</span> ease;
 }` },
-  { id: 'f5', name: 'Sidebar', ext: 'tsx', group: 'src', modified: Date.now()/1000 - 600,
-    added: 8, removed: 0, deleted: false,
-    content: `<span class="kw">import</span> { useMemo, useState } <span class="kw">from</span> <span class="str">"react"</span>;
-<span class="kw">import</span> { useAppStore } <span class="kw">from</span> <span class="str">"../stores/app-store"</span>;
-
-<span class="kw">export function</span> <span class="fn">Sidebar</span>() {
-  <span class="kw">const</span> { files, groups } = <span class="fn">useAppStore</span>();
-  <span class="kw">const</span> [search, setSearch] = <span class="fn">useState</span>(<span class="str">""</span>);
-
-  <span class="kw">return</span> (
-    &lt;<span class="type">div</span> <span class="attr">style</span>={{ width: <span class="num">240</span> }}&gt;
-      &lt;<span class="type">SearchBox</span> /&gt;
-      &lt;<span class="type">DrawerSection</span> /&gt;
-    &lt;/<span class="type">div</span>&gt;
-  );
-}` },
-  { id: 'f6', name: 'notes', ext: 'md', modified: Date.now()/1000 - 86400,
+  { id: 'f7', name: 'notes', ext: 'md', modified: Date.now()/1000 - 86400,
     added: 0, removed: 0, deleted: false,
     content: `<h2>Development Notes</h2>
-<p>Some quick notes about the architecture and design decisions made during development.</p>
+<p>Architecture decisions and design rationale for Codorum.</p>
 <h3>File Watching</h3>
-<p>Using the <code>notify</code> crate with FSEvents backend on macOS for native performance.</p>
-<p>Events are debounced at 200ms to prevent rapid-fire updates during batch saves.</p>` },
-  { id: 'f7', name: 'config', ext: 'json', modified: Date.now()/1000 - 172800,
+<p>Using the <code>notify</code> crate with FSEvents backend on macOS for native performance. Events are debounced at 250ms to prevent rapid-fire updates during batch saves.</p>
+<h3>Editor Modes</h3>
+<p>File type determines which editor loads:</p>
+<ul>
+<li><code>.md</code> / <code>.mdx</code> → Tiptap WYSIWYG with slash menu, bubble toolbar, Mermaid support</li>
+<li><code>.ts</code> / <code>.rs</code> / <code>.py</code> etc. → CodeMirror 6 with syntax highlighting</li>
+<li>Everything else → plain <code>textarea</code> with monospace font</li>
+</ul>
+<div class="mermaid-block"><div class="mermaid-render">graph LR<br>  A[File Drop] --> B{Extension?}<br>  B -->|.md| C[Tiptap]<br>  B -->|.ts/.rs| D[CodeMirror]<br>  B -->|other| E[Textarea]</div></div>` },
+  { id: 'f8', name: 'tauri.conf', ext: 'json', modified: Date.now()/1000 - 172800,
     added: 0, removed: 0, deleted: true,
     content: `{
-  <span class="attr">"appName"</span>: <span class="str">"Codorum"</span>,
-  <span class="attr">"version"</span>: <span class="str">"0.1.0"</span>,
-  <span class="attr">"window"</span>: {
-    <span class="attr">"width"</span>: <span class="num">1200</span>,
-    <span class="attr">"height"</span>: <span class="num">800</span>
+  <span class="attr">"productName"</span>: <span class="str">"CODORUM"</span>,
+  <span class="attr">"version"</span>: <span class="str">"0.2.0"</span>,
+  <span class="attr">"app"</span>: {
+    <span class="attr">"windows"</span>: [{
+      <span class="attr">"width"</span>: <span class="num">1200</span>,
+      <span class="attr">"height"</span>: <span class="num">800</span>,
+      <span class="attr">"minWidth"</span>: <span class="num">900</span>,
+      <span class="attr">"minHeight"</span>: <span class="num">600</span>,
+      <span class="attr">"titleBarStyle"</span>: <span class="str">"Overlay"</span>
+    }]
   }
 }` },
 ];
 
 let activeFileId = 'f1';
 let selectedIds = new Set();
-let collapsedCards = new Set(['f3', 'f4', 'f7']);
+let collapsedCards = new Set(['f4', 'f6', 'f8']);
 let searchQuery = '';
 let cmdSelectedIdx = 0;
 
 const GROUPS = [
   { id: 'pinned', name: 'Pinned', fileIds: ['f1'] },
-  { id: 'src', name: 'src', fileIds: ['f2', 'f3', 'f4', 'f5'], ejectable: true },
-  { id: 'loose', name: 'Loose', fileIds: ['f6', 'f7'] },
+  { id: 'src', name: 'src', fileIds: ['f2', 'f5', 'f6'], ejectable: true },
+  { id: 'src-tauri', name: 'src-tauri', fileIds: ['f3', 'f4'], ejectable: true },
+  { id: 'loose', name: 'Loose', fileIds: ['f7', 'f8'] },
 ];
-let openDrawers = new Set(['pinned', 'src', 'loose']);
+let openDrawers = new Set(['pinned', 'src', 'src-tauri', 'loose']);
 
 const COMMANDS = [
   { type: 'sep', label: 'Actions' },
@@ -748,6 +885,7 @@ const COMMANDS = [
   { type: 'cmd', id: 'add-file', label: 'Add Files', icon: '📄' },
   { type: 'cmd', id: 'create-tab', label: 'Create Tab', icon: '＋' },
   { type: 'cmd', id: 'new-src', label: 'New File in src', icon: '＋' },
+  { type: 'cmd', id: 'new-src-tauri', label: 'New File in src-tauri', icon: '＋' },
   { type: 'sep', label: 'Appearance' },
   { type: 'cmd', id: 'theme', label: 'Cycle Theme', icon: '🎨', kbd: '⌘T', sub: '' },
 ];
@@ -770,7 +908,7 @@ function extColor(ext) {
 
 function detectMode(ext) {
   if (['md','markdown','mdx'].includes(ext)) return 'markdown';
-  if (['ts','tsx','js','jsx','rs','py','go','css','scss','json','toml','yaml','yml'].includes(ext)) return 'code';
+  if (['ts','tsx','js','jsx','rs','py','go','c','cpp','h','hpp','java','rb','swift','kt','cs','css','scss','less','html','xml','sql','sh','bash','zsh','lua','zig','toml','yaml','yml','json','jsonc','dockerfile','makefile'].includes(ext)) return 'code';
   return 'text';
 }
 
@@ -1175,7 +1313,7 @@ document.addEventListener('drop', (e) => {
 // INIT
 // ═══════════════════════════════════════════════════════════
 renderAll();
-addToast('7 file(s)', 'restored', 'cyan');
+addToast('8 file(s)', 'restored', 'cyan');
 </script>
 </body>
 </html>
