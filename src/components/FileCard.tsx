@@ -49,6 +49,7 @@ const CODE_EXTS = new Set([
   "java", "rb", "swift", "kt", "cs", "css", "scss", "less", "html",
   "xml", "sql", "sh", "bash", "zsh", "lua", "zig", "toml", "yaml",
   "yml", "json", "jsonc", "dockerfile", "makefile",
+  "fs", "vs", "frag", "vert", "glsl",
 ]);
 
 function detectMode(ext: string): "markdown" | "code" | "text" {
