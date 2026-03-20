@@ -1,10 +1,10 @@
-import { Search, Maximize2, Minimize2 } from "lucide-react";
+import { Search, Maximize2, Minimize2, HelpCircle } from "lucide-react";
 import { useAppStore } from "../stores/app-store";
 import { useCommandStore } from "../stores/command-store";
 
 const THEMES = ["n01z", "paper", "phosphor", "ember"] as const;
 
-export function Toolbar() {
+export function Toolbar({ onHelp }: { onHelp?: () => void }) {
   const { files, theme, setTheme, isFullscreen, toggleFullscreen } = useAppStore();
   const openCmd = useCommandStore((s) => s.toggle);
 
@@ -35,6 +35,9 @@ export function Toolbar() {
             <Search size={14} /> <span className="kbd">⌘K</span>
           </button>
           <button className="btn-ghost" onClick={cycleTheme}>{theme}</button>
+          <button className="btn-icon" onClick={onHelp} title="Help & Shortcuts">
+            <HelpCircle size={16} />
+          </button>
         </div>
       </div>
     </div>

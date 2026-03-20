@@ -9,6 +9,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { Toasts } from "./components/Toasts";
 import { EjectBar } from "./components/EjectBar";
 import { DropZone } from "./components/DropZone";
+import { HelpModal } from "./components/HelpModal";
 import { useAppStore } from "./stores/app-store";
 import { useToastStore } from "./stores/toast-store";
 import { useCommandStore } from "./stores/command-store";
@@ -20,6 +21,7 @@ export default function App() {
   const isFullscreen = useAppStore((s) => s.isFullscreen);
   const addToast = useToastStore((s) => s.add);
   const [dropHovering, setDropHovering] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Sync theme to DOM
   useEffect(() => {
@@ -202,6 +204,23 @@ export default function App() {
         }
       }
 
+      // ⇧⌘↑/⇧⌘↓ — switch between file cards
+      if (mod && e.shiftKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        const { files, activeFileId, openFile: navTo } = useAppStore.getState();
+        if (files.length === 0) return;
+        e.preventDefault();
+        // Build visible file order from DOM (matches ContentPane rendering)
+        const cards = Array.from(document.querySelectorAll<HTMLElement>(".content-scroll .fc[id]"));
+        const ids = cards.map((el) => el.id);
+        if (ids.length === 0) return;
+        const curIdx = activeFileId ? ids.indexOf(activeFileId) : -1;
+        const nextIdx = e.key === "ArrowDown"
+          ? Math.min(curIdx + 1, ids.length - 1)
+          : Math.max(curIdx - 1, 0);
+        navTo(ids[nextIdx]);
+        cards[nextIdx]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
       // Escape — clear selection
       if (e.key === "Escape" && !isEditing) {
         useAppStore.getState().clearSelection();
@@ -225,13 +244,14 @@ export default function App() {
     <div className="flex flex-col h-full select-none" style={{ padding: 16, gap: 16, position: 'relative', overflow: 'hidden' }}>
       <div className="bg-solid" />
       <div className="bg-grad" />
-      <div className="ui">
-        <Toolbar />
+      <div className={`ui ${showHelp ? "help-blur" : ""}`}>
+        <Toolbar onHelp={() => setShowHelp(true)} />
         <div className="main">
           {!isFullscreen && <Sidebar />}
           <ContentPane />
         </div>
       </div>
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       <CommandPalette />
       <EjectBar />
       <Toasts />

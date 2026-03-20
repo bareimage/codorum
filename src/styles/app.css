@@ -229,7 +229,7 @@ button{cursor:pointer;font-family:inherit}
 .fc-h-main{display:flex;align-items:center;gap:12px;flex:1}
 .fc-h .chev{flex-shrink:0;color:var(--tx3);background:transparent;border:none;padding:0;transition:transform .15s}
 .fc-h .chev.open svg{transform:rotate(90deg)}
-.fc-h .cdot{width:12px;height:12px;border-radius:9999px;flex-shrink:0}
+.fc-h .file-icon{width:16px;height:16px;flex-shrink:0;opacity:.8;margin-left:3px;margin-right:8px}
 .fc-h .ftitle{font-size:16px;font-weight:600;letter-spacing:-.02em}
 .fc-h .ftitle .ext{color:var(--tx3);font-weight:500}
 .fc-h .fmeta{margin-left:auto;display:flex;align-items:center;gap:16px}
@@ -278,6 +278,29 @@ button{cursor:pointer;font-family:inherit}
 .cmd-item .cmd-sub{margin-left:auto;font-size:12px;color:var(--tx3)}
 .cmd-foot{display:flex;gap:16px;padding:10px 16px;border-top:1px solid var(--brd);font-size:11px;color:var(--tx3)}
 .cmd-foot span{display:flex;align-items:center;gap:4px}
+
+/* ═══ Status Bar ═══ */
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--brd);font-size:10px;color:var(--tx3);opacity:.6}
+.status-bar:hover{opacity:1}
+.sb-files{flex:1}
+.sb-help{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;background:transparent;color:var(--tx3);border-radius:9999px;cursor:pointer;opacity:.6}
+.sb-help:hover{opacity:1;color:var(--tx2);background:var(--hover)}
+
+/* ═══ Help Modal ═══ */
+.ui.help-blur{filter:blur(12px) saturate(.6);transform:scale(.97) rotate(-.5deg);transition:filter .4s ease,transform .4s ease;pointer-events:none}
+.help-overlay{position:fixed;inset:0;z-index:110;display:flex;align-items:center;justify-content:center}
+.help-panel{width:440px;max-height:80vh;overflow-y:auto;background:var(--cmd-bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:16px;box-shadow:var(--cmd-shadow);padding:28px 32px}
+.help-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.help-title{font-size:18px;font-weight:700;color:var(--tx);letter-spacing:-.02em}
+.help-desc{font-size:13px;line-height:1.6;color:var(--tx2);margin-bottom:20px}
+.help-section{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--brd)}
+.help-list{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.help-list li{font-size:13px;color:var(--tx2);padding-left:12px;position:relative}
+.help-list li::before{content:"·";position:absolute;left:0;color:var(--tx3);font-weight:700}
+.help-keys{display:flex;flex-direction:column;gap:4px}
+.help-row{display:flex;align-items:center;gap:12px;padding:5px 0;font-size:13px;color:var(--tx2)}
+.help-kbd{min-width:100px;font-size:11px;font-family:var(--font-mono);color:var(--tx3);background:var(--hover);padding:3px 8px;border-radius:6px;text-align:center;border:1px solid var(--brd)}
+.help-footer{margin-top:20px;font-size:12px;color:var(--tx3);text-align:center;font-style:italic}
 
 /* ═══ Eject Bar ═══ */
 .ej-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 20px;background:var(--bg2);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:9999px;box-shadow:0 8px 32px rgba(0,0,0,.2);white-space:nowrap}
