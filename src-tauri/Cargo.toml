@@ -20,3 +20,5 @@ notify = { version = "7", default-features = false, features = ["macos_fsevent"]
 uuid = { version = "1", features = ["v4"] }
 window-vibrancy = "0.6"
 diffy = "0.4.2"
+rusqlite = { version = "0.31", features = ["bundled"] }
+dirs = "5"

@@ -10,7 +10,6 @@ import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { FileIcon } from "./FileIcon";
 import { ResizeHandle } from "./ResizeHandle";
-import { MicroTimeline } from "./MicroTimeline";
 import { reconstructAtSnapshot } from "../utils/reconstructContent";
 import { buildAnnotatedLines } from "../utils/diffUtils";
 import type { WatchedFile, FileSnapshot } from "../types/files";
@@ -95,10 +94,18 @@ export function FileCard({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const mode = detectMode(file.extension);
   const activeSnapshotTs = useAppStore((s) => s.activeSnapshots[file.id]) ?? null;
   const setActiveSnapshot = useAppStore((s) => s.setActiveSnapshot);
+  const [snapshots, setSnapshots] = useState<FileSnapshot[]>([]);
+
+  // Load snapshots from DB when needed (timeline scrubbing)
+  useEffect(() => {
+    if (activeSnapshotTs !== null) {
+      invoke<FileSnapshot[]>("get_snapshots", { filePath: file.path }).then(setSnapshots);
+    }
+  }, [activeSnapshotTs, file.path]);
 
   // Entrance animation
   useEffect(() => {
@@ -131,12 +138,10 @@ export function FileCard({
       }
 
       invoke<WatchedFile>("save_file", { id: file.id, content: latest }).then((saved) => {
-        const snap = saved.history[saved.history.length - 1];
         patchFileMeta(file.id, {
           content: latest,
-          history: saved.history,
-          linesAdded: snap?.lines_added ?? 0,
-          linesRemoved: snap?.lines_removed ?? 0,
+          linesAdded: saved.lines_added ?? 0,
+          linesRemoved: saved.lines_removed ?? 0,
           modified: saved.modified,
         });
         setContent(latest);
@@ -176,17 +181,17 @@ export function FileCard({
   })();
 
   const historicalSnap = activeSnapshotTs
-    ? (file.history || []).find((s) => s.timestamp === activeSnapshotTs)
+    ? snapshots.find((s) => s.timestamp === activeSnapshotTs)
     : null;
 
   const reconstructedContent = useMemo(() => {
     if (!historicalSnap) return null;
-    const snapIdx = (file.history || []).findIndex(
+    const snapIdx = snapshots.findIndex(
       (s) => s.timestamp === activeSnapshotTs,
     );
     if (snapIdx === -1) return null;
-    return reconstructAtSnapshot(file.content, file.history, snapIdx);
-  }, [historicalSnap, file.content, file.history, activeSnapshotTs]);
+    return reconstructAtSnapshot(file.content, snapshots, snapIdx);
+  }, [historicalSnap, file.content, snapshots, activeSnapshotTs]);
 
   const isReadOnly = !isActive || file.deleted;
 
@@ -203,14 +208,6 @@ export function FileCard({
       ref={cardRef}
       id={file.id}
       className={`fc${isActive ? " active" : ""}${isSelected ? " selected" : ""}`}
-      onMouseEnter={() => {
-        if (!isActive) {
-          hoverTimer.current = setTimeout(onActivate, 500);
-        }
-      }}
-      onMouseLeave={() => {
-        if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
-      }}
       onClick={onActivate}
     >
       {/* Card header */}
@@ -261,9 +258,6 @@ export function FileCard({
             </span>
           ) : null}
         </div>
-        {file.history && file.history.length > 0 && (
-          <MicroTimeline history={file.history} size="medium" />
-        )}
       </div>
 
       {/* History mode banner */}

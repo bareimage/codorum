@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { invoke } from "@tauri-apps/api/core";
-import type { WatchedFile, FileGroup, FileSnapshot } from "../types/files";
+import type { WatchedFile, FileGroup } from "../types/files";
 import { useToastStore } from "./toast-store";
 
 /** Non-reactive map of file id -> current editor content. Updated by FileCard onChange. */
@@ -67,9 +67,6 @@ interface AppState {
   clearSelection: () => void;
   ejectSelected: () => void;
 
-  // History persistence
-  fileHistory: Record<string, FileSnapshot[]>;
-
   // File actions
   setFiles: (files: WatchedFile[]) => void;
   addFiles: (files: WatchedFile[]) => void;
@@ -116,7 +113,6 @@ export const useAppStore = create<AppState>()(
       savedFilePaths: [],
       groups: [],
       theme: "n01z",
-      fileHistory: {} as Record<string, FileSnapshot[]>,
       isFullscreen: false,
       toggleFullscreen: () => set((s) => ({ isFullscreen: !s.isFullscreen })),
       drawerOpen: { pinned: true, loose: true },
@@ -198,35 +194,19 @@ export const useAppStore = create<AppState>()(
             f.id === id ? { ...f, ...updates, _rev: (f._rev ?? 0) + 1 } : f,
           );
           const needsSync = updates.path !== undefined || updates.pinned !== undefined;
-          const result: Record<string, unknown> = needsSync
+          return needsSync
             ? { files, savedFilePaths: toSavedPaths(files) }
             : { files };
-          // Auto-sync fileHistory when history is updated
-          if (updates.history) {
-            const file = files.find((f) => f.id === id);
-            if (file) {
-              result.fileHistory = { ...s.fileHistory, [file.path]: updates.history };
-            }
-          }
-          return result;
         }),
 
       // Like updateFile but does NOT bump _rev — used for internal saves
       // so editors (keyed on editorRev) stay mounted.
       patchFileMeta: (id, updates) =>
-        set((s) => {
-          const files = s.files.map((f) =>
+        set((s) => ({
+          files: s.files.map((f) =>
             f.id === id ? { ...f, ...updates } : f,
-          );
-          const result: Record<string, unknown> = { files };
-          if (updates.history) {
-            const file = files.find((f) => f.id === id);
-            if (file) {
-              result.fileHistory = { ...s.fileHistory, [file.path]: updates.history };
-            }
-          }
-          return result;
-        }),
+          ),
+        })),
 
       removeFile: (id) =>
         set((s) => {
@@ -274,22 +254,19 @@ export const useAppStore = create<AppState>()(
 
         invoke<WatchedFile>("save_file", { id: activeFileId, content })
           .then((saved) => {
-            const latest = saved.history[saved.history.length - 1];
             set((s) => ({
               files: s.files.map((f) =>
                 f.id === activeFileId
                   ? {
                       ...f,
                       content,
-                      history: saved.history,
-                      linesAdded: latest?.lines_added ?? 0,
-                      linesRemoved: latest?.lines_removed ?? 0,
+                      linesAdded: saved.lines_added ?? 0,
+                      linesRemoved: saved.lines_removed ?? 0,
                       modified: saved.modified,
                     }
                   : f,
               ),
               cardDirty: { ...s.cardDirty, [activeFileId]: false },
-              fileHistory: { ...s.fileHistory, [file.path]: saved.history },
             }));
             useToastStore.getState().add("Saved", file.name, "cyan");
           })
@@ -409,7 +386,6 @@ export const useAppStore = create<AppState>()(
         searchMode: state.searchMode,
         cardCollapsed: state.cardCollapsed,
         cardHeights: state.cardHeights,
-        fileHistory: state.fileHistory,
       }),
     },
   ),

@@ -77,11 +77,3 @@ pub fn initial_snapshot(content: &str) -> FileSnapshot {
         lines_removed: 0,
     }
 }
-
-/// Push a snapshot onto history, capping at 50 entries.
-pub fn push_snapshot(history: &mut Vec<FileSnapshot>, snap: FileSnapshot) {
-    history.push(snap);
-    if history.len() > 50 {
-        history.remove(0);
-    }
-}

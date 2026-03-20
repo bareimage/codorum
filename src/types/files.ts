@@ -14,7 +14,10 @@ export interface WatchedFile {
   content: string;
   modified: number;
   pinned: boolean;
-  history: FileSnapshot[];
+  /** Latest snapshot diff stats (for sidebar badges). Full history lives in SQLite. */
+  lines_added?: number;
+  lines_removed?: number;
+  /** Frontend aliases for camelCase access */
   linesAdded?: number;
   linesRemoved?: number;
   /** Internal revision counter — incremented on each external update to force editor remount */

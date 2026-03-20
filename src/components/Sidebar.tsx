@@ -13,7 +13,6 @@ import { useToastStore } from "../stores/toast-store";
 import { sortFiles } from "../utils/sortFiles";
 import { FileIcon } from "./FileIcon";
 import { StatusBar } from "./StatusBar";
-import { MicroTimeline } from "./MicroTimeline";
 import { useStaggerIn } from "../hooks/useAnime";
 import type { WatchedFile } from "../types/files";
 
@@ -60,7 +59,6 @@ function DraggableFileItem({
           ) : null}
           {file.deleted && <span className="del-badge">deleted</span>}
         </div>
-        <MicroTimeline history={file.history} />
         {excerpt && (
           <div
             style={{

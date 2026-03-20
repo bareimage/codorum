@@ -1,6 +1,7 @@
+use crate::db::SnapshotDb;
 use crate::error::CodorumError;
 use crate::models::{FileRenamedPayload, WatchedFile};
-use crate::snapshot::{create_snapshot, initial_snapshot, push_snapshot};
+use crate::snapshot::create_snapshot;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::{Mutex, RwLock};
@@ -118,24 +119,30 @@ impl FileRegistry {
     }
 
     // ── Suppression API ──
+    // Mutex poisoning = programmer error → panic is correct here
 
     fn suppress_path(&self, path: &str) {
-        if let Ok(mut set) = self.suppressed.lock() {
-            set.insert(path.to_string());
-        }
+        self.suppressed
+            .lock()
+            .expect("suppression mutex poisoned")
+            .insert(path.to_string());
     }
 
     fn take_suppressed(&self, path: &str) -> bool {
-        if let Ok(mut set) = self.suppressed.lock() {
-            set.remove(path)
-        } else {
-            false
-        }
+        self.suppressed
+            .lock()
+            .expect("suppression mutex poisoned")
+            .remove(path)
     }
 
-    // ── Save: suppress -> disk write -> update state ──
+    // ── Save: suppress -> disk write -> snapshot to DB ──
 
-    pub fn save_file(&self, id: &str, content: &str) -> Result<WatchedFile, CodorumError> {
+    pub fn save_file(
+        &self,
+        id: &str,
+        content: &str,
+        db: &SnapshotDb,
+    ) -> Result<WatchedFile, CodorumError> {
         // 1. Read lock -> get path + old content
         let (path, old_content) = {
             let store = self.store.read().map_err(|_| CodorumError::Lock)?;
@@ -151,17 +158,22 @@ impl FileRegistry {
         // 3. Write to disk (no lock held)
         std::fs::write(&path, content)?;
 
-        // 4. Create snapshot if content changed (no lock held)
+        // 4. Create snapshot if content changed, write to DB (no lock held)
         let snap = create_snapshot(&old_content, content);
+        if let Some(ref s) = snap {
+            db.push_snapshot(&path, s);
+        }
 
-        // 5. Write lock -> update state
+        // 5. Write lock -> update in-memory state (content + modified, no history)
         let mut store = self.store.write().map_err(|_| CodorumError::Lock)?;
         let file = store
             .get_by_id_mut(id)
             .ok_or_else(|| CodorumError::FileNotFound(id.to_string()))?;
         file.content = content.to_string();
-        if let Some(s) = snap {
-            push_snapshot(&mut file.history, s);
+        // Update latest diff stats for sidebar badges
+        if let Some(ref s) = snap {
+            file.lines_added = s.lines_added;
+            file.lines_removed = s.lines_removed;
         }
         if let Ok(meta) = std::fs::metadata(&path) {
             if let Ok(mod_time) = meta.modified() {
@@ -175,7 +187,11 @@ impl FileRegistry {
 
     // ── Watcher event handlers ──
 
-    pub fn handle_file_changed(&self, path: &str) -> Result<Option<WatchedFile>, CodorumError> {
+    pub fn handle_file_changed(
+        &self,
+        path: &str,
+        db: &SnapshotDb,
+    ) -> Result<Option<WatchedFile>, CodorumError> {
         // 1. Check suppression
         if self.take_suppressed(path) {
             return Ok(None);
@@ -201,15 +217,19 @@ impl FileRegistry {
             return Ok(None);
         }
 
-        // 5. Create snapshot (no lock)
+        // 5. Create snapshot, write to DB (no lock)
         let snap = create_snapshot(&old_content, &new_content);
+        if let Some(ref s) = snap {
+            db.push_snapshot(path, s);
+        }
 
-        // 6. Write lock -> update file
+        // 6. Write lock -> update in-memory state
         let mut store = self.store.write().map_err(|_| CodorumError::Lock)?;
         if let Some(file) = store.get_by_path_mut(path) {
             file.content = new_content;
-            if let Some(s) = snap {
-                push_snapshot(&mut file.history, s);
+            if let Some(ref s) = snap {
+                file.lines_added = s.lines_added;
+                file.lines_removed = s.lines_removed;
             }
             if let Ok(meta) = std::fs::metadata(path) {
                 if let Ok(mod_time) = meta.modified() {
@@ -256,7 +276,9 @@ impl FileRegistry {
     }
 }
 
-/// Read file info from disk and create a WatchedFile with an initial snapshot.
+/// Read file info from disk and create a WatchedFile.
+/// Initial snapshot is written to DB by the caller.
+/// For .docx files, converts to markdown via pandoc.
 pub fn read_file_info(path: &PathBuf) -> Option<WatchedFile> {
     let name = path.file_stem()?.to_string_lossy().to_string();
     let ext = path
@@ -273,8 +295,6 @@ pub fn read_file_info(path: &PathBuf) -> Option<WatchedFile> {
         .ok()?
         .as_secs();
 
-    let snap = initial_snapshot(&content);
-
     Some(WatchedFile {
         id: uuid::Uuid::new_v4().to_string(),
         path: path.to_string_lossy().to_string(),
@@ -283,6 +303,7 @@ pub fn read_file_info(path: &PathBuf) -> Option<WatchedFile> {
         content,
         modified,
         pinned: false,
-        history: vec![snap],
+        lines_added: 0,
+        lines_removed: 0,
     })
 }
