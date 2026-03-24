@@ -11,7 +11,6 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { FileIcon } from "./FileIcon";
 import { ResizeHandle } from "./ResizeHandle";
 import { reconstructAtSnapshot } from "../utils/reconstructContent";
-import { marked } from "marked";
 import { buildAnnotatedLines } from "../utils/diffUtils";
 import type { WatchedFile, FileSnapshot } from "../types/files";
 
@@ -304,19 +303,14 @@ export function FileCard({
               )
             ) : (
               <>
-                {mode === "markdown" && isActive && (
+                {mode === "markdown" && (
                   <MilkdownEditor
                     key={`md-${file.id}-${file._rev ?? 0}`}
                     content={content}
                     onChange={handleTextChange}
                     fileId={file.id}
-                    editable={!isReadOnly}
-                  />
-                )}
-                {mode === "markdown" && !isActive && (
-                  <div
-                    className="tiptap-editor-content"
-                    dangerouslySetInnerHTML={{ __html: marked.parse(content) as string }}
+                    editable={isActive && !isReadOnly}
+                    template={useAppStore.getState().mdTemplates[file.id] || useAppStore.getState().mdTemplate}
                   />
                 )}
                 {mode === "code" && (

@@ -20,6 +20,12 @@ interface AppState {
   // Theme
   theme: string;
 
+  // Markdown template
+  mdTemplate: string;
+  mdTemplates: Record<string, string>; // per-file overrides keyed by file id
+  setMdTemplate: (template: string) => void;
+  setFileMdTemplate: (fileId: string, template: string) => void;
+
   // Fullscreen
   isFullscreen: boolean;
   toggleFullscreen: () => void;
@@ -101,6 +107,11 @@ export const useAppStore = create<AppState>()(
       activeFileId: null,
       groups: [],
       theme: "n01z",
+      mdTemplate: "github",
+      mdTemplates: {},
+      setMdTemplate: (template) => set({ mdTemplate: template }),
+      setFileMdTemplate: (fileId, template) =>
+        set((s) => ({ mdTemplates: { ...s.mdTemplates, [fileId]: template } })),
       isFullscreen: false,
       toggleFullscreen: () => set((s) => ({ isFullscreen: !s.isFullscreen })),
       drawerOpen: { pinned: true, loose: true },
@@ -369,6 +380,8 @@ export const useAppStore = create<AppState>()(
       name: "codorum-state",
       partialize: (state) => ({
         theme: state.theme,
+        mdTemplate: state.mdTemplate,
+        mdTemplates: state.mdTemplates,
         groups: state.groups,
         drawerOpen: state.drawerOpen,
         sortBy: state.sortBy,
