@@ -45,7 +45,7 @@ Codorum is a **Tauri v2 desktop app** (Rust backend + React 19 frontend) that wa
 
 **Never translate mockup CSS to Tailwind utilities.** This has failed multiple times.
 
-When a mockup HTML file exists:
+When a mockup HTML file exists (see `docs/mockups/`):
 1. Copy the CSS block **verbatim** into `src/styles/app.css`
 2. Use those class names directly in JSX (`className="fc-h"`)
 3. Custom classes and Tailwind v4 coexist naturally — no conflict

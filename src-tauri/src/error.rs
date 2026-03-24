@@ -5,6 +5,7 @@ pub enum CodorumError {
     FileNotFound(String),
     AlreadyExists(String),
     Io(std::io::Error),
+    Db(String),
     Lock,
 }
 
@@ -14,6 +15,7 @@ impl fmt::Display for CodorumError {
             Self::FileNotFound(p) => write!(f, "File not found: {}", p),
             Self::AlreadyExists(p) => write!(f, "File already exists: {}", p),
             Self::Io(e) => write!(f, "IO error: {}", e),
+            Self::Db(e) => write!(f, "Database error: {}", e),
             Self::Lock => write!(f, "Lock poisoned"),
         }
     }

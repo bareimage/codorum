@@ -52,9 +52,3 @@ pub struct FileRenamedPayload {
     pub new_extension: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct SavedFileEntry {
-    pub id: String,
-    pub path: String,
-    pub pinned: bool,
-}

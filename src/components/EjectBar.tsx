@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { animate } from "animejs";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
@@ -35,9 +34,7 @@ export function EjectBar() {
 
   const handleEject = () => {
     const count = selectedIds.size;
-    const ids = [...selectedIds];
     ejectSelected();
-    invoke("remove_files", { ids });
     addToast(`${count} file(s)`, "ejected", "amber");
   };
 

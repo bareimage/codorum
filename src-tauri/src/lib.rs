@@ -44,7 +44,7 @@ pub fn run() {
                 }
                 FileEvent::Renamed { old_path, new_path } => {
                     if let Some(payload) = reg_for_watcher.handle_renamed(&old_path, &new_path) {
-                        db_for_watcher.rename_path(&old_path, &new_path);
+                        let _ = db_for_watcher.rename_file(&old_path, &new_path, &payload.new_name, &payload.new_extension);
                         let _ = handle.emit("file-renamed", payload);
                     }
                 }
@@ -70,7 +70,7 @@ pub fn run() {
             commands::add_files,
             commands::add_directory,
             commands::drop_paths,
-            commands::restore_files,
+            commands::load_watched_files,
             commands::reveal_in_finder,
             commands::get_snapshots,
         ])

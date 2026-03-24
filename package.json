@@ -1,7 +1,7 @@
 {
   "name": "codorum",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.5",
   "license": "CC0-1.0",
   "type": "module",
   "scripts": {
@@ -32,6 +32,9 @@
     "@dnd-kit/react": "^0.3.2",
     "@lezer/highlight": "^1.2.3",
     "@mdxeditor/editor": "^3.52.4",
+    "@milkdown/crepe": "^7.19.2",
+    "@milkdown/kit": "^7.19.2",
+    "@milkdown/react": "^7.19.2",
     "@tauri-apps/api": "^2.5.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
