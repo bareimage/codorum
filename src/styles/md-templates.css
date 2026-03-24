@@ -3,20 +3,56 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Slash menu: opaque, on top of everything ─────────── */
+/* Slash menu — Codorum command palette style, compact */
 .milkdown-container .milkdown .milkdown-slash-menu {
   z-index:999 !important;
-  background:var(--bg2) !important;
+  background:var(--cmd-bg) !important;
   backdrop-filter:saturate(180%) blur(40px) !important;
   -webkit-backdrop-filter:saturate(180%) blur(40px) !important;
-  box-shadow:0 8px 24px rgba(0,0,0,0.3) !important;
+  box-shadow:var(--cmd-shadow) !important;
   border:1px solid var(--brd) !important;
   border-radius:12px !important;
+  font-family:var(--font-sans) !important;
+  min-width:180px !important;
 }
 .milkdown-container .milkdown .milkdown-slash-menu .tab-group {
-  background:var(--bg2) !important;
+  background:transparent !important;
+  padding:6px 8px 0 !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .tab-group ul {
+  gap:4px !important;
+  padding:4px 6px !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .tab-group ul li {
+  font-size:12px !important;
+  padding:4px 8px !important;
+  line-height:16px !important;
+  border-radius:6px !important;
 }
 .milkdown-container .milkdown .milkdown-slash-menu .menu-groups {
-  background:var(--bg2) !important;
+  background:transparent !important;
+  padding:4px 8px 8px !important;
+  max-height:280px !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .menu-groups .menu-group h6 {
+  font-size:10px !important;
+  padding:8px 6px 4px !important;
+  line-height:14px !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .menu-groups .menu-group li {
+  min-width:160px !important;
+  padding:6px 8px !important;
+  gap:8px !important;
+  border-radius:6px !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .menu-groups .menu-group li > span {
+  font-size:12px !important;
+  line-height:16px !important;
+  font-weight:500 !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .menu-groups .menu-group li svg {
+  width:16px !important;
+  height:16px !important;
 }
 .milkdown-container .milkdown .milkdown-block-handle {
   z-index:50 !important;
