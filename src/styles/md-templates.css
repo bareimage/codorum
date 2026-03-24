@@ -5,9 +5,18 @@
 /* ── Slash menu: opaque, on top of everything ─────────── */
 .milkdown-container .milkdown .milkdown-slash-menu {
   z-index:999 !important;
-  background:var(--card) !important;
-  box-shadow:0 4px 16px rgba(0,0,0,0.25) !important;
+  background:var(--bg2) !important;
+  backdrop-filter:saturate(180%) blur(40px) !important;
+  -webkit-backdrop-filter:saturate(180%) blur(40px) !important;
+  box-shadow:0 8px 24px rgba(0,0,0,0.3) !important;
   border:1px solid var(--brd) !important;
+  border-radius:12px !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .tab-group {
+  background:var(--bg2) !important;
+}
+.milkdown-container .milkdown .milkdown-slash-menu .menu-groups {
+  background:var(--bg2) !important;
 }
 .milkdown-container .milkdown .milkdown-block-handle {
   z-index:50 !important;
