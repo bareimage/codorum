@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
-import { Search, File, FolderOpen, Plus, Sparkles, Palette, ExternalLink } from "lucide-react";
+import { Search, File, FolderOpen, Plus, Sparkles, Palette, ExternalLink, Trash2 } from "lucide-react";
 import { animate } from "animejs";
 import { useAppStore } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
@@ -18,15 +18,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
   sparkle: Sparkles,
   palette: Palette,
   external: ExternalLink,
+  eject: Trash2,
 };
 
 type PaletteItem =
-  | { type: "cmd"; id: string; label: string; icon: "search" | "file" | "folder" | "plus" | "sparkle" | "palette" | "external"; kbd?: string; sub?: string }
+  | { type: "cmd"; id: string; label: string; icon: "search" | "file" | "folder" | "plus" | "sparkle" | "palette" | "external" | "eject"; kbd?: string; sub?: string }
   | { type: "sep"; label: string };
 
 export function CommandPalette() {
   const { open, close } = useCommandStore();
-  const { files, groups, activeFileId, openFile, setTheme, theme, addFiles, addGroup, createTab } = useAppStore();
+  const { files, groups, activeFileId, selectedIds, openFile, setTheme, theme, addFiles, addGroup, createTab } = useAppStore();
   const addToast = useToastStore((s) => s.add);
   const [query, setQuery] = useState("");
   const [idx, setIdx] = useState(0);
@@ -93,6 +94,9 @@ export function CommandPalette() {
     all.push({ type: "sep", label: "Actions" });
     if (activeFile) {
       all.push({ type: "cmd", id: "reveal-finder", label: "Reveal in Finder", icon: "external" });
+    }
+    if (activeFile || selectedIds.size > 0) {
+      all.push({ type: "cmd", id: "eject-file", label: "Eject File", icon: "eject" });
     }
     all.push({ type: "cmd", id: "add-folder", label: "Add Folder", icon: "folder" });
     all.push({ type: "cmd", id: "add-file", label: "Add Files", icon: "file" });
@@ -220,11 +224,21 @@ export function CommandPalette() {
     (item: PaletteItem) => {
       if (item.type === "sep") return;
       if (item.id === "reveal-finder") {
-        const activeFile = useAppStore.getState().activeFileId
-          ? files.find((f) => f.id === useAppStore.getState().activeFileId)
-          : null;
-        if (activeFile) {
-          invoke("reveal_in_finder", { path: activeFile.path });
+        const state = useAppStore.getState();
+        const targetId = state.activeFileId || [...state.selectedIds][0];
+        const targetFile = targetId ? files.find((f) => f.id === targetId) : null;
+        if (targetFile) {
+          invoke("reveal_in_finder", { path: targetFile.path });
+        }
+        close();
+      } else if (item.id === "eject-file") {
+        const state = useAppStore.getState();
+        if (state.selectedIds.size > 0) {
+          state.ejectSelected();
+          addToast(`${state.selectedIds.size} file(s)`, "ejected", "amber");
+        } else if (state.activeFileId) {
+          state.removeFile(state.activeFileId);
+          addToast("File", "ejected", "amber");
         }
         close();
       } else if (item.id === "add-folder") {

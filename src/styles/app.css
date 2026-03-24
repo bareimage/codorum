@@ -241,7 +241,7 @@ button{cursor:pointer;font-family:inherit}
 /* Card Body */
 .fc-body{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;position:relative;background:var(--card)}
 .fc-body.closed{max-height:0!important;opacity:0}
-.fc-body.open{opacity:1}
+.fc-body.open{opacity:1;max-height:none;overflow:visible}
 
 /* Markdown body */
 .md-body{padding:24px 32px 24px 52px;font-family:Georgia,"Times New Roman",serif;font-size:15px;line-height:1.8;color:var(--tx2)}

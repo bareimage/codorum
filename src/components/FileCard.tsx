@@ -4,13 +4,14 @@ import { ChevronRight } from "lucide-react";
 import { animate } from "animejs";
 import { useAppStore, editorContentMap } from "../stores/app-store";
 import { useToastStore } from "../stores/toast-store";
-import { MarkdownEditor, type MarkdownEditorHandle } from "./MarkdownEditor";
 import { MarkdownDiffView } from "./MarkdownDiffView";
+import { MilkdownEditor } from "./MilkdownEditor";
 import { CodeEditor } from "./CodeEditor";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { FileIcon } from "./FileIcon";
 import { ResizeHandle } from "./ResizeHandle";
 import { reconstructAtSnapshot } from "../utils/reconstructContent";
+import { marked } from "marked";
 import { buildAnnotatedLines } from "../utils/diffUtils";
 import type { WatchedFile, FileSnapshot } from "../types/files";
 
@@ -52,6 +53,7 @@ const CODE_EXTS = new Set([
 ]);
 
 function detectMode(ext: string): "markdown" | "code" | "text" {
+  // Markdown: rendered preview when inactive, CodeMirror source editing when active
   if (MARKUP_EXTS.has(ext.toLowerCase())) return "markdown";
   if (CODE_EXTS.has(ext.toLowerCase())) return "code";
   return "text";
@@ -81,7 +83,6 @@ export function FileCard({
   onActivate,
 }: FileCardProps) {
   const addToast = useToastStore((s) => s.add);
-  const cardHeight = useAppStore((s) => s.cardHeights[file.id] ?? null);
   const dirty = useAppStore((s) => s.cardDirty[file.id] ?? false);
   const selectedIds = useAppStore((s) => s.selectedIds);
   const isSelected = selectedIds.has(file.id);
@@ -90,7 +91,6 @@ export function FileCard({
   const patchFileMeta = useAppStore((s) => s.patchFileMeta);
   const [content, setContent] = useState(file.content);
   const [trackedContent, setTrackedContent] = useState(file.content);
-  const mdEditorRef = useRef<MarkdownEditorHandle>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -130,12 +130,7 @@ export function FileCard({
   useEffect(() => {
     if (!isActive) return;
     const handler = () => {
-      let latest: string;
-      if (mode === "markdown" && mdEditorRef.current) {
-        latest = mdEditorRef.current.getMarkdown();
-      } else {
-        latest = editorContentMap.get(file.id) ?? content;
-      }
+      const latest = editorContentMap.get(file.id) ?? content;
 
       invoke<WatchedFile>("save_file", { id: file.id, content: latest }).then((saved) => {
         patchFileMeta(file.id, {
@@ -156,14 +151,6 @@ export function FileCard({
     return () => window.removeEventListener("codorum:save", handler);
   }, [isActive, file.id, file.name, content, mode, addToast, patchFileMeta, setCardDirty]);
 
-  const handleMarkdownChange = useCallback((md: string) => {
-    setContent(md);
-    if (md.replace(/\r\n/g, '\n').trim() !== file.content.replace(/\r\n/g, '\n').trim()) {
-      setCardDirty(file.id, true);
-    } else {
-      setCardDirty(file.id, false);
-    }
-  }, [file.id, file.content, setCardDirty]);
 
   const handleTextChange = useCallback((value: string) => {
     setContent(value);
@@ -208,16 +195,14 @@ export function FileCard({
       ref={cardRef}
       id={file.id}
       className={`fc${isActive ? " active" : ""}${isSelected ? " selected" : ""}`}
-      onClick={onActivate}
+      onClick={() => {
+        if (isActive) return; // already active — editor handles clicks natively
+        // First click: activate (jump to this card, show editor)
+        onActivate();
+      }}
     >
       {/* Card header */}
-      <div
-        className="fc-h"
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          onToggleCollapse();
-        }}
-      >
+      <div className="fc-h">
         <button
           className={`chev ${!isCollapsed ? "open" : ""}`}
           onClick={(e) => {
@@ -297,8 +282,13 @@ export function FileCard({
       <div
         ref={bodyRef}
         className={`fc-body ${isCollapsed ? "closed" : "open"}`}
-        onClick={(e) => e.stopPropagation()}
-        style={!isCollapsed && cardHeight ? { maxHeight: cardHeight, overflowY: "auto" } : undefined}
+        onClick={(e) => {
+          if (isActive) {
+            e.stopPropagation(); // let editor handle clicks when active
+          }
+          // when not active, let it bubble to the card's onClick → onActivate
+        }}
+        style={undefined}
       >
         {!isCollapsed && (
           <ErrorBoundary>
@@ -314,14 +304,19 @@ export function FileCard({
               )
             ) : (
               <>
-                {mode === "markdown" && (
-                  <MarkdownEditor
+                {mode === "markdown" && isActive && (
+                  <MilkdownEditor
                     key={`md-${file.id}-${file._rev ?? 0}`}
-                    ref={mdEditorRef}
                     content={content}
-                    onChange={handleMarkdownChange}
+                    onChange={handleTextChange}
                     fileId={file.id}
                     editable={!isReadOnly}
+                  />
+                )}
+                {mode === "markdown" && !isActive && (
+                  <div
+                    className="tiptap-editor-content"
+                    dangerouslySetInnerHTML={{ __html: marked.parse(content) as string }}
                   />
                 )}
                 {mode === "code" && (

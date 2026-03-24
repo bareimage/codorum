@@ -161,7 +161,7 @@ impl FileRegistry {
         // 4. Create snapshot if content changed, write to DB (no lock held)
         let snap = create_snapshot(&old_content, content);
         if let Some(ref s) = snap {
-            db.push_snapshot(&path, s);
+            let _ = db.push_snapshot(&path, s);
         }
 
         // 5. Write lock -> update in-memory state (content + modified, no history)
@@ -220,7 +220,7 @@ impl FileRegistry {
         // 5. Create snapshot, write to DB (no lock)
         let snap = create_snapshot(&old_content, &new_content);
         if let Some(ref s) = snap {
-            db.push_snapshot(path, s);
+            let _ = db.push_snapshot(path, s);
         }
 
         // 6. Write lock -> update in-memory state

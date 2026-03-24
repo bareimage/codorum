@@ -28,19 +28,18 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  // Restore persisted files on startup
+  // Load watched files from SQLite on startup
   useEffect(() => {
-    const { savedFilePaths, setFiles } = useAppStore.getState();
-    if (savedFilePaths.length === 0) return;
-
-    invoke<WatchedFile[]>("restore_files", { saved: savedFilePaths }).then(
-      (restored) => {
-        if (restored.length > 0) {
-          setFiles(restored);
-          addToast(`${restored.length} file(s)`, "restored", "cyan");
+    invoke<WatchedFile[]>("load_watched_files").then(
+      (loaded) => {
+        console.log("[codorum] load_watched_files:", loaded.length, "files");
+        loaded.forEach(f => console.log(`  ${f.name}.${f.extension} content=${f.content?.length ?? 0} chars`));
+        if (loaded.length > 0) {
+          useAppStore.getState().setFiles(loaded);
+          addToast(`${loaded.length} file(s)`, "restored", "cyan");
         }
       },
-    );
+    ).catch(err => console.error("[codorum] load_watched_files failed:", err));
   }, [addToast]);
 
   // Listen for file changes from Tauri backend
@@ -177,15 +176,12 @@ export default function App() {
         const { selectedIds, ejectSelected, activeFileId, removeFile } = useAppStore.getState();
         if (selectedIds.size > 0) {
           e.preventDefault();
-          const ids = [...selectedIds];
           ejectSelected();
-          invoke("remove_files", { ids });
           addToast(`${selectedIds.size} file(s)`, "ejected", "amber");
         } else if (activeFileId) {
           e.preventDefault();
           const file = useAppStore.getState().files.find((f) => f.id === activeFileId);
           removeFile(activeFileId);
-          invoke("remove_files", { ids: [activeFileId] });
           if (file) addToast(file.name, "ejected", "amber");
         }
       }

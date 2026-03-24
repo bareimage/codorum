@@ -7,19 +7,12 @@ import { useToastStore } from "./toast-store";
 /** Non-reactive map of file id -> current editor content. Updated by FileCard onChange. */
 export const editorContentMap = new Map<string, string>();
 
-export interface SavedFileEntry {
-  id: string;
-  path: string;
-  pinned: boolean;
-}
 
 interface AppState {
   // Files
   files: WatchedFile[];
   activeFileId: string | null;
 
-  // Persisted file paths (for restore on startup)
-  savedFilePaths: SavedFileEntry[];
 
   // Groups
   groups: FileGroup[];
@@ -91,10 +84,6 @@ interface AppState {
   reorderGroups: (groupIds: string[]) => void;
 }
 
-/** Derive savedFilePaths from current files array */
-function toSavedPaths(files: WatchedFile[]): SavedFileEntry[] {
-  return files.map((f) => ({ id: f.id, path: f.path, pinned: f.pinned }));
-}
 
 /** Files not belonging to any group */
 export function getUngroupedFiles(
@@ -110,7 +99,6 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       files: [],
       activeFileId: null,
-      savedFilePaths: [],
       groups: [],
       theme: "n01z",
       isFullscreen: false,
@@ -163,6 +151,8 @@ export const useAppStore = create<AppState>()(
         set((s) => {
           const ids = s.selectedIds;
           if (ids.size === 0) return {};
+          // Delete from SQLite
+          invoke("remove_files", { ids: [...ids] });
           const files = s.files.filter((f) => !ids.has(f.id));
           const groups = s.groups.map((g) => ({
             ...g,
@@ -174,18 +164,17 @@ export const useAppStore = create<AppState>()(
             files,
             groups,
             activeFileId,
-            savedFilePaths: toSavedPaths(files),
             selectedIds: new Set<string>(),
             lastSelectedId: null,
           };
         }),
 
-      setFiles: (files) => set({ files, savedFilePaths: toSavedPaths(files) }),
+      setFiles: (files) => set({ files }),
 
       addFiles: (newFiles) =>
         set((s) => {
           const files = [...s.files, ...newFiles];
-          return { files, savedFilePaths: toSavedPaths(files) };
+          return { files };
         }),
 
       updateFile: (id, updates) =>
@@ -195,7 +184,7 @@ export const useAppStore = create<AppState>()(
           );
           const needsSync = updates.path !== undefined || updates.pinned !== undefined;
           return needsSync
-            ? { files, savedFilePaths: toSavedPaths(files) }
+            ? { files }
             : { files };
         }),
 
@@ -210,17 +199,19 @@ export const useAppStore = create<AppState>()(
 
       removeFile: (id) =>
         set((s) => {
+          invoke("remove_file", { id });
           const files = s.files.filter((f) => f.id !== id);
           const groups = s.groups.map((g) => ({
             ...g,
             fileIds: g.fileIds.filter((fid) => fid !== id),
           }));
           const activeFileId = s.activeFileId === id ? null : s.activeFileId;
-          return { files, groups, activeFileId, savedFilePaths: toSavedPaths(files) };
+          return { files, groups, activeFileId };
         }),
 
       removeFiles: (ids) =>
         set((s) => {
+          invoke("remove_files", { ids });
           const idSet = new Set(ids);
           const files = s.files.filter((f) => !idSet.has(f.id));
           const groups = s.groups.map((g) => ({
@@ -229,7 +220,7 @@ export const useAppStore = create<AppState>()(
           }));
           const activeFileId =
             s.activeFileId && idSet.has(s.activeFileId) ? null : s.activeFileId;
-          return { files, groups, activeFileId, savedFilePaths: toSavedPaths(files) };
+          return { files, groups, activeFileId };
         }),
 
       openFile: (id) => set({ activeFileId: id }),
@@ -239,7 +230,7 @@ export const useAppStore = create<AppState>()(
           const files = s.files.map((f) =>
             f.id === id ? { ...f, pinned: !f.pinned } : f,
           );
-          return { files, savedFilePaths: toSavedPaths(files) };
+          return { files };
         }),
 
       setTheme: (theme) => set({ theme }),
@@ -334,7 +325,6 @@ export const useAppStore = create<AppState>()(
           return {
             groups: s.groups.filter((g) => g.id !== groupId),
             files,
-            savedFilePaths: toSavedPaths(files),
           };
         }),
 
@@ -379,13 +369,11 @@ export const useAppStore = create<AppState>()(
       name: "codorum-state",
       partialize: (state) => ({
         theme: state.theme,
-        savedFilePaths: state.savedFilePaths,
         groups: state.groups,
         drawerOpen: state.drawerOpen,
         sortBy: state.sortBy,
         searchMode: state.searchMode,
         cardCollapsed: state.cardCollapsed,
-        cardHeights: state.cardHeights,
       }),
     },
   ),

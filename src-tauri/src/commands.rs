@@ -74,9 +74,8 @@ pub fn create_file(
     std::fs::write(&file_path, &initial)?;
     let info = read_file_info(&file_path)
         .ok_or_else(|| CodorumError::FileNotFound(file_path.to_string_lossy().to_string()))?;
-    // Write initial snapshot to DB
     let snap = initial_snapshot(&info.content);
-    state.db.push_snapshot(&info.path, &snap);
+    state.db.add_file_with_snapshot(&info.id, &info.path, &info.name, &info.extension, &snap)?;
     state.registry.insert(info.clone())?;
     {
         let mut watcher = state.watcher.lock().map_err(|_| CodorumError::Lock)?;
@@ -87,27 +86,33 @@ pub fn create_file(
 
 #[tauri::command]
 pub fn remove_file(id: String, state: State<AppState>) -> Result<(), CodorumError> {
-    // Get path before removing so we can clean up snapshots
-    if let Ok(Some(file)) = state.registry.get_by_id(&id) {
-        state.db.remove_snapshots(&file.path);
+    let path = state.registry.get_by_id(&id)?.map(|f| f.path.clone());
+    state.registry.remove_by_id(&id).ok();
+    if let Some(path) = path {
+        state.db.remove_file_completely(&path)?;
     }
-    state.registry.remove_by_id(&id)
+    Ok(())
 }
 
 #[tauri::command]
 pub fn remove_files(ids: Vec<String>, state: State<AppState>) -> Result<(), CodorumError> {
-    // Clean up snapshots for each file
-    for id in &ids {
-        if let Ok(Some(file)) = state.registry.get_by_id(id) {
-            state.db.remove_snapshots(&file.path);
-        }
+    let paths: Vec<String> = ids.iter()
+        .filter_map(|id| state.registry.get_by_id(id).ok().flatten().map(|f| f.path.clone()))
+        .collect();
+    state.registry.remove_by_ids(&ids).ok();
+    for path in paths {
+        state.db.remove_file_completely(&path)?;
     }
-    state.registry.remove_by_ids(&ids)
+    Ok(())
 }
 
 #[tauri::command]
 pub fn toggle_pin(id: String, state: State<AppState>) -> Result<bool, CodorumError> {
-    state.registry.toggle_pin(&id)
+    let new_state = state.registry.toggle_pin(&id)?;
+    if let Ok(Some(file)) = state.registry.get_by_id(&id) {
+        state.db.set_pinned(&file.path, new_state)?;
+    }
+    Ok(new_state)
 }
 
 #[tauri::command]
@@ -144,7 +149,7 @@ pub async fn add_files(
                 dirs_to_watch.insert(parent.to_string_lossy().to_string());
             }
             let snap = initial_snapshot(&info.content);
-            state.db.push_snapshot(&info.path, &snap);
+            state.db.add_file_with_snapshot(&info.id, &info.path, &info.name, &info.extension, &snap)?;
             state.registry.insert(info.clone())?;
             added.push(info);
         }
@@ -202,7 +207,7 @@ pub async fn add_directory(
             }
             if let Some(info) = read_file_info(&path) {
                 let snap = initial_snapshot(&info.content);
-                state.db.push_snapshot(&info.path, &snap);
+                state.db.add_file_with_snapshot(&info.id, &info.path, &info.name, &info.extension, &snap)?;
                 state.registry.insert(info.clone())?;
                 added.push(info);
             }
@@ -252,7 +257,7 @@ pub fn drop_paths(
                     }
                     if let Some(info) = read_file_info(&ep) {
                         let snap = initial_snapshot(&info.content);
-                        state.db.push_snapshot(&info.path, &snap);
+                        state.db.add_file_with_snapshot(&info.id, &info.path, &info.name, &info.extension, &snap)?;
                         state.registry.insert(info.clone())?;
                         dir_files.push(info);
                     }
@@ -277,7 +282,7 @@ pub fn drop_paths(
                     dirs_to_watch.insert(parent.to_string_lossy().to_string());
                 }
                 let snap = initial_snapshot(&info.content);
-                state.db.push_snapshot(&info.path, &snap);
+                state.db.add_file_with_snapshot(&info.id, &info.path, &info.name, &info.extension, &snap)?;
                 state.registry.insert(info.clone())?;
                 loose_files.push(info);
             }
@@ -313,34 +318,33 @@ pub fn get_snapshots(file_path: String, state: State<AppState>) -> Vec<FileSnaps
 }
 
 #[tauri::command]
-pub fn restore_files(
-    saved: Vec<SavedFileEntry>,
+pub fn load_watched_files(
     state: State<AppState>,
 ) -> Result<Vec<WatchedFile>, CodorumError> {
-    let mut restored = Vec::new();
+    let rows = state.db.get_watched_files();
+    let mut loaded = Vec::new();
     let mut dirs_to_watch = HashSet::new();
 
-    for entry in saved {
-        let path = PathBuf::from(&entry.path);
-        if !path.is_file() {
+    for (id, path, _name, _ext, pinned) in rows {
+        let pb = PathBuf::from(&path);
+        if !pb.is_file() {
             continue;
         }
-        if state.registry.contains_path(&entry.path)? {
+        if state.registry.contains_path(&path)? {
             continue;
         }
-        if let Some(mut info) = read_file_info(&path) {
-            info.id = entry.id;
-            info.pinned = entry.pinned;
-            // Restore latest diff stats from DB
+        if let Some(mut info) = read_file_info(&pb) {
+            info.id = id;
+            info.pinned = pinned;
             if let Some(latest) = state.db.get_latest_snapshot(&info.path) {
                 info.lines_added = latest.lines_added;
                 info.lines_removed = latest.lines_removed;
             }
-            if let Some(parent) = path.parent() {
+            if let Some(parent) = pb.parent() {
                 dirs_to_watch.insert(parent.to_string_lossy().to_string());
             }
             state.registry.insert(info.clone())?;
-            restored.push(info);
+            loaded.push(info);
         }
     }
 
@@ -351,5 +355,5 @@ pub fn restore_files(
         }
     }
 
-    Ok(restored)
+    Ok(loaded)
 }
