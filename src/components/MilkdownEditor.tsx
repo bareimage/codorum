@@ -36,10 +36,16 @@ export const MilkdownEditor = forwardRef<MilkdownEditorHandle, Props>(
       const crepe = new Crepe({
         root: containerRef.current,
         defaultValue: content,
-        featureConfigs: {
-          [CrepeFeature.CodeMirror]: {
-            languages: [],
-          },
+        features: {
+          [CrepeFeature.BlockEdit]: false,
+          [CrepeFeature.Toolbar]: false,
+          [CrepeFeature.ImageBlock]: false,
+          [CrepeFeature.LinkTooltip]: true,
+          [CrepeFeature.ListItem]: true,
+          [CrepeFeature.Table]: true,
+          [CrepeFeature.CodeMirror]: true,
+          [CrepeFeature.Cursor]: true,
+          [CrepeFeature.Placeholder]: false,
         },
       });
 
