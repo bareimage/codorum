@@ -153,16 +153,8 @@ function DrawerSection({
       const el = document.getElementById(fileId);
       const container = el?.closest?.(".content-scroll") as HTMLElement | null;
       if (el && container) {
-        const cRect = container.getBoundingClientRect();
-        const eRect = el.getBoundingClientRect();
-        const relTop = eRect.top - cRect.top + container.scrollTop;
-        const relBottom = relTop + eRect.height;
-        const visBottom = container.scrollTop + cRect.height;
-        if (relTop < container.scrollTop) {
-          container.scrollTo({ top: relTop - 16, behavior: "smooth" });
-        } else if (relBottom > visBottom) {
-          container.scrollTo({ top: relBottom - cRect.height + 16, behavior: "smooth" });
-        }
+        const relTop = el.offsetTop - container.offsetTop;
+        container.scrollTo({ top: relTop - 8, behavior: "smooth" });
       }
     }, 50);
   };

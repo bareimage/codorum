@@ -98,6 +98,15 @@ export function CommandPalette() {
     if (activeFile || selectedIds.size > 0) {
       all.push({ type: "cmd", id: "eject-file", label: "Eject File", icon: "eject" });
     }
+    // Markdown templates
+    all.push({ type: "sep", label: "Markdown Template" });
+    const mdTemplates = ["github","swiss","notion","terminal","editorial","academic","ink","brutalist","typewriter","zen"];
+    const currentTemplate = useAppStore.getState().mdTemplate;
+    for (const t of mdTemplates) {
+      all.push({ type: "cmd", id: `md-template-${t}`, label: `${t.charAt(0).toUpperCase() + t.slice(1)}${t === currentTemplate ? " ✓" : ""}`, icon: "palette" });
+    }
+
+    all.push({ type: "sep", label: "Actions" });
     all.push({ type: "cmd", id: "add-folder", label: "Add Folder", icon: "folder" });
     all.push({ type: "cmd", id: "add-file", label: "Add Files", icon: "file" });
     all.push({ type: "cmd", id: "create-tab", label: "Create Tab", icon: "plus" });
@@ -230,6 +239,11 @@ export function CommandPalette() {
         if (targetFile) {
           invoke("reveal_in_finder", { path: targetFile.path });
         }
+        close();
+      } else if (item.id.startsWith("md-template-")) {
+        const template = item.id.replace("md-template-", "");
+        useAppStore.getState().setMdTemplate(template);
+        addToast("Template", template, "cyan");
         close();
       } else if (item.id === "eject-file") {
         const state = useAppStore.getState();

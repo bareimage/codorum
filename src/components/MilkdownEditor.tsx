@@ -1,7 +1,6 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Crepe, CrepeFeature } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/common/style.css";
-import "@milkdown/crepe/theme/frame.css";
 import { editorContentMap } from "../stores/app-store";
 
 export interface MilkdownEditorHandle {
@@ -13,10 +12,11 @@ interface Props {
   onChange: (md: string) => void;
   fileId: string;
   editable?: boolean;
+  template?: string;
 }
 
 export const MilkdownEditor = forwardRef<MilkdownEditorHandle, Props>(
-  function MilkdownEditor({ content, onChange, fileId, editable = true }, fwdRef) {
+  function MilkdownEditor({ content, onChange, fileId, editable = true, template = "github" }, fwdRef) {
     const containerRef = useRef<HTMLDivElement>(null);
     const crepeRef = useRef<Crepe | null>(null);
     const contentRef = useRef(content);
@@ -73,8 +73,8 @@ export const MilkdownEditor = forwardRef<MilkdownEditorHandle, Props>(
     return (
       <div
         ref={containerRef}
-        className="milkdown-container"
-        style={{ minHeight: 100 }}
+        className={`milkdown-container md-template-${template}`}
+        style={{ minHeight: 100, width: "100%" }}
       />
     );
   }
