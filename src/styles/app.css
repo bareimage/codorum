@@ -221,7 +221,7 @@ button{cursor:pointer;font-family:inherit}
 .sec-h .ln{flex:1;height:1px;background:var(--brd);opacity:.5}
 
 /* File Card */
-.fc{background:var(--card);border-radius:12px;border:1px solid var(--brd);margin:0 32px 16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.fc{background:var(--card);border-radius:12px;border:1px solid var(--brd);margin:0 32px 16px;overflow:visible;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
 .fc.active{border-color:color-mix(in srgb, var(--ac) 25%, transparent);box-shadow:0 4px 16px rgba(0,0,0,0.06)}
 .fc.selected{box-shadow:0 0 0 2px rgba(10,132,255,.25)}
 .fc-h{display:flex;align-items:center;padding:16px 24px;cursor:pointer;transition:background .1s}

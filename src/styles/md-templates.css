@@ -2,13 +2,10 @@
    MARKDOWN TEMPLATES — Override Milkdown Crepe vars + styles
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Fix Crepe popover positioning ─────────────────────── */
-.milkdown-container .milkdown [data-crepe-block-edit] { position:absolute !important; z-index:100 }
-.milkdown-container .milkdown [data-crepe-toolbar] { position:absolute !important; z-index:100 }
-
 /* ── Base: fill card + theme-aware Crepe vars ─────────── */
-.milkdown-container { width:100% }
+.milkdown-container { width:100%; position:relative }
 .milkdown-container .milkdown {
+  position:relative;
   width:100%;
   /* Map Crepe vars to Codorum theme vars — adapts to n01z/paper/phosphor/ember */
   --crepe-color-background: transparent;
