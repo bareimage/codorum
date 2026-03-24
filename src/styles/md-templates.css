@@ -2,6 +2,17 @@
    MARKDOWN TEMPLATES — Override Milkdown Crepe vars + styles
    ═══════════════════════════════════════════════════════════ */
 
+/* ── Slash menu: opaque, on top of everything ─────────── */
+.milkdown-container .milkdown .milkdown-slash-menu {
+  z-index:999 !important;
+  background:var(--card) !important;
+  box-shadow:0 4px 16px rgba(0,0,0,0.25) !important;
+  border:1px solid var(--brd) !important;
+}
+.milkdown-container .milkdown .milkdown-block-handle {
+  z-index:50 !important;
+}
+
 /* ── Base: fill card + theme-aware Crepe vars ─────────── */
 .milkdown-container { width:100%; position:relative }
 .milkdown-container .milkdown {
