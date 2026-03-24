@@ -37,8 +37,8 @@ export const MilkdownEditor = forwardRef<MilkdownEditorHandle, Props>(
         root: containerRef.current,
         defaultValue: content,
         features: {
-          [CrepeFeature.BlockEdit]: false,
-          [CrepeFeature.Toolbar]: false,
+          [CrepeFeature.BlockEdit]: true,
+          [CrepeFeature.Toolbar]: true,
           [CrepeFeature.ImageBlock]: false,
           [CrepeFeature.LinkTooltip]: true,
           [CrepeFeature.ListItem]: true,

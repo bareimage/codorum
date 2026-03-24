@@ -2,6 +2,10 @@
    MARKDOWN TEMPLATES — Override Milkdown Crepe vars + styles
    ═══════════════════════════════════════════════════════════ */
 
+/* ── Fix Crepe popover positioning ─────────────────────── */
+.milkdown-container .milkdown [data-crepe-block-edit] { position:absolute !important; z-index:100 }
+.milkdown-container .milkdown [data-crepe-toolbar] { position:absolute !important; z-index:100 }
+
 /* ── Base: fill card + theme-aware Crepe vars ─────────── */
 .milkdown-container { width:100% }
 .milkdown-container .milkdown {
