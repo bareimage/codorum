@@ -28,10 +28,10 @@
   --crepe-shadow-2: none;
 }
 .milkdown-container .milkdown .ProseMirror { outline:none; width:100% }
-/* Tables: horizontal scroll, no word-break wrapping */
+/* Tables: compact, scrollable */
 .milkdown-container .milkdown .ProseMirror .tableWrapper { overflow-x:auto; width:100% }
-.milkdown-container .milkdown .ProseMirror table { white-space:nowrap; width:auto; min-width:100% }
-.milkdown-container .milkdown .ProseMirror table td,.milkdown-container .milkdown .ProseMirror table th { white-space:nowrap; padding:4px 12px; font-size:12px }
+.milkdown-container .milkdown .ProseMirror table { width:auto; min-width:100%; border-collapse:collapse }
+.milkdown-container .milkdown .ProseMirror table td,.milkdown-container .milkdown .ProseMirror table th { padding:4px 10px !important; font-size:12px !important; line-height:1.4 !important; vertical-align:top }
 
 /* ── 1. GitHub ─────────────────────────────────────────── */
 .md-template-github .milkdown {
@@ -48,7 +48,7 @@
   --crepe-color-inline-code: var(--danger);
   --crepe-color-hover: var(--hover);
   --crepe-color-selected: var(--hover);
-  font-size:14px; line-height:1.6; padding:16px 24px;
+  font-size:14px; line-height:1.6; padding:8px 12px;
 }
 .md-template-github .milkdown .ProseMirror h1 { font-size:1.5em !important; font-weight:600; border-bottom:1px solid var(--brd); padding-bottom:.25em }
 .md-template-github .milkdown .ProseMirror h2 { font-size:1.25em !important; font-weight:600; border-bottom:1px solid var(--brd); padding-bottom:.25em }
@@ -68,7 +68,7 @@
   --crepe-color-on-surface: var(--tx);
   --crepe-color-outline: var(--brd);
   --crepe-color-primary: var(--tx);
-  font-size:13px; line-height:1.65; padding:28px 36px; 
+  font-size:13px; line-height:1.65; padding:8px 12px; 
 }
 .md-template-swiss .milkdown .ProseMirror h1 { font-size:1.3em !important; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin:28px 0 12px }
 .md-template-swiss .milkdown .ProseMirror h2 { font-size:1em !important; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border-bottom:1.5px solid var(--tx); padding-bottom:4px; margin:24px 0 10px }
@@ -87,7 +87,7 @@
   --crepe-color-on-surface: var(--tx);
   --crepe-color-outline: var(--brd);
   --crepe-color-inline-code: var(--danger);
-  font-size:14px; line-height:1.65; padding:14px 20px;
+  font-size:14px; line-height:1.65; padding:8px 12px;
 }
 .md-template-notion .milkdown .ProseMirror h1 { font-size:1.35em !important; font-weight:700; color:var(--tx) }
 .md-template-notion .milkdown .ProseMirror h2 { font-size:1.15em !important; font-weight:600; color:var(--tx) }
@@ -105,7 +105,7 @@
   --crepe-color-on-surface: var(--ac3);
   --crepe-color-outline: var(--tx3);
   --crepe-color-inline-code: var(--warn);
-  font-size:13px; line-height:1.5; padding:12px 16px;
+  font-size:13px; line-height:1.5; padding:8px 12px;
 }
 .md-template-terminal .milkdown .ProseMirror h1 { font-size:1.15em !important; font-weight:700; color:var(--ac3) }
 .md-template-terminal .milkdown .ProseMirror h2 { font-size:1em !important; font-weight:600; color:var(--ac3) }
@@ -124,7 +124,7 @@
   --crepe-color-surface: var(--input-bg);
   --crepe-color-on-surface: var(--tx);
   --crepe-color-outline: var(--brd);
-  font-size:14px; line-height:1.75; padding:24px 36px; 
+  font-size:14px; line-height:1.75; padding:8px 12px; 
 }
 .md-template-editorial .milkdown .ProseMirror h1 { font-size:1.4em !important; font-weight:400; font-style:italic }
 .md-template-editorial .milkdown .ProseMirror h2 { font-family:-apple-system,sans-serif; font-size:10px !important; font-weight:700; text-transform:uppercase; letter-spacing:.08em; font-style:normal }
@@ -142,7 +142,7 @@
   --crepe-color-surface: var(--input-bg);
   --crepe-color-on-surface: var(--tx);
   --crepe-color-outline: var(--brd);
-  font-size:14px; line-height:1.6; padding:24px 32px; 
+  font-size:14px; line-height:1.6; padding:8px 12px; 
 }
 .md-template-academic .milkdown .ProseMirror h1 { font-size:1.25em !important; font-weight:700; text-align:center }
 .md-template-academic .milkdown .ProseMirror h2 { font-size:1.1em !important; font-weight:700 }
@@ -159,7 +159,7 @@
   --crepe-color-surface: transparent;
   --crepe-color-on-surface: var(--tx2);
   --crepe-color-outline: var(--brd);
-  font-size:14px; line-height:1.85; padding:24px 32px; 
+  font-size:14px; line-height:1.85; padding:8px 12px; 
 }
 .md-template-ink .milkdown .ProseMirror h1 { font-size:1.25em !important; font-weight:300; color:var(--tx) }
 .md-template-ink .milkdown .ProseMirror h2 { font-size:12px !important; font-weight:600; color:var(--tx3); text-transform:lowercase; letter-spacing:.08em }
@@ -177,7 +177,7 @@
   --crepe-color-surface: var(--input-bg);
   --crepe-color-on-surface: var(--tx);
   --crepe-color-outline: var(--brd);
-  font-size:12px; line-height:1.5; padding:14px 18px;
+  font-size:12px; line-height:1.5; padding:8px 12px;
 }
 .md-template-brutalist .milkdown .ProseMirror h1 { font-size:1.25em !important; font-weight:700; text-transform:uppercase; letter-spacing:.03em; border-bottom:2px solid var(--tx); padding-bottom:4px }
 .md-template-brutalist .milkdown .ProseMirror h2 { font-size:12px !important; font-weight:700; text-transform:uppercase; border-bottom:1px solid var(--tx); padding-bottom:3px }
@@ -196,7 +196,7 @@
   --crepe-color-surface: transparent;
   --crepe-color-on-surface: var(--tx2);
   --crepe-color-outline: var(--tx3);
-  font-size:13px; line-height:1.75; padding:24px 36px; 
+  font-size:13px; line-height:1.75; padding:8px 12px; 
 }
 .md-template-typewriter .milkdown .ProseMirror h1 { font-size:1.15em !important; font-weight:400; text-transform:uppercase; text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:1px }
 .md-template-typewriter .milkdown .ProseMirror h2 { font-size:13px !important; font-weight:400; text-decoration:underline; text-underline-offset:3px }
@@ -216,7 +216,7 @@
   --crepe-color-surface: var(--input-bg);
   --crepe-color-on-surface: var(--tx2);
   --crepe-color-outline: var(--brd);
-  font-size:14px; line-height:1.9; padding:36px 24px;  text-align:center; font-weight:300;
+  font-size:14px; line-height:1.9; padding:8px 12px;  text-align:center; font-weight:300;
 }
 .md-template-zen .milkdown .ProseMirror h1 { font-size:1.25em !important; font-weight:200; color:var(--tx) }
 .md-template-zen .milkdown .ProseMirror h2 { font-size:11px !important; font-weight:400; color:var(--tx3); letter-spacing:.1em; text-transform:lowercase }
