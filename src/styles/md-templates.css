@@ -28,6 +28,10 @@
   --crepe-shadow-2: none;
 }
 .milkdown-container .milkdown .ProseMirror { outline:none; width:100% }
+/* Tables: horizontal scroll, no word-break wrapping */
+.milkdown-container .milkdown .ProseMirror .tableWrapper { overflow-x:auto; width:100% }
+.milkdown-container .milkdown .ProseMirror table { white-space:nowrap; width:auto; min-width:100% }
+.milkdown-container .milkdown .ProseMirror table td,.milkdown-container .milkdown .ProseMirror table th { white-space:nowrap; padding:4px 12px; font-size:12px }
 
 /* ── 1. GitHub ─────────────────────────────────────────── */
 .md-template-github .milkdown {
@@ -198,6 +202,9 @@
 .md-template-typewriter .milkdown .ProseMirror h2 { font-size:13px !important; font-weight:400; text-decoration:underline; text-underline-offset:3px }
 .md-template-typewriter .milkdown .ProseMirror h3 { font-size:13px !important; font-weight:700 }
 .md-template-typewriter .milkdown .ProseMirror pre { border-top:1px dashed var(--tx3); border-bottom:1px dashed var(--tx3); border-radius:0; background:transparent }
+.md-template-typewriter .milkdown .ProseMirror table { font-family:-apple-system,sans-serif; font-size:12px }
+.md-template-terminal .milkdown .ProseMirror table { font-size:11px }
+.md-template-brutalist .milkdown .ProseMirror table { font-size:11px }
 
 /* ── 10. Zen ───────────────────────────────────────────── */
 .md-template-zen .milkdown {
