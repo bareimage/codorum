@@ -1,6 +1,7 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Crepe, CrepeFeature } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/common/style.css";
+import "@milkdown/crepe/theme/frame.css";
 import { editorContentMap } from "../stores/app-store";
 
 export interface MilkdownEditorHandle {
