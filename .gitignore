@@ -16,6 +16,9 @@ src-tauri/gen/
 .DS_Store
 *.swp
 
+# Claude Code (local permissions, locks)
+.claude/
+
 # Env
 .env
 .env.*
